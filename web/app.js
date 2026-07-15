@@ -16,15 +16,16 @@
     const m = e.data;
     if (m.type === "ready") {
       engineReady = true;
-      setBadge("engine loading self-test…", "warn");
+      setBadge("INSPECTING ENGINE…", "warn");
       worker.postMessage({ type: "job", op: "selftest", id: nextId++ });
       return;
     }
     if (m.type === "selftest") {
-      setBadge(m.ok
-        ? "✅ cryptographically verified — engine decrypts desktop vaults byte-exactly"
-        : "❌ SELF-TEST FAILED — do not use this deployment",
-        m.ok ? "ok" : "bad");
+      setBadge(m.ok ? "ENGINE VERIFIED · v2" : "INSPECTION FAILED",
+               m.ok ? "ok" : "bad");
+      $("#selftest-badge").title = m.ok
+        ? "This page just decrypted a reference vault produced by the desktop app — the served code is genuine and compatible."
+        : "Self-test failed — do not use this deployment.";
       return;
     }
     if (m.type === "progress") {
@@ -65,9 +66,7 @@
     const b = $("#selftest-badge");
     b.textContent = text;
     b.className = "badge " + cls;
-  }
-
-  function sendJob(job, progressEl) {
+  }  function sendJob(job, progressEl) {
     const id = nextId++;
     job.id = id;
     job.type = "job";
@@ -108,8 +107,10 @@
   }
 
   function addResult(name, size) {
+    const empty = $("#results-empty");
+    if (empty) empty.remove();
     const li = document.createElement("li");
-    li.textContent = `💾 ${name}  (${size.toLocaleString()} bytes)`;
+    li.textContent = `№ ${name} — ${size.toLocaleString()} B`;
     $("#results").prepend(li);
   }
 
@@ -160,6 +161,11 @@
   // ---------------- file pickers / drop zones ----------------
   function bindDrop(zoneSel, listEl) {
     const zone = $(zoneSel);
+    // CSP blocks inline onclick attributes, so "click to browse" is wired here
+    zone.addEventListener("click", () => {
+      const inp = zone.querySelector('input[type="file"]');
+      if (inp) inp.click();
+    });
     zone.addEventListener("dragover", (e) => { e.preventDefault(); zone.classList.add("over"); });
     zone.addEventListener("dragleave", () => zone.classList.remove("over"));
     zone.addEventListener("drop", (e) => {
