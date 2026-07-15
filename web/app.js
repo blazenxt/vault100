@@ -5,6 +5,16 @@
   const $ = (s) => document.querySelector(s);
   const $$ = (s) => Array.from(document.querySelectorAll(s));
 
+  // the clerk stamps today's date on the form
+  const todayEl = document.getElementById("today");
+  if (todayEl) {
+    const d = new Date();
+    const M = ["JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG",
+               "SEP", "OCT", "NOV", "DEC"];
+    todayEl.textContent = `${String(d.getDate()).padStart(2, "0")} ` +
+                          `${M[d.getMonth()]} ${d.getFullYear()}`;
+  }
+
   // ---------------- worker plumbing ----------------
   const worker = new Worker("worker.js");
   let nextId = 1;
