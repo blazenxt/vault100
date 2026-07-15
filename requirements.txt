@@ -1,0 +1,4 @@
+PyNaCl>=1.5.0
+argon2-cffi>=21.3.0
+cryptography>=42.0.0    # AES-256-GCM cascade mode
+# GUI uses tkinter, which ships with CPython (python3-tk on Debian/Ubuntu)
