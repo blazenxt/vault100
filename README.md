@@ -3,6 +3,8 @@
 A file encryption suite built on the strongest widely-audited primitives
 available, with both a **command-line interface** and a **desktop GUI**.
 
+**License:** MIT (see `LICENSE`) · **Release:** v2.0.0 · **Python ≥ 3.10**, Node ≥ 20 (web hosting only)
+
 > **Straight talk:** no honest software can promise "impossible to decrypt."
 > Vault100 instead layers *independent* defenses — dual ciphers, memory-hard
 > key derivation, an optional physical second factor — so that a failure
