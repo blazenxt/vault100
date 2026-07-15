@@ -1,13 +1,55 @@
-# 🚀 Deploying Vault100-web to `vault100.blazenxt.in`
+# 🚀 Deploying Vault100-web
 
 The web edition is a **static, zero-knowledge site**: HTML/JS/WASM only.
 There is no backend, no database, nothing to hack on the server side —
-visitors' files and passwords never leave their browsers. You could host it
-on a toaster. This guide gets it live with proper TLS and secured headers.
+visitors' files and passwords never leave their browsers.
+
+- **Option A — Railway** *(below: fastest path, auto-TLS, zero maintenance)*
+- **Option B — your own VPS** *(further down: Caddy/Nginx + manual domain)*
 
 ---
 
-## 1. DNS
+# Option A — Railway
+
+The repo ships everything Railway needs:
+
+| File | Purpose |
+|---|---|
+| `Dockerfile` | `node:20-alpine`, non-root, built-in healthcheck |
+| `railway.toml` | pins the Dockerfile builder + `/health` healthcheck |
+| `web/server.mjs` | zero-dependency static server (preloads assets, `application/wasm`, hardened CSP/HSTS headers, gzip, ETag/304, honors Railway's injected `$PORT`) |
+| `package.json` | lets Nixpacks run it too (`npm start`), no dependencies at all |
+
+## Steps
+
+1. **Push the repo to GitHub** (already done — `blazenxt/vault100`).
+2. [railway.com](https://railway.com) → **New Project** → **Deploy from GitHub repo** → select **`blazenxt/vault100`**.
+3. Railway detects the `Dockerfile` automatically and deploys. Wait for the
+   healthcheck to go green (it pings `/health`).
+4. **Domain:** Settings → **Networking** →
+   - *Generate Domain* for a quick `*.up.railway.app` URL, and/or
+   - **Custom Domain** → enter `vault100.blazenxt.in` → Railway shows a
+     **CNAME target** (e.g. `abcd123.up.railway.app`).
+5. **DNS at your registrar:** create
+   `vault100.blazenxt.in  CNAME  <target Railway shows>`.
+6. Railway provisions **TLS automatically** — done. ✅
+
+Verify: open the site; the badge at the top must say **green** —
+"cryptographically verified — engine decrypts desktop vaults byte-exactly".
+
+## Local dry-run (exactly what Railway runs)
+
+```bash
+cd web && PORT=8080 node server.mjs     # then open http://localhost:8080
+# or with Docker:
+docker build -t vault100-web . && docker run -p 8080:8080 vault100-web
+```
+
+---
+
+# Option B — VPS (Caddy/Nginx, manual TLS)
+
+The web/ folder can also be hosted on a plain VPS at `vault100.blazenxt.in`.
 
 Create an **A record** (or AAAA) in the BlazeNXT DNS panel:
 

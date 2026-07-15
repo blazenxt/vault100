@@ -1,0 +1,10 @@
+{
+  "name": "vault100-web",
+  "version": "2.0.0",
+  "private": true,
+  "description": "Vault100 zero-knowledge web vaults — static site + zero-dep server",
+  "engines": { "node": ">=20" },
+  "scripts": {
+    "start": "node web/server.mjs"
+  }
+}
