@@ -40,7 +40,7 @@ const SEC_HEADERS = {
   "Content-Security-Policy":
     "default-src 'none'; script-src 'self' 'wasm-unsafe-eval'; " +
     "worker-src 'self'; style-src 'unsafe-inline'; img-src 'self' data:; " +
-    "connect-src 'none'; font-src 'none'; form-action 'none'; " +
+    "connect-src 'self'; font-src 'none'; form-action 'none'; " +
     "base-uri 'none'; manifest-src 'none'",
   "X-Content-Type-Options": "nosniff",
   "Referrer-Policy": "no-referrer",

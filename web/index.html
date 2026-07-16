@@ -6,25 +6,26 @@
 <meta http-equiv="Content-Security-Policy"
       content="default-src 'none'; script-src 'self' 'wasm-unsafe-eval';
                worker-src 'self'; style-src 'unsafe-inline';
-               img-src 'self' data:; connect-src 'none'; font-src 'none';
+               img-src 'self' data:; connect-src 'self'; font-src 'none';
                form-action 'none'; base-uri 'none'; manifest-src 'none'">
 <meta name="referrer" content="no-referrer">
-<title>FORM 100-B — The Seal Bureau · document counter</title>
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 48'%3E%3Crect width='48' height='48' fill='%23f0ead8'/%3E%3Ccircle cx='24' cy='24' r='15' fill='none' stroke='%23211d15' stroke-width='3'/%3E%3Ccircle cx='24' cy='24' r='5' fill='%23a4303a'/%3E%3C/svg%3E">
+<title>FORM 100-B — The Seal Bureau · night counter</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 48'%3E%3Crect width='48' height='48' fill='%23111318'/%3E%3Ccircle cx='24' cy='24' r='15' fill='none' stroke='%23ddd6c4' stroke-width='3'/%3E%3Ccircle cx='24' cy='24' r='5' fill='%23e15555'/%3E%3C/svg%3E">
 <style>
   /* ============================================================
-     FORM 100-B — the page is a paper form, not an app.
-     Light aged stock · black ink · red official ink.
+     FORM 100-B — night stock.
+     The same bureau form, printed for the night window:
+     black stock · bone ink · red official marks.
      ============================================================ */
   :root{
-    --paper:#f0ead8;      /* the sheet        */
-    --paper2:#e9e1ca;     /* recessed stock   */
-    --desk:#d3c9ae;       /* the desk behind  */
-    --ink:#211d15;        /* typing ink       */
-    --ink2:#4a442f;       /* pencil ink       */
-    --faint:#8d8060;      /* fading ink       */
-    --red:#a4303a;        /* official stamp   */
-    --green:#2f5d46;      /* approved stamp   */
+    --paper:#111318;      /* the black sheet  */
+    --paper2:#0c0e11;     /* recessed stock   */
+    --desk:#08090b;       /* the desk behind  */
+    --ink:#ddd6c4;        /* bone typing ink  */
+    --ink2:#938d7a;       /* dim pencil ink   */
+    --faint:#5d594b;      /* fading ink       */
+    --red:#e15555;        /* official stamp   */
+    --green:#6dbb92;      /* approved stamp   */
     --mono:ui-monospace,"SF Mono","Cascadia Mono",Menlo,Consolas,monospace;
     --serif:Georgia,"Times New Roman",serif;
   }
@@ -36,28 +37,28 @@
   }
   /* desk fiber */
   body::after{
-    content:"";position:fixed;inset:0;pointer-events:none;z-index:60;opacity:.06;
+    content:"";position:fixed;inset:0;pointer-events:none;z-index:60;opacity:.05;
     background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='140' height='140'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/><feColorMatrix type='saturate' values='0'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>");
   }
   ::selection{background:var(--red);color:var(--paper)}
   :focus-visible{outline:2px dashed var(--red);outline-offset:3px}
-  *{scrollbar-width:thin;scrollbar-color:#8d8060 transparent}
+  *{scrollbar-width:thin;scrollbar-color:#3a3b40 transparent}
   *::-webkit-scrollbar{width:9px;height:9px}
-  *::-webkit-scrollbar-thumb{background:#8d8060;border:2px solid var(--paper)}
+  *::-webkit-scrollbar-thumb{background:#3a3b40;border:2px solid var(--paper)}
 
   /* ---------------- the sheet ---------------- */
   .sheet{
     max-width:920px;margin:36px auto 90px;padding:42px 46px 26px 82px;
     background:var(--paper);position:relative;
-    box-shadow:0 26px 55px rgba(33,29,21,.28),0 2px 0 rgba(33,29,21,.12);
+    box-shadow:0 30px 70px rgba(0,0,0,.65),0 2px 0 rgba(0,0,0,.5);
     background-image:
-      radial-gradient(circle at 27px 30px, #c9c0a3 8px, var(--desk) 6.5px, rgba(0,0,0,0) 7.5px);
+      radial-gradient(circle at 27px 30px, #040507 6.5px, #1e222a 7.5px, rgba(0,0,0,0) 8.5px);
     background-size:100% 86px;background-repeat:repeat-y;
   }
   /* red legal margin rule */
   .sheet::before{
     content:"";position:absolute;top:0;bottom:0;left:54px;width:1.5px;
-    background:rgba(164,48,58,.45);
+    background:rgba(225,85,85,.5);
   }
   @media(max-width:640px){
     .sheet{padding:30px 20px;background-image:none}
@@ -66,7 +67,7 @@
 
   /* ---------------- letterhead ---------------- */
   .lh{display:flex;gap:22px;align-items:flex-start}
-  .postmark{flex:none;width:96px;height:96px;transform:rotate(-8deg);opacity:.85;margin-top:-6px}
+  .postmark{flex:none;width:96px;height:96px;transform:rotate(-8deg);opacity:.9;margin-top:-6px}
   .lh .center{flex:1;text-align:center}
   .bureau{font:10.5px var(--mono);letter-spacing:.3em;text-transform:uppercase;color:var(--ink2)}
   .bureau::before,.bureau::after{content:"—";margin:0 10px;color:var(--faint)}
@@ -76,7 +77,7 @@
   .lh .rightcol{flex:none;width:158px;display:flex;flex-direction:column;gap:10px;align-items:stretch}
   .serial{border:1.5px solid var(--ink);padding:8px 10px;font:9.5px var(--mono);letter-spacing:.1em;text-transform:uppercase;line-height:1.9}
   .serial b{font-size:10.5px}
-  .serial .blank{border-bottom:1px dashed #6f674e;display:inline-block;min-width:56px}
+  .serial .blank{border-bottom:1px dashed #57544a;display:inline-block;min-width:56px}
   @media(max-width:640px){.lh{flex-wrap:wrap}.postmark{order:3}.lh .center{order:1;min-width:100%}.lh .rightcol{order:2;width:100%;flex-direction:row}.serial{flex:1}}
 
   /* verification stamp — a rubber stamp, not a badge */
@@ -85,7 +86,7 @@
     font-family:var(--serif);font-style:italic;font-weight:700;
     font-size:12px;letter-spacing:.22em;text-transform:uppercase;text-align:center;
     border:3px double currentColor;border-radius:6px;padding:9px 12px;
-    color:var(--ink2);cursor:help;background:rgba(255,255,255,.18);
+    color:var(--ink2);cursor:help;background:rgba(255,255,255,.04);
   }
   .badge.ok{color:var(--green)}
   .badge.warn{color:var(--ink2)}
@@ -109,7 +110,7 @@
     font:700 10.5px var(--mono);letter-spacing:.16em;text-transform:uppercase;
     padding:11px 20px 12px;transform:translateY(1.5px);
   }
-  .tabbtn:hover{background:#efe7cf;color:var(--ink)}
+  .tabbtn:hover{background:#171a20;color:var(--ink)}
   .tabbtn.active{background:var(--ink);color:var(--paper)}
   @media(max-width:640px){.tabbtn{padding:10px 12px;letter-spacing:.08em}}
 
@@ -130,17 +131,17 @@
   .frow{margin-bottom:16px}
   .flabel{display:block;font:700 10.5px var(--mono);letter-spacing:.16em;text-transform:uppercase;color:var(--ink2);margin-bottom:4px}
   input[type=text],input[type=password],select{
-    width:100%;border:none;border-bottom:1.5px dashed #6f674e;border-radius:0;
+    width:100%;border:none;border-bottom:1.5px dashed #57544a;border-radius:0;
     background:transparent;color:var(--ink);caret-color:var(--red);
     font:14.5px var(--mono);letter-spacing:.02em;padding:7px 2px;appearance:none;
   }
   input::placeholder{color:var(--faint)}
-  input:focus,select:focus{outline:none;background:#f8f2df;border-bottom:1.5px solid var(--ink)}
+  input:focus,select:focus{outline:none;background:rgba(255,255,255,.045);border-bottom:1.5px solid var(--ink)}
   select{cursor:pointer;padding-right:26px;
-    background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='11' height='7'><path d='M1 1l4.5 4.5L10 1' fill='none' stroke='%234a442f' stroke-width='1.5'/></svg>");
+    background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='11' height='7'><path d='M1 1l4.5 4.5L10 1' fill='none' stroke='%23938d7a' stroke-width='1.5'/></svg>");
     background-repeat:no-repeat;background-position:right 4px center;
   }
-  .ro{background:rgba(255,255,255,.25)!important;border-bottom-style:solid!important}
+  .ro{background:rgba(255,255,255,.06)!important;border-bottom-style:solid!important}
   .fnote{font:10.5px/1.7 var(--mono);color:var(--faint);margin-top:5px}
 
   .checkline{display:flex;gap:9px;align-items:center;font:11.5px var(--mono);color:var(--ink2);cursor:pointer;margin-top:10px;user-select:none}
@@ -153,16 +154,16 @@
     clip-path:polygon(14% 46%,0 62%,40% 100%,100% 18%,86% 4%,40% 70%);
   }
 
-  /* thin official boxes — the only boxes allowed on paper */
+  /* thin official boxes — the only boxes allowed on the sheet */
   .obox{border:1.5px solid var(--ink);padding:12px 14px}
   .obox .oh{font:700 9.5px var(--mono);letter-spacing:.2em;text-transform:uppercase;color:var(--red)}
 
   /* intake zone */
   .intake{
-    position:relative;border:2px dashed #6f674e;background:rgba(255,255,255,.16);
+    position:relative;border:2px dashed #4e4b40;background:rgba(255,255,255,.03);
     padding:36px 20px;text-align:center;cursor:pointer;transition:background .15s,border-color .15s;
   }
-  .intake:hover,.intake.over{background:rgba(255,255,255,.35);border-color:var(--ink)}
+  .intake:hover,.intake.over{background:rgba(255,255,255,.06);border-color:var(--ink)}
   .intake input{display:none}
   .corner{position:absolute;width:13px;height:13px;border:2.5px solid var(--ink2);transition:border-color .15s}
   .intake:hover .corner{border-color:var(--red)}
@@ -177,7 +178,7 @@
   ul.files{list-style:none;margin:6px 0 0;padding:0}
   .filerow{
     display:grid;grid-template-columns:1fr 110px 46px 22px;gap:12px;align-items:center;
-    padding:9px 0;border-bottom:1px dotted #8d8060;font:12px var(--mono);
+    padding:9px 0;border-bottom:1px dotted #3f3d34;font:12px var(--mono);
   }
   .fname{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--ink)}
   .pct{color:var(--ink2);text-align:right;font-size:10.5px}
@@ -190,14 +191,14 @@
 
   /* combination gauge: four little ink cells */
   .gauge{position:relative;margin-top:10px;max-width:280px}
-  .gauge progress{height:13px;border-color:#4a442f}
+  .gauge progress{height:13px;border-color:#938d7a}
   .gauge .ticks{
     position:absolute;inset:0;pointer-events:none;
-    background:repeating-linear-gradient(90deg,transparent 0,transparent calc(25% - 2px),var(--paper) calc(25% - 2px),var(--paper) calc(25% - 1px),#4a442f calc(25% - 1px),#4a442f 25%);
+    background:repeating-linear-gradient(90deg,transparent 0,transparent calc(25% - 2px),var(--paper) calc(25% - 2px),var(--paper) calc(25% - 1px),#938d7a calc(25% - 1px),#938d7a 25%);
     opacity:.65;
   }
   #enc-strength-label,#genpass-strength{font:700 10px var(--mono);letter-spacing:.18em;text-transform:uppercase}
-  .s0{color:var(--red)}.s1{color:#b06a2c}.s2{color:#8d6e2c}.s3{color:#5d7a3c}.s4{color:var(--green)}
+  .s0{color:var(--red)}.s1{color:#d08a4a}.s2{color:#c9a24b}.s3{color:#8fae5c}.s4{color:var(--green)}
 
   /* stamp buttons */
   .go,.ghost{
@@ -211,19 +212,19 @@
     box-shadow:4px 4px 0 var(--red);
     transition:transform .06s,box-shadow .06s,background .2s;
   }
-  .go:hover{background:#000}
+  .go:hover{background:#efe8d6}
   .go:active{transform:translate(3px,3px);box-shadow:1px 1px 0 var(--red)}
   .go:disabled{opacity:.45;transform:none;box-shadow:4px 4px 0 var(--red);cursor:not-allowed}
-  .ghost{font-size:10px;padding:9px 13px;letter-spacing:.14em;box-shadow:2.5px 2.5px 0 rgba(33,29,21,.85);transition:transform .06s,box-shadow .06s,background .15s}
-  .ghost:hover{background:rgba(33,29,21,.08)}
-  .ghost:active{transform:translate(2px,2px);box-shadow:.5px .5px 0 rgba(33,29,21,.85)}
+  .ghost{font-size:10px;padding:9px 13px;letter-spacing:.14em;box-shadow:2.5px 2.5px 0 rgba(0,0,0,.8);transition:transform .06s,box-shadow .06s,background .15s}
+  .ghost:hover{background:rgba(255,255,255,.06)}
+  .ghost:active{transform:translate(2px,2px);box-shadow:.5px .5px 0 rgba(0,0,0,.8)}
   .action-row{display:flex;align-items:center;gap:20px;margin-top:26px;flex-wrap:wrap}
   .action-row .fnote{margin:0;max-width:46ch}
 
   /* instruments as flat annex boxes */
   .recs{display:grid;grid-template-columns:1fr 1fr;gap:22px}
   @media(max-width:720px){.recs{grid-template-columns:1fr}}
-  .rec{border:1.5px solid var(--ink);padding:15px 16px;background:rgba(255,255,255,.1)}
+  .rec{border:1.5px solid var(--ink);padding:15px 16px;background:rgba(255,255,255,.03)}
   .rec .idx{font:700 9.5px var(--mono);letter-spacing:.22em;text-transform:uppercase;color:var(--red)}
   .rec h3{margin:8px 0 8px;font:700 13px var(--mono);letter-spacing:.1em;text-transform:uppercase}
   .rec p{font:11.5px/1.75 var(--mono);color:var(--ink2);margin:0 0 12px}
@@ -234,11 +235,11 @@
   @media(max-width:720px){.records{grid-template-columns:1fr}}
   .rechead{font:700 10px var(--mono);letter-spacing:.2em;text-transform:uppercase;color:var(--ink2);display:flex;gap:10px;align-items:baseline}
   .rechead::after{content:"";flex:1;border-bottom:1px solid var(--ink)}
-  #results{list-style:none;margin:10px 0 0;padding:0;border:1.5px solid var(--ink);min-height:120px;padding:10px 14px;background:rgba(255,255,255,.12)}
-  #results li{padding:6px 0;border-bottom:1px dotted #8d8060;font:11.5px var(--mono);color:var(--ink)}
+  #results{list-style:none;margin:10px 0 0;padding:0;border:1.5px solid var(--ink);min-height:120px;padding:10px 14px;background:rgba(255,255,255,.03)}
+  #results li{padding:6px 0;border-bottom:1px dotted #3f3d34;font:11.5px var(--mono);color:var(--ink)}
   #results-empty{font:11px/1.8 var(--mono);color:var(--faint)}
-  #log{border:1.5px solid var(--ink);min-height:120px;max-height:230px;overflow:auto;padding:10px 14px;background:rgba(255,255,255,.12);margin-top:10px}
-  .logline{font:11px/1.85 var(--mono);color:var(--ink2);border-bottom:1px dotted #cfc3a0;padding:2px 0}
+  #log{border:1.5px solid var(--ink);min-height:120px;max-height:230px;overflow:auto;padding:10px 14px;background:rgba(255,255,255,.03);margin-top:10px}
+  .logline{font:11px/1.85 var(--mono);color:var(--ink2);border-bottom:1px dotted #26282b;padding:2px 0}
   .logline.err{color:var(--red)}
 
   /* bureau ephemera */
@@ -278,18 +279,18 @@
   <!-- ================= LETTERHEAD ================= -->
   <header class="lh">
     <svg class="postmark" viewBox="0 0 96 96" aria-hidden="true">
-      <circle cx="48" cy="48" r="44" fill="none" stroke="#4a442f" stroke-width="2"/>
-      <circle cx="48" cy="48" r="32" fill="none" stroke="#4a442f" stroke-width="1" stroke-dasharray="3 3"/>
-      <text x="48" y="30" text-anchor="middle" font-family="monospace" font-size="9" letter-spacing="2" fill="#4a442f">SEAL BUREAU</text>
-      <text x="48" y="46" text-anchor="middle" font-family="monospace" font-size="8" letter-spacing="1.5" fill="#4a442f">★ ★ ★</text>
-      <text x="48" y="60" text-anchor="middle" font-family="monospace" font-size="9" letter-spacing="2" fill="#4a442f">WINDOW 100</text>
-      <text x="48" y="74" text-anchor="middle" font-family="monospace" font-size="7.5" letter-spacing="1.5" fill="#4a442f">EST. 2026</text>
+      <circle cx="48" cy="48" r="44" fill="none" stroke="#6d685a" stroke-width="2"/>
+      <circle cx="48" cy="48" r="32" fill="none" stroke="#6d685a" stroke-width="1" stroke-dasharray="3 3"/>
+      <text x="48" y="30" text-anchor="middle" font-family="monospace" font-size="9" letter-spacing="2" fill="#6d685a">SEAL BUREAU</text>
+      <text x="48" y="46" text-anchor="middle" font-family="monospace" font-size="8" letter-spacing="1.5" fill="#6d685a">★ ★ ★</text>
+      <text x="48" y="60" text-anchor="middle" font-family="monospace" font-size="9" letter-spacing="2" fill="#6d685a">WINDOW 100</text>
+      <text x="48" y="74" text-anchor="middle" font-family="monospace" font-size="7.5" letter-spacing="1.5" fill="#6d685a">EST. 2026</text>
     </svg>
 
     <div class="center">
-      <div class="bureau">The Seal Bureau · Document Counter</div>
+      <div class="bureau">The Seal Bureau · Night Counter</div>
       <div class="wordmark">VAULT-<b>100</b></div>
-      <div class="counterline">form 100-b · request to seal &amp; open · third revision</div>
+      <div class="counterline">form 100-b · request to seal &amp; open · night stock · third revision</div>
     </div>
 
     <div class="rightcol">
@@ -314,7 +315,7 @@
     <span class="zk">Dearest visitor: this counter performs every turn of the key
     inside your own machine.</span> The bureau merely delivered the paperwork —
     it never sees your documents, your passphrase, or your keys, and keeps no
-    copies. You may verify the claim personally: <b>finishing loading this form,
+    copies. You may verify the claim personally: <b>finish loading this form,
     then sever the network cable</b> — every instrument below continues to
     function. Vaults (<b>.v100</b>) issued here open in the Vault100 desk &amp;
     command-line applications, and vice versa.
@@ -337,10 +338,10 @@
       <div id="enc-drop" class="intake">
         <span class="corner tl"></span><span class="corner tr"></span>
         <span class="corner bl"></span><span class="corner br"></span>
-        <svg width="34" height="34" viewBox="0 0 34 34" fill="none" stroke="#4a442f" stroke-width="1.6" aria-hidden="true">
+        <svg width="34" height="34" viewBox="0 0 34 34" fill="none" stroke="#6d685a" stroke-width="1.6" aria-hidden="true">
           <path d="M21 6l7 7v13a2 2 0 0 1-2 2H10a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h11z"/>
           <path d="M21 6v7h7" />
-          <path d="M17 15v7m0 0l-3-3m3 3l3-3" stroke="#a4303a"/>
+          <path d="M17 15v7m0 0l-3-3m3 3l3-3" stroke="#e15555"/>
         </svg>
         <div class="big">Attach documents here</div>
         <div class="small">drop them upon the counter — or click to rummage the drawer</div>
@@ -417,9 +418,9 @@
       <div id="dec-drop" class="intake">
         <span class="corner tl"></span><span class="corner tr"></span>
         <span class="corner bl"></span><span class="corner br"></span>
-        <svg width="34" height="34" viewBox="0 0 34 34" fill="none" stroke="#4a442f" stroke-width="1.6" aria-hidden="true">
+        <svg width="34" height="34" viewBox="0 0 34 34" fill="none" stroke="#6d685a" stroke-width="1.6" aria-hidden="true">
           <rect x="8" y="14" width="18" height="13" rx="1.5"/>
-          <path d="M12 14v-3.5a5 5 0 0 1 10 0V14" stroke="#a4303a"/>
+          <path d="M12 14v-3.5a5 5 0 0 1 10 0V14" stroke="#e15555"/>
           <circle cx="17" cy="20.5" r="1.6"/>
         </svg>
         <div class="big">Present the vault to the clerk</div>
@@ -527,7 +528,7 @@
   </div>
 
   <footer>
-    <span><span class="b">Vault100 v2</span> · the seal bureau · window 100</span>
+    <span><span class="b">Vault100 v2</span> · the seal bureau · night window 100</span>
     <span>no accounts · no telemetry · no escrow</span>
     <span>filed in triplicate — <span class="b">zero copies retained</span></span>
   </footer>
