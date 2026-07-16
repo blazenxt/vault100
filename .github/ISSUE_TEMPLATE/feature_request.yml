@@ -1,0 +1,24 @@
+name: ✨ Feature request
+description: Suggest an idea for Vault100
+title: "[idea] "
+labels: [enhancement]
+body:
+  - type: textarea
+    id: idea
+    attributes:
+      label: The idea
+      description: What should Vault100 do? Who does it help?
+    validations:
+      required: true
+  - type: textarea
+    id: security
+    attributes:
+      label: Security considerations (if any)
+      description: Does it touch crypto, secrets, or the zero-knowledge rule? How do we keep it safe?
+  - type: checkboxes
+    id: spirit
+    attributes:
+      label: House rules check
+      options:
+        - label: This keeps the zero-knowledge rule (server never sees files/passwords/keys)
+          required: true

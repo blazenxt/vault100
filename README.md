@@ -1,9 +1,59 @@
-# 🔐 Vault100 — Maximum-Security File Encryption (v2)
+# 🔐 Vault100 — Maximum-Security, Zero-Knowledge File Encryption
 
-A file encryption suite built on the strongest widely-audited primitives
-available, with both a **command-line interface** and a **desktop GUI**.
+**Seal any file into a `.v100` vault — in your browser, from the CLI, or on the desktop. Files, passwords and keys never leave your device.**
 
-**License:** MIT (see `LICENSE`) · **Release:** v2.0.0 · **Python ≥ 3.10**, Node ≥ 20 (web hosting only)
+[![Version](https://img.shields.io/badge/release-v2.0.16-e15555)](https://github.com/blazenxt/vault100/releases)
+[![License: MIT](https://img.shields.io/badge/license-MIT-6dbb92)](LICENSE)
+[![Python ≥ 3.10](https://img.shields.io/badge/python-%E2%89%A5%203.10-blue)](#installation)
+[![Web app](https://img.shields.io/badge/web-vault100.blazenxt.in-c9a227)](https://vault100.blazenxt.in/)
+[![Tests](https://img.shields.io/badge/tests-55%20passed-6dbb92)](#testing)
+
+🌐 **Live zero-knowledge web app:** **[vault100.blazenxt.in](https://vault100.blazenxt.in/)** — installs as an offline PWA · also [self-hostable](#self-hosting) with one zero-dependency Node server
+
+| 🖥 Desktop GUI | 💻 CLI engine | 🌐 Web counter (PWA) |
+|---|---|---|
+| Tkinter app — drag files, pick strength, seal | `python -m vault100 encrypt …` | 5 windows, 108 KDF notches, benchmark instruments |
+
+Three bodies, one cloth — **vaults are fully interchangeable** between web, CLI and GUI.
+
+- [Why Vault100](#why-vault100)
+- [Security architecture](#-security-architecture)
+- [The web counter](#-the-web-counter)
+- [Installation](#-install) · [Command line](#-command-line) · [Self-hosting](#-self-hosting-zero-knowledge)
+- [Testing](#-testing) · [Honest limitations](#-honest-limitations)
+- [Contributing](CONTRIBUTING.md) · [Security policy](SECURITY.md)
+
+## Why Vault100
+
+* **Zero-knowledge by design** — all cryptography runs locally (Web Worker / native). No accounts, no telemetry, no escrow, no uploads — verifiable in the source and by DevTools.
+* **Layered, honest security** — XChaCha20-Poly1305 secretstream, optional AES-256-GCM cascade, Argon2id memory-hard KDF with **108 tunable notches** plus per-device benchmarks ("the timekeeper").
+* **Real-world conveniences** — instant passphrase change without re-encrypting the body, 256-bit keyfiles, gzip inside the vault, whole-folder sealing, filename restore, offline PWA.
+* **Open and documented** — MIT license, fully specified container format, 55 automated tests, CLI↔web byte-exact compatibility proofs.
+
+<a id="-the-web-counter"></a>
+## 🌐 The web counter
+
+**Live at [vault100.blazenxt.in](https://vault100.blazenxt.in/)** — five windows at the Seal Bureau, zero knowledge end to end, and installable as an offline-first PWA:
+
+| Window | What it does |
+|---|---|
+| Form 100-B · Seal | files & whole folders → `.v100` · 108 KDF notches · cascade · keyfile · gzip |
+| Form 100-C · Open | local decrypt · original names restored · peeking facts · examining tray preview |
+| Form 100-R · Recombinate | instant passphrase/keyfile change — head re-sealed, body untouched |
+| Annex D · Instruments | keyfile press · passphrase mint · examining glass · **timekeeper** device benchmarks · office sweep policy |
+| Esc, Esc anywhere | panic drill — wipes the counter and burns the record book |
+
+![Annex D instruments — the timekeeper](docs/img/annex-timekeeper.png)
+![Five inks × day/night shifts](docs/img/theme-kit.png)
+
+Everything the counter does, the CLI and desktop app do as well — and **vaults open byte-exactly across all three**.
+
+## Why Vault100
+
+* **Zero-knowledge by design** — all cryptography runs locally (Web Worker / native). No accounts, no telemetry, no escrow, no uploads — verifiable in the source and by DevTools.
+* **Layered, honest security** — XChaCha20-Poly1305 secretstream, optional AES-256-GCM cascade, Argon2id memory-hard KDF with **108 tunable notches** plus per-device benchmarks ("the timekeeper").
+* **Real-world conveniences** — instant passphrase change without re-encrypting the body, 256-bit keyfiles, gzip inside the vault, whole-folder sealing, filename restore, offline PWA.
+* **Open and documented** — MIT license, fully specified container format, 55 automated tests, CLI↔web byte-exact compatibility proofs.
 
 > **Straight talk:** no honest software can promise "impossible to decrypt."
 > Vault100 instead layers *independent* defenses — dual ciphers, memory-hard
@@ -65,6 +115,7 @@ chunk 2..N: your data
 
 ---
 
+<a id="-install"></a>
 ## 📦 Install
 
 ```bash
@@ -73,6 +124,7 @@ pip install -r requirements.txt     # PyNaCl + argon2-cffi + cryptography
 # GUI needs tkinter (bundled with Python; Debian/Ubuntu: python3-tk)
 ```
 
+<a id="-command-line"></a>
 ## 💻 Command line
 
 ```bash
@@ -122,10 +174,11 @@ python -m vault100.gui
 
 ---
 
-## ✅ Tested security properties (49/49 passing)
+<a id="-testing"></a>
+## ✅ Tested security properties (55/55 passing)
 
 ```bash
-python -m unittest discover -s tests -v
+VAULT100_FAST_KDF=1 python3 -m pytest tests/test_crypto.py -v
 ```
 
 * ✔ Round-trips: empty / boundary / multi-chunk / cascade / keyfile
@@ -151,7 +204,8 @@ python -m unittest discover -s tests -v
   full-disk encryption alongside for nation-state threat models.
 * Not yet professionally audited. Keep backups of anything important.
 
-## 🌐 Web edition (zero-knowledge hosting)
+<a id="-self-hosting-zero-knowledge"></a>
+## 🌐 Self-hosting (zero-knowledge)
 
 `web/` is a static, **zero-knowledge** web app: all encryption happens in the
 visitor's browser (WASM libsodium + Argon2, WebCrypto AES-GCM cascade) and
@@ -160,10 +214,25 @@ the server is a dumb file host. Vaults are **byte-compatible with this CLI**
 turnkey deployment (Caddy/Nginx, auto-HTTPS, hardened CSP/HSTS headers) and
 the operational rules that keep it zero-knowledge.
 
-## 🆕 Changelog v2.0
+```bash
+docker build -t vault100 . && docker run -p 8080:8080 vault100
+# — or, zero-dependency —
+node web/server.mjs    # serves on :8080 (honors $PORT), /health for checks
+```
 
-Envelope encryption (KEK/FEK) · keyfile second factor · cascade dual-cipher
-mode · auto-tuned `max` KDF profile · instant `passwd` · `info` / `keygen` /
-`genpass` commands · v1 vault compatibility · 49-test suite ·
-zero-knowledge web edition with byte-exact CLI interop (proven
-cross-implementation: Argon2id, HKDF, BLAKE2b, AES-GCM, full vaults both ways).
+## 🆕 Changelog highlights
+
+**v2.0.x series** (all releases on the
+[releases page](https://github.com/blazenxt/vault100/releases)):
+
+* **2.0.16** — public-launch polish: SEO (robots/sitemap/OG/JSON-LD), recorded charter + FAQ, launch docs
+* **2.0.15** — the timekeeper device benchmarks · punched batch receipt serials · CLI `bench` · GUI gzip
+* **2.0.14** — folder→tar sealing · gzip inside the vault · examining-tray preview
+* **2.0.13** — idle sweep · Esc-Esc panic drill · clipboard furnace · vault peek
+* **2.0.12** — Form 100-R instant passphrase change (web)
+* **2.0.11** — theme kit: 5 counter inks × day/night shifts
+* **2.0.10** — KDF auto-fold for RAM-tight browsers
+* **2.0.0** — envelope encryption (KEK/FEK) · keyfile second factor · cascade dual-cipher ·
+  auto-tuned `max` KDF profile · instant `passwd` · v1 vault compatibility ·
+  zero-knowledge web edition with byte-exact CLI interop (proven both ways:
+  Argon2id, HKDF, BLAKE2b, AES-GCM, full vaults)

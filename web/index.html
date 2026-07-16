@@ -11,10 +11,73 @@
 <meta name="referrer" content="no-referrer">
 <meta name="theme-color" content="#08090b">
 <meta name="mobile-web-app-capable" content="yes">
+<meta name="description" content="Vault100 is a free, open-source, zero-knowledge file encryption app. Seal files with XChaCha20-Poly1305, AES-256-GCM cascade and Argon2id — in the browser, from the CLI, or on desktop. No accounts, no uploads, MIT licensed.">
+<meta name="robots" content="index,follow,max-image-preview:large">
+<link rel="canonical" href="https://vault100.blazenxt.in/">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Vault100 — The Seal Bureau">
+<meta property="og:title" content="Vault100 — zero-knowledge file encryption, sealed on your own device">
+<meta property="og:description" content="Vault100 is a free, open-source, zero-knowledge file encryption app. Seal files with XChaCha20-Poly1305, AES-256-GCM cascade and Argon2id — in the browser, from the CLI, or on desktop. No accounts, no uploads, MIT licensed.">
+<meta property="og:url" content="https://vault100.blazenxt.in/">
+<meta property="og:image" content="https://vault100.blazenxt.in/og-cover.jpg">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Vault100 — zero-knowledge file encryption, sealed on your own device">
+<meta name="twitter:description" content="Vault100 is a free, open-source, zero-knowledge file encryption app. Seal files with XChaCha20-Poly1305, AES-256-GCM cascade and Argon2id — in the browser, from the CLI, or on desktop. No accounts, no uploads, MIT licensed.">
+<meta name="twitter:image" content="https://vault100.blazenxt.in/og-cover.jpg">
 <link rel="manifest" href="manifest.json">
-<title>FRONT DESK — The Seal Bureau · night counter</title>
+<title>Vault100 — Free Zero-Knowledge File Encryption (Browser · CLI · Desktop)</title>
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 48'%3E%3Crect width='48' height='48' fill='%23111318'/%3E%3Ccircle cx='24' cy='24' r='15' fill='none' stroke='%23ddd6c4' stroke-width='3'/%3E%3Ccircle cx='24' cy='24' r='5' fill='%23e15555'/%3E%3C/svg%3E">
-<link rel="stylesheet" href="bureau.css?v=215">
+<link rel="stylesheet" href="bureau.css?v=216">
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "WebSite",
+      "name": "Vault100 — The Seal Bureau",
+      "url": "https://vault100.blazenxt.in/",
+      "description": "Zero-knowledge file encryption counter: seal, open and recombinate .v100 vaults entirely on your own device."
+    },
+    {
+      "@type": "SoftwareApplication",
+      "name": "Vault100",
+      "alternateName": "Vault100 — The Seal Bureau",
+      "applicationCategory": "SecurityApplication",
+      "operatingSystem": "Web, Windows, macOS, Linux",
+      "url": "https://vault100.blazenxt.in/",
+      "downloadUrl": "https://github.com/blazenxt/vault100",
+      "codeRepository": "https://github.com/blazenxt/vault100",
+      "softwareVersion": "2.0.16",
+      "license": "https://opensource.org/licenses/MIT",
+      "isAccessibleForFree": true,
+      "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" },
+      "author": { "@type": "Person", "name": "BlazeNXT", "url": "https://github.com/blazenxt" },
+      "description": "Vault100 is a free, open-source, zero-knowledge file encryption app. Seal files with XChaCha20-Poly1305, optional AES-256-GCM cascade and Argon2id key derivation — in the browser, from the CLI, or on desktop. No accounts, no uploads, no telemetry.",
+      "featureList": "XChaCha20-Poly1305, AES-256-GCM cascade, Argon2id (108 notches), keyfiles, gzip, folder sealing, instant passphrase change, offline PWA, CLI, desktop app",
+      "screenshot": "https://vault100.blazenxt.in/og-cover.jpg"
+    },
+    {
+      "@type": "FAQPage",
+      "mainEntity": [
+        { "@type": "Question", "name": "Is Vault100 really free?",
+          "acceptedAnswer": { "@type": "Answer", "text": "Yes — free and MIT-licensed open source, with no accounts, no subscriptions and no ads. You may run it, study it, modify it and self-host it forever." } },
+        { "@type": "Question", "name": "Do my files ever leave my device?",
+          "acceptedAnswer": { "@type": "Answer", "text": "Never. All cryptography runs locally in a dedicated Worker thread of your browser (or fully offline in the CLI/desktop app). Disconnect the network and the bureau keeps working." } },
+        { "@type": "Question", "name": "What if I forget a vault's combination?",
+          "acceptedAnswer": { "@type": "Answer", "text": "No one on earth can recover it — not even the bureau, which keeps no ledger of combinations, keys or escrow copies. Store passphrases and keyfiles like house keys, with a copy laid safely away." } },
+        { "@type": "Question", "name": "Which algorithms protect my vaults?",
+          "acceptedAnswer": { "@type": "Answer", "text": "XChaCha20-Poly1305 authenticated streaming encryption, an optional AES-256-GCM cascade, Argon2id memory-hard key derivation with 108 graded notches, and optional 256-bit keyfiles as a physical second factor." } },
+        { "@type": "Question", "name": "Can I use Vault100 offline or self-host it?",
+          "acceptedAnswer": { "@type": "Answer", "text": "Yes. After the first visit the web counter works offline as a PWA. Self-hosting is a zero-dependency Node server or the provided Dockerfile; the CLI and desktop app never need a network at all." } },
+        { "@type": "Question", "name": "Can I change a vault's passphrase later?",
+          "acceptedAnswer": { "@type": "Answer", "text": "Yes — Form 100-R (or python -m vault100 passwd) re-seals only the vault's key wrap; the body is never re-encrypted, so a 10 GB vault's combination changes as fast as a 10 KB one." } }
+      ]
+    }
+  ]
+}
+</script>
 </head>
 <body>
 
@@ -151,6 +214,98 @@
     </div>
   </div>
 
+  <!-- ================= THE RECORDED CHARTER (about · how · FAQ) ================= -->
+  <div class="part charter">
+    <h2><span class="rn">Charter.</span> The recorded charter of the bureau</h2>
+
+    <h3>What Vault100 is</h3>
+    <p><b>Vault100 is a free, open-source, zero-knowledge file encryption app</b> —
+      the Seal Bureau where documents are locked into <b>.v100</b> vaults.
+      It runs in three bodies cut from one cloth: this
+      <b>web counter</b> (which also installs as an offline PWA), a
+      <b>command-line engine</b> (<code>python -m vault100</code>), and a
+      <b>desktop application</b> — all compatible with one another, all under the
+      <a href="https://github.com/blazenxt/vault100" rel="noopener">MIT license on GitHub</a>.</p>
+
+    <h3>How a sealing proceeds</h3>
+    <ol>
+      <li>Bring documents to <a href="seal.html">window 1</a> — single files or a whole folder.</li>
+      <li>Whisper a combination, pick a key-turning notch (108 of them), and
+        optionally demand a physical second key (<b>.v100key</b> keyfile) or the
+        double-lock cipher cascade.</li>
+      <li>The clerk seals everything <b>on your own device</b> and hands back a
+        .v100 vault — open it anywhere with <a href="open.html">window 2</a>,
+        the CLI, or the desktop app.</li>
+    </ol>
+
+    <h3>The locks behind the stamp</h3>
+    <ul>
+      <li><b>XChaCha20-Poly1305</b> secretstream — extended-nonce authenticated
+        encryption with per-chunk tags and a tamper-evident header.</li>
+      <li>Optional <b>AES-256-GCM ⟶ XChaCha20</b> cascade — two independent
+        ciphers, both must fall for a break.</li>
+      <li><b>Argon2id</b> memory-hard key turning — 108 notches up to
+        1 GiB × 6 turns; the device benchmark (the annex timekeeper) tells you
+        what your own machine can afford.</li>
+      <li>Optional <b>gzip</b> shrink-wrap inside the vault, whole-folder tar
+        filings, instant passphrase change that never re-encrypts the body.</li>
+    </ul>
+
+    <h3>Zero knowledge, by design</h3>
+    <p>The bureau keeps <b>no accounts, no telemetry, no escrow, and no copies</b>.
+      Every byte is encrypted inside a Web Worker on your device; the server only
+      serves the printed paperwork — it never sees files, combinations, or keys.
+      The source is open, the container format is documented, and every page
+      proves itself by decrypting a reference vault sealed by the desktop app.</p>
+
+    <h3>Questions the counter hears often</h3>
+    <div class="faq">
+      <details>
+        <summary>Is Vault100 really free?</summary>
+        <p>Yes — free and MIT-licensed open source, with no accounts, no
+          subscriptions and no ads. You may run it, study it, modify it and
+          self-host it forever.</p>
+      </details>
+      <details>
+        <summary>Do my files ever leave my device?</summary>
+        <p>Never. All cryptography runs locally in a dedicated Worker thread of
+          your browser (or fully offline in the CLI/desktop app). Disconnect the
+          network and the bureau keeps working.</p>
+      </details>
+      <details>
+        <summary>What if I forget a vault's combination?</summary>
+        <p>No one on earth can recover it — not even the bureau, which keeps no
+          ledger of combinations, keys or escrow copies. Write passphrases down
+          and store keyfiles like house keys, with a copy laid safely away.</p>
+      </details>
+      <details>
+        <summary>Which algorithms protect my vaults?</summary>
+        <p>XChaCha20-Poly1305 authenticated streaming encryption, an optional
+          AES-256-GCM cascade (double-lock), Argon2id memory-hard key derivation
+          with 108 graded notches, and optional 256-bit keyfiles as a physical
+          second factor. Parameters are stamped in each vault's public header,
+          so any Vault100 build can open them.</p>
+      </details>
+      <details>
+        <summary>Can I use Vault100 offline or self-host it?</summary>
+        <p>Yes. After the first visit the web counter works with the network
+          cable severed (PWA). Self-hosting is a zero-dependency Node server or
+          the provided Dockerfile; the CLI and desktop app never need a network
+          at all.</p>
+      </details>
+      <details>
+        <summary>Can I change a vault's passphrase later?</summary>
+        <p>Yes — <a href="rewrap.html">Form 100-R</a> (or
+          <code>python -m vault100 passwd</code>) re-seals only the vault's key
+          wrap. The body is never re-encrypted, so a 10 GB vault's combination
+          changes as fast as a 10 KB one.</p>
+      </details>
+    </div>
+    <p class="fine">charter continua — full documentation, the .v100 container
+      specification, security model and release history live in the
+      <a href="https://github.com/blazenxt/vault100" rel="noopener">GitHub repository</a>.</p>
+  </div>
+
   <!-- ================= CLERK'S RECORD ================= -->
   <div class="records solo">
     <div>
@@ -167,7 +322,7 @@
   </div>
 
   <footer>
-    <span><span class="b">Vault100 v2.0.15</span> · the seal bureau · night ledger</span>
+    <span><span class="b">Vault100 v2.0.16</span> · the seal bureau · night ledger</span>
     <span>no accounts · no telemetry · no escrow</span>
     <span>filed in triplicate — <span class="b">zero copies retained</span></span>
   </footer>
@@ -180,6 +335,6 @@
   <span class="curl" aria-hidden="true"></span>
 </div>
 
-<script src="common.js?v=215"></script>
+<script src="common.js?v=216"></script>
 </body>
 </html>

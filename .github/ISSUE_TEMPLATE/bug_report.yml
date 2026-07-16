@@ -1,0 +1,42 @@
+name: 🐞 Bug report
+description: Something in Vault100 misbehaves (NOT for security vulnerabilities — use Security → Advisories for those)
+title: "[bug] "
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        > 🔒 **Security vulnerability?** Stop — report it via
+        > *Security → Advisories* (private), never as a public issue.
+  - type: dropdown
+    id: body-part
+    attributes:
+      label: Which body?
+      options:
+        - Web app (browser / PWA)
+        - CLI (python -m vault100)
+        - Desktop GUI (Tkinter)
+        - Container format / compatibility
+        - Packaging / deployment
+    validations:
+      required: true
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened?
+      description: What you did, what you expected, what you got. Include the exact error text.
+    validations:
+      required: true
+  - type: textarea
+    id: env
+    attributes:
+      label: Environment
+      description: OS, browser (+version) or Python version, Vault100 release (v2.0.x)
+      placeholder: "Windows 11 · Chrome 141 · v2.0.15"
+  - type: checkboxes
+    id: secrets
+    attributes:
+      label: Sanity check
+      options:
+        - label: I have NOT pasted any passphrase, keyfile, or secret data into this report
+          required: true

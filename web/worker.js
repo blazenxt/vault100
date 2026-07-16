@@ -3,7 +3,7 @@
  */
 "use strict";
 
-const V = "?v=215";
+const V = "?v=216";
 importScripts("vendor/libsodium-sumo.js" + V);
 importScripts("vendor/libsodium-wrappers.js" + V);
 importScripts("vendor/argon2.js" + V);
@@ -14,7 +14,7 @@ let cancelJob = null;
 
 // argon2-browser: serve the WASM binary ourselves (relative to worker scope)
 self.loadArgon2WasmBinary = () =>
-  fetch("vendor/argon2.wasm?v=215").then((r) => {
+  fetch("vendor/argon2.wasm?v=216").then((r) => {
     if (!r.ok) throw new Error("argon2.wasm failed to load (HTTP " + r.status + ")");
     return r.arrayBuffer();
   });

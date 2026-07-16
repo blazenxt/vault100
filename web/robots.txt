@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://vault100.blazenxt.in/sitemap.xml

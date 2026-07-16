@@ -31,10 +31,11 @@ const MIME = {
   ".jpg": "image/jpeg",
   ".ico": "image/x-icon",
   ".txt": "text/plain; charset=utf-8",
+  ".xml": "application/xml; charset=utf-8",
   ".webmanifest": "application/manifest+json",
 };
 const COMPRESSIBLE = new Set([".html", ".js", ".mjs", ".css", ".json",
-                              ".map", ".svg", ".txt", ".webmanifest"]);
+                              ".map", ".svg", ".txt", ".xml", ".webmanifest"]);
 
 const SEC_HEADERS = {
   "Content-Security-Policy":
