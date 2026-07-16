@@ -285,6 +285,68 @@
                       (b) => b.toString(16).padStart(2, "0")).join("");
   }
 
+  // -- the notary: ed25519 endorsements — byte-parity with vault100/notary.py
+  const SEAL_MAGIC = u8("V100SEAL1");
+  const STAMP_MAGIC = u8("V100STAMP1");
+  const SIG_MAGIC = u8("V100SIG1");
+  const SIGFILE_BYTES = 8 + 4 + 32 + 64;
+
+  const hasMagic = (b, m) => b.length >= m.length &&
+                             m.every((v, i) => b[i] === v);
+  function notaryFingerprint(pk) {
+    if (pk.length !== 32) throw new VaultShareError("a stamp is 32 bytes");
+    return Array.from(pk.slice(0, 6),
+                      (x) => x.toString(16).padStart(2, "0")).join("");
+  }
+  function notaryMint() {
+    const sodium = needEnv().sodium;
+    const kp = sodium.crypto_sign_keypair();
+    const seed = sodium.crypto_sign_ed25519_sk_to_seed(kp.privateKey);
+    const seal = concat(SEAL_MAGIC, seed);
+    const stamp = concat(STAMP_MAGIC, kp.publicKey);
+    const fp = notaryFingerprint(kp.publicKey);
+    kp.privateKey.fill(0); seed.fill(0);
+    return { seal, stamp, fingerprint: fp };
+  }
+  function notaryEndorse(data, sealBytes, epoch) {
+    const sodium = needEnv().sodium;
+    if (!hasMagic(sealBytes, SEAL_MAGIC) ||
+        sealBytes.length !== SEAL_MAGIC.length + 32)
+      throw new VaultShareError("not a Vault100 seal (V100SEAL1 + 32-byte seed)");
+    const seed = sealBytes.slice(SEAL_MAGIC.length, SEAL_MAGIC.length + 32);
+    const kp = sodium.crypto_sign_seed_keypair(seed);
+    const sig = sodium.crypto_sign_detached(data, kp.privateKey);
+    const ts = new Uint8Array(4);
+    new DataView(ts.buffer).setUint32(
+      0, epoch == null ? Math.floor(Date.now() / 1000) : epoch >>> 0, true);
+    const blob = concat(SIG_MAGIC, ts, kp.publicKey, sig);
+    kp.privateKey.fill(0); seed.fill(0);
+    return blob;
+  }
+  function notaryInspect(blob) {
+    if (blob.length !== SIGFILE_BYTES)
+      throw new VaultShareError(
+        `a Vault100 endorsement is ${SIGFILE_BYTES} bytes on the nose — ` +
+        "this one is torn");
+    if (!hasMagic(blob, SIG_MAGIC))
+      throw new VaultShareError("not a Vault100 endorsement (missing V100SIG1)");
+    return { epoch: rd32(blob, 8), pk: blob.slice(12, 44),
+             sig: blob.slice(44, 108) };
+  }
+  function notaryAttest(data, blob, stampPk) {
+    const parts = notaryInspect(blob);
+    const fp = notaryFingerprint(parts.pk);
+    if (stampPk && !parts.pk.every((v, i) => v === stampPk[i]))
+      return { ...parts, valid: false, fingerprint: fp,
+               reason: "endorsed by a DIFFERENT seal than the stamp presented" };
+    const ok = needEnv().sodium.crypto_sign_verify_detached(
+      parts.sig, data, parts.pk);
+    return { ...parts, valid: ok, fingerprint: fp,
+             reason: ok ? "endorsement holds"
+                        : "the signature does NOT hold — tampered, swapped, " +
+                          "or signed over other paper" };
+  }
+
   // -- shrink-wrap (gzip) --------------------------------------------------
   /* "gz": true in the metadata means the payload is one gzip stream —
      wrapped on seal (CompressionStream), unwrapped on open. The desktop
@@ -872,6 +934,8 @@
     armorEncode, armorDecode, ARMOR_BEGIN, ARMOR_END,
     shareSplit, shareJoin, shareEncode, shareDecode, shareInspect, sharePressId,
     SHARE_MAX_LEN,
+    notaryMint, notaryEndorse, notaryAttest, notaryInspect, notaryFingerprint,
+    SIGFILE_BYTES,
     _internals: { hkdfSha256, deriveKek, argon2id, argon2idProven,
                   kekFromRaw, parsePrefix, concat, u8 },
   };

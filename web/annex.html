@@ -28,11 +28,11 @@
 <meta name="twitter:image" content="https://vault100.blazenxt.in/og-cover.jpg">
 <link rel="manifest" href="manifest.json">
 <title>Instruments · Annex D — Vault100 Encryption Toolkit</title>
-<link rel="icon" type="image/svg+xml" href="icon.svg?v=222">
-<link rel="icon" type="image/png" sizes="32x32" href="icons/icon-32.png?v=222">
-<link rel="icon" type="image/png" sizes="16x16" href="icons/icon-16.png?v=222">
-<link rel="apple-touch-icon" href="icons/icon-180.png?v=222">
-<link rel="stylesheet" href="bureau.css?v=222">
+<link rel="icon" type="image/svg+xml" href="icon.svg?v=223">
+<link rel="icon" type="image/png" sizes="32x32" href="icons/icon-32.png?v=223">
+<link rel="icon" type="image/png" sizes="16x16" href="icons/icon-16.png?v=223">
+<link rel="apple-touch-icon" href="icons/icon-180.png?v=223">
+<link rel="stylesheet" href="bureau.css?v=223">
 </head>
 <body>
 
@@ -255,6 +255,70 @@
           </div>
         </div>
       </div>
+      <div class="rec wide">
+        <div class="idx">instrument (i)</div>
+        <h3>The notary</h3>
+        <p>Mints a personal <b>seal</b> (secret — guard it like a keyfile) and its
+          <b>stamp</b> (public — share it freely). The seal endorses any vault
+          with an ed25519 signature; anyone holding the stamp can attest the
+          endorsement, here or at the desk application —
+          <code>vault100 notary mint/endorse/attest</code>, byte for byte the
+          same stamp. A doctored vault, a swapped file, a foreign seal — all
+          refused, loudly.</p>
+        <div class="ntgrid">
+          <div class="qdesk">
+            <div class="qph">mint the seal</div>
+            <p class="pwahint">one press strikes both pieces; the seal keeps
+              0600 hours — secrecy is its habit.</p>
+            <div class="rowline">
+              <button id="nt-mint" class="ghost">Mint seal + stamp</button>
+            </div>
+            <div class="fnote qpnote" id="nt-mint-note" data-burn-note>&nbsp;</div>
+          </div>
+          <div class="qdesk">
+            <div class="qph">endorse a vault</div>
+            <div class="rowline">
+              <button id="nt-vault-btn" class="ghost" data-pocket>Vault…</button>
+              <span class="picklbl" id="nt-vault-name" data-pocket-name></span>
+              <input id="nt-vault" type="file" hidden>
+            </div>
+            <div class="rowline">
+              <button id="nt-seal-btn" class="ghost" data-pocket>Seal (.v100seal)…</button>
+              <span class="picklbl" id="nt-seal-name" data-pocket-name></span>
+              <input id="nt-seal" type="file" accept=".v100seal" hidden>
+            </div>
+            <div class="rowline">
+              <button id="nt-endorse" class="ghost">🖋 Endorse → .v100sig</button>
+            </div>
+            <div class="fnote qpnote" id="nt-endorse-note" data-burn-note>&nbsp;</div>
+          </div>
+          <div class="qdesk">
+            <div class="qph">attest the endorsement</div>
+            <div class="rowline">
+              <button id="nt-avault-btn" class="ghost" data-pocket>Vault…</button>
+              <span class="picklbl" id="nt-avault-name" data-pocket-name></span>
+              <input id="nt-avault" type="file" hidden>
+            </div>
+            <div class="rowline">
+              <button id="nt-asig-btn" class="ghost" data-pocket>Sig (.v100sig)…</button>
+              <span class="picklbl" id="nt-asig-name" data-pocket-name></span>
+              <input id="nt-asig" type="file" accept=".v100sig" hidden>
+            </div>
+            <div class="rowline">
+              <button id="nt-astamp-btn" class="ghost" data-pocket>Stamp (optional)…</button>
+              <span class="picklbl" id="nt-astamp-name" data-pocket-name></span>
+              <input id="nt-astamp" type="file" accept=".v100stamp" hidden>
+            </div>
+            <div class="rowline">
+              <button id="nt-attest" class="ghost">Attest</button>
+            </div>
+            <div class="ntverdict" id="nt-verdict"></div>
+          </div>
+        </div>
+        <div class="fnote qpnote">attestation proves <i>who</i> sealed the paper
+          and that not one byte moved since — it never reads what the paper
+          says; for that, the combination still rules.</div>
+      </div>
     </div>
   </div>
 
@@ -299,7 +363,7 @@
   </nav>
 
   <footer>
-    <span><span class="b">Vault100 v2.0.22</span> · the seal bureau · night ledger</span>
+    <span><span class="b">Vault100 v2.0.23</span> · the seal bureau · night ledger</span>
     <span>© 2026 BlazeNXT ·
       <a href="https://github.com/blazenxt/vault100/blob/main/LICENSE" rel="noopener">MIT license</a>
       · no accounts · no telemetry · no escrow</span>
@@ -314,8 +378,8 @@
   <span class="curl" aria-hidden="true"></span>
 </div>
 
-<script src="common.js?v=222"></script>
-<script src="vendor/qrcode.js?v=222"></script>
-<script src="annex.js?v=222"></script>
+<script src="common.js?v=223"></script>
+<script src="vendor/qrcode.js?v=223"></script>
+<script src="annex.js?v=223"></script>
 </body>
 </html>

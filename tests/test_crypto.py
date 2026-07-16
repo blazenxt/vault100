@@ -714,5 +714,107 @@ class CustodyVerifyTests(unittest.TestCase):
             del os.environ["XDG_CONFIG_HOME"]
 
 
+class NotaryTests(unittest.TestCase):
+    """The notary — ed25519 seals & endorsements (vault100/notary.py)."""
+
+    def test_mint_roundtrip_and_perms(self):
+        from vault100.notary import (SEAL_MAGIC, STAMP_MAGIC, load_seal,
+                                     load_stamp, mint_seal)
+        with tempfile.TemporaryDirectory() as td:
+            res = mint_seal(os.path.join(td, "me.v100seal"))
+            self.assertTrue(res["seal"].endswith(".v100seal"))
+            blob_s = open(res["seal"], "rb").read()
+            blob_p = open(res["stamp"], "rb").read()
+            self.assertTrue(blob_s.startswith(SEAL_MAGIC))
+            self.assertTrue(blob_p.startswith(STAMP_MAGIC))
+            self.assertEqual(len(load_seal(res["seal"])), 32)
+            self.assertEqual(len(load_stamp(res["stamp"])), 32)
+            mode = os.stat(res["seal"]).st_mode & 0o777
+            self.assertEqual(mode, 0o600)
+            # no silent overwrite of a seal
+            from vault100.notary import NotaryError
+            with self.assertRaises(NotaryError):
+                mint_seal(os.path.join(td, "me.v100seal"))
+
+    def test_endorse_attest_holds(self):
+        from vault100.notary import attest_file, endorse_file, mint_seal
+        with tempfile.TemporaryDirectory() as td:
+            seal = os.path.join(td, "bureau.v100seal")
+            mint = mint_seal(seal)
+            vault = os.path.join(td, "papers.v100")
+            open(vault, "wb").write(b"deeds " * 500)
+            end = endorse_file(vault, seal)
+            blob = open(end["sig"], "rb").read()
+            self.assertEqual(len(blob), 108)          # SIGFILE_BYTES
+            v = attest_file(vault, end["sig"], mint["stamp"])
+            self.assertTrue(v["valid"])
+            self.assertEqual(v["fingerprint"], mint["fingerprint"])
+
+    def test_doctored_vault_refused(self):
+        from vault100.notary import attest_file, endorse_file, mint_seal
+        with tempfile.TemporaryDirectory() as td:
+            seal = os.path.join(td, "a.v100seal"); mint_seal(seal)
+            vault = os.path.join(td, "x.v100")
+            open(vault, "wb").write(b"original")
+            sig = endorse_file(vault, seal)["sig"]
+            open(vault, "ab").write(b"!")
+            v = attest_file(vault, sig)
+            self.assertFalse(v["valid"])
+            self.assertIn("does NOT hold", v["reason"])
+
+    def test_foreign_seal_and_stamp_mismatch(self):
+        from vault100.notary import attest_file, endorse_file, mint_seal
+        with tempfile.TemporaryDirectory() as td:
+            s1 = os.path.join(td, "one.v100seal"); m1 = mint_seal(s1)
+            s2 = os.path.join(td, "two.v100seal"); mint_seal(s2)
+            vault = os.path.join(td, "y.v100")
+            open(vault, "wb").write(b"paper")
+            # endorse with seal two, demand stamp one
+            sig = endorse_file(vault, s2)["sig"]
+            v = attest_file(vault, sig, m1["stamp"])
+            self.assertFalse(v["valid"])
+            self.assertIn("DIFFERENT seal", v["reason"])
+
+    def test_torn_and_forged_paper_rejected(self):
+        from vault100.notary import (NotaryError, attest_bytes, inspect_sig,
+                                     load_seal, load_stamp, mint_seal)
+        with tempfile.TemporaryDirectory() as td:
+            seal = os.path.join(td, "z.v100seal"); res = mint_seal(seal)
+            with self.assertRaises(NotaryError):
+                load_seal(res["stamp"])               # stamp as seal
+            with self.assertRaises(NotaryError):
+                load_stamp(res["seal"])               # seal as stamp
+            with self.assertRaises(NotaryError):
+                inspect_sig(b"V100SIG1" + b"\0" * 10)  # torn
+            with self.assertRaises(NotaryError):
+                inspect_sig(b"F000SIG1" + b"\0" * 100)  # forged magic
+
+    def test_determinism_matches_rfc8032_style(self):
+        from vault100.notary import endorse_bytes, inspect_sig
+        seed = bytes(range(32))
+        b1 = endorse_bytes(b"paper", seed, epoch=1700000000)
+        b2 = endorse_bytes(b"paper", seed, epoch=1700000000)
+        self.assertEqual(b1, b2)
+        self.assertEqual(inspect_sig(b1)["epoch"], 1700000000)
+
+    def test_cli_notary_flow(self):
+        from vault100 import cli
+        with tempfile.TemporaryDirectory() as td:
+            seal = os.path.join(td, "me.v100seal")
+            self.assertEqual(cli.main(["notary", "mint", seal]), 0)
+            stamp = os.path.join(td, "me.v100stamp")
+            self.assertTrue(os.path.exists(stamp))
+            vault = os.path.join(td, "file.v100")
+            open(vault, "wb").write(b"vidyut " * 100)
+            self.assertEqual(cli.main(
+                ["notary", "endorse", vault, "-s", seal]), 0)
+            self.assertTrue(os.path.exists(vault + ".v100sig"))
+            self.assertEqual(cli.main(
+                ["notary", "attest", vault, "--stamp", stamp]), 0)
+            blob = bytearray(open(vault, "rb").read()); blob[-20] ^= 1
+            open(vault, "wb").write(blob)
+            self.assertEqual(cli.main(["notary", "attest", vault]), 1)
+
+
 if __name__ == "__main__":
     unittest.main(verbosity=2)

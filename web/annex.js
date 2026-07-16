@@ -305,4 +305,75 @@
       `vault100-courier-${Date.now().toString(36)}.svg`, [svg], svg.length);
     log(`stamp filed as ${saved.name} — print it, or flash the screen.`);
   };
+
+  // (i) the notary — ed25519 seals, endorsements, attestations
+  const ntPick = (btnSel, inpSel, lblSel) => {
+    const btn = $(btnSel), inp = $(inpSel), lbl = $(lblSel);
+    btn.onclick = () => inp.click();
+    inp.onchange = (e) => {
+      btn._file = e.target.files[0] || null;
+      lbl.textContent = btn._file ? btn._file.name : "";
+      lbl.classList.toggle("picked", !!btn._file);
+    };
+  };
+  ntPick("#nt-vault-btn", "#nt-vault", "#nt-vault-name");
+  ntPick("#nt-seal-btn", "#nt-seal", "#nt-seal-name");
+  ntPick("#nt-avault-btn", "#nt-avault", "#nt-avault-name");
+  ntPick("#nt-asig-btn", "#nt-asig", "#nt-asig-name");
+  ntPick("#nt-astamp-btn", "#nt-astamp", "#nt-astamp-name");
+
+  $("#nt-mint").onclick = async () => {
+    const r = await sendJob({ op: "notary-mint" });
+    if (!r || !r.seal)
+      return log("✗ the press refused — " + ((r && r.message) || "fault"), "err");
+    const seal = download("bureau.v100seal", [r.seal], 41);
+    const stamp = download("bureau.v100stamp", [r.stamp], 41);
+    $("#nt-mint-note").textContent =
+      `seal + stamp struck — fingerprint №${r.fingerprint}`;
+    log(`🖋 notary pair minted — №${r.fingerprint}`);
+    log(`  ${seal.name} — KEEP SECRET, like a keyfile; ${stamp.name} — share freely`);
+  };
+
+  $("#nt-endorse").onclick = async () => {
+    const vault = $("#nt-vault-btn")._file, seal = $("#nt-seal-btn")._file;
+    if (!vault) return log("present the vault to endorse.", "err");
+    if (!seal) return log("present your seal (.v100seal).", "err");
+    const sealData = new Uint8Array(await seal.arrayBuffer());
+    log(`the notary reads ${vault.name} and lifts the seal…`);
+    const r = await sendJob({ op: "notary-sign", file: vault, sealData });
+    if (!r || !r.sig)
+      return log("✗ endorsement failed — " + ((r && r.message) || "fault"), "err");
+    const saved = download(r.name, [r.sig], r.sig.byteLength || r.sig.length);
+    const when = new Date(r.epoch * 1000)
+      .toISOString().slice(0, 16).replace("T", " ");
+    $("#nt-endorse-note").textContent =
+      `endorsed at ${when}Z by seal №${r.fingerprint}`;
+    log(`🖋 ${r.name} pressed — seal №${r.fingerprint} · ${saved.name} filed`);
+  };
+
+  $("#nt-attest").onclick = async () => {
+    const vault = $("#nt-avault-btn")._file, sig = $("#nt-asig-btn")._file,
+          stamp = $("#nt-astamp-btn")._file;
+    const box = $("#nt-verdict");
+    box.className = "ntverdict"; box.textContent = "";
+    if (!vault) return log("present the vault under question.", "err");
+    if (!sig) return log("present its claimed endorsement (.v100sig).", "err");
+    const sigData = new Uint8Array(await sig.arrayBuffer());
+    const stampData = stamp
+      ? new Uint8Array(await stamp.arrayBuffer()) : null;
+    log(`the notary holds ${vault.name} to the light…`);
+    const r = await sendJob({ op: "notary-verify", file: vault,
+                              sigData, stampData });
+    if (!r || r.valid === undefined) {
+      log("✗ the paper was malformed — " + ((r && r.message) || "fault"), "err");
+      return;
+    }
+    const when = new Date(r.epoch * 1000)
+      .toISOString().slice(0, 16).replace("T", " ");
+    box.textContent = (r.valid ? "✓ ENDORSEMENT HOLDS" : "✗ REFUSED") +
+      ` — seal №${r.fingerprint}, stamped ${when}Z — ${r.reason}`;
+    box.classList.add(r.valid ? "holds" : "refused");
+    log(`${r.valid ? "✓" : "✗"} ${vault.name}: ${r.reason} ` +
+        `(№${r.fingerprint}, ${when}Z)`, r.valid ? "" : "err");
+  };
 })();

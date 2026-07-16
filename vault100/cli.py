@@ -27,6 +27,7 @@ from .crypto_core import (DEFAULT_PROFILE, KDF_PROFILES, VaultAuthError,
                           verify_file)
 from .genpass import gen_passphrase, gen_password
 from .keyfile import KeyfileError, generate_keyfile, identify, load_keyfile
+from .notary import (NotaryError, attest_file, endorse_file, mint_seal)
 from .shamir import (SHARE_EXT, ShareError, join_from_text, press_id_of,
                      split_secret, encode_slip)
 from .shredder import ShredError, shred_file
@@ -417,6 +418,46 @@ def cmd_share(args) -> int:
     return 0
 
 
+def cmd_notary(args) -> int:
+    if args.notary_op == "mint":
+        res = mint_seal(args.seal, overwrite=args.overwrite)
+        print(f"  seal  → {res['seal']}  (KEEP SECRET — like a keyfile)")
+        print(f"  stamp → {res['stamp']}  (share freely)")
+        print(f"  fingerprint №{res['fingerprint']}")
+        return 0
+    if args.notary_op == "endorse":
+        for vault in args.paths:
+            r = endorse_file(vault, args.seal)
+            stamp = time.strftime("%Y-%m-%d %H:%M",
+                                  time.localtime(r["epoch"]))
+            print(f"  🖋 {vault} → {r['sig']}  "
+                  f"(seal №{r['fingerprint']}, {stamp})")
+        return 0
+    # attest
+    ok_all = True
+    for vault in args.paths:
+        sig = args.sig or vault + ".v100sig"
+        if len(args.paths) > 1 and args.sig:
+            print("error: --sig names one file; with several vaults let the "
+                  "clerk look beside each (FILE.v100sig)", file=sys.stderr)
+            return 1
+        try:
+            v = attest_file(vault, sig, args.stamp)
+        except (NotaryError, OSError) as e:
+            print(f"  ✗ {vault}: {e}")
+            ok_all = False
+            continue
+        stamp = time.strftime("%Y-%m-%d %H:%M", time.localtime(v["epoch"]))
+        if v["valid"]:
+            print(f"  ✓ {vault} — endorsement HOLDS "
+                  f"(seal №{v['fingerprint']}, stamped {stamp})")
+        else:
+            print(f"  ✗ {vault} — REFUSED: {v['reason']} "
+                  f"(sig carries №{v['fingerprint']})")
+            ok_all = False
+    return 0 if ok_all else 1
+
+
 # ---------------------------------------------------------------------------
 # Parser
 # ---------------------------------------------------------------------------
@@ -542,6 +583,26 @@ def build_parser() -> argparse.ArgumentParser:
     v.add_argument("-q", "--quiet", action="store_true",
                    help="less ceremony")
     v.set_defaults(func=cmd_verify)
+
+    n = sub.add_parser("notary", help="the notary — ed25519 endorsements: "
+                                      "mint a seal, stamp vaults, attest them")
+    nsub = n.add_subparsers(dest="notary_op", required=True)
+    nm = nsub.add_parser("mint", help="mint a seal (.v100seal, SECRET) + "
+                                      "stamp (.v100stamp, public)")
+    nm.add_argument("seal", help="where the seal lands, e.g. me.v100seal")
+    nm.add_argument("--overwrite", action="store_true")
+    ne = nsub.add_parser("endorse", help="stamp vaults with your seal → "
+                                         "FILE.v100sig")
+    ne.add_argument("paths", nargs="+", help="vaults (any file, really) "
+                                             "to endorse")
+    ne.add_argument("-s", "--seal", required=True, help="your .v100seal")
+    na = nsub.add_parser("attest", help="check a vault's endorsement")
+    na.add_argument("paths", nargs="+", help="vaults to attest")
+    na.add_argument("--sig", help="endorsement file (default: beside the "
+                                  "vault as FILE.v100sig)")
+    na.add_argument("--stamp", help="demand the endorsement come from this "
+                                    "exact .v100stamp")
+    n.set_defaults(func=cmd_notary)
     return p
 
 
@@ -562,7 +623,7 @@ def main(argv=None) -> int:
     except KeyboardInterrupt:
         print("\ninterrupted", file=sys.stderr)
         return 130
-    except (VaultError, KeyfileError) as e:
+    except (VaultError, KeyfileError, NotaryError) as e:
         print(f"error: {e}", file=sys.stderr)
         return 1
 

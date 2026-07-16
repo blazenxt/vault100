@@ -641,3 +641,16 @@
     box-shadow:6px 6px 0 rgba(0,0,0,.45)}
   .rec .pwainstall{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:4px}
   .pwahint{font:10.5px var(--mono);color:var(--ink2);letter-spacing:.04em}
+
+  /* ---------- the notary (v2.0.23) ---------- */
+  .ntgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:22px;margin-top:6px}
+  @media(max-width:860px){.ntgrid{grid-template-columns:1fr}}
+  .ntverdict{margin-top:12px;padding:12px 14px;border-radius:8px;
+    font:700 12px/1.7 var(--mono);letter-spacing:.05em;display:none}
+  .ntverdict.holds{display:block;background:rgba(88,179,104,.12);
+    border:1px solid rgba(88,179,104,.55);color:#7fd292}
+  .ntverdict.refused{display:block;background:rgba(225,85,85,.12);
+    border:1px solid rgba(225,85,85,.6);color:#e98686}
+  .picklbl{font:10.5px var(--mono);color:var(--ink2);letter-spacing:.03em;
+    cursor:pointer;border-bottom:1px dotted rgba(var(--linetri),.5)}
+  .picklbl.picked{color:var(--ink);border-bottom-color:var(--red)}

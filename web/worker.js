@@ -3,7 +3,7 @@
  */
 "use strict";
 
-const V = "?v=222";
+const V = "?v=223";
 importScripts("vendor/libsodium-sumo.js" + V);
 importScripts("vendor/libsodium-wrappers.js" + V);
 importScripts("vendor/argon2.js" + V);
@@ -14,7 +14,7 @@ let cancelJob = null;
 
 // argon2-browser: serve the WASM binary ourselves (relative to worker scope)
 self.loadArgon2WasmBinary = () =>
-  fetch("vendor/argon2.wasm?v=222").then((r) => {
+  fetch("vendor/argon2.wasm?v=223").then((r) => {
     if (!r.ok) throw new Error("argon2.wasm failed to load (HTTP " + r.status + ")");
     return r.arrayBuffer();
   });
@@ -173,6 +173,47 @@ async function runJob(msg) {
       postMessage({ type: "done", id, op, secret: buf, text }, [buf]);
       return;
     }
+    if (op === "notary-mint") {
+      const r = VaultFormat.notaryMint();
+      const sealB = r.seal.buffer.slice(0), stampB = r.stamp.buffer.slice(0);
+      postMessage({ type: "done", id, op, seal: sealB, stamp: stampB,
+                    fingerprint: r.fingerprint }, [sealB, stampB]);
+      return;
+    }
+    if (op === "notary-sign") {
+      const data = new Uint8Array(await msg.file.arrayBuffer());
+      const blob = VaultFormat.notaryEndorse(
+        data, new Uint8Array(msg.sealData));
+      data.fill(0);
+      const parts = VaultFormat.notaryInspect(blob);
+      const out = blob.buffer.slice(blob.byteOffset,
+                                    blob.byteOffset + blob.byteLength);
+      postMessage({ type: "done", id, op,
+                    name: msg.file.name + ".v100sig",
+                    sig: out, epoch: parts.epoch,
+                    fingerprint: VaultFormat.notaryFingerprint(parts.pk) },
+                  [out]);
+      return;
+    }
+    if (op === "notary-verify") {
+      const data = new Uint8Array(await msg.file.arrayBuffer());
+      const stampPk = msg.stampData
+        ? (() => { const s = new Uint8Array(msg.stampData);
+                   const M = "V100STAMP1";
+                   if (s.length !== M.length + 32 ||
+                       !M.split("")
+                         .every((c, i) => s[i] === c.charCodeAt(0)))
+                     throw new VaultFormat.VaultShareError(
+                       "not a Vault100 stamp (V100STAMP1 + 32 bytes)");
+                   return s.slice(M.length, M.length + 32); })()
+        : null;
+      const v = VaultFormat.notaryAttest(
+        data, new Uint8Array(msg.sigData), stampPk);
+      data.fill(0);
+      postMessage({ type: "done", id, op, valid: v.valid, reason: v.reason,
+                    epoch: v.epoch, fingerprint: v.fingerprint });
+      return;
+    }
     if (op === "decrypt") {
       const res = await VaultFormat.decryptVault(msg.file, {
         password: msg.password, keyData: keyDigest,
@@ -193,7 +234,8 @@ async function runJob(msg) {
                   message: (e && e.message) || String(e) });
   } finally {
     for (const k of ["password", "oldPassword", "newPassword",
-                     "keyData", "oldKeyData", "newKeyData", "secret"]) {
+                     "keyData", "oldKeyData", "newKeyData", "secret",
+                     "sealData"]) {
       if (msg[k] && msg[k].fill) msg[k].fill(0);   // best effort
     }
     if (cancelJob === id) cancelJob = null;

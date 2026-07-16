@@ -237,6 +237,7 @@ node web/server.mjs    # serves on :8080 (honors $PORT), /health for checks
 **v2.0.x series** (all releases on the
 [releases page](https://github.com/blazenxt/vault100/releases)):
 
+* **2.0.23** — **the notary**: ed25519 endorsements — `vault100 notary mint/endorse/attest` (.v100seal secret + .v100stamp public + detached .v100sig) · Annex instrument (i) mint/endorse/attest desks · byte-exact web↔desk · seal files 0600
 * **2.0.22** — **desk box hardening**: Tkinter night-ledger bureau theme · live strength bar · stopwatch bench button · recently-handled forms (XDG config) · **CLI + GUI `verify`** — prove vaults open clean with ZERO plaintext written · module import smoke-test
 * **2.0.21** — **the courier's corner**: QR stamps (Annex instrument (h) + per-slip **QR ↗** + armorer hand-off, vendored MIT qrcode, camera-only) · clerk's record download as stamped `.txt` on every counter · drag-anywhere intake on filing pages · PWA install button (get) · zone-drop de-dup + rewrap double-inspect fixes
 * **2.0.20** — **the quorum press**: Shamir M-of-N secret sharing over GF(2⁸) — Annex D instrument (g) + CLI `share split/join`, checksum-pressed slips, byte-exact web↔desk

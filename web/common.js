@@ -7,7 +7,7 @@
   const VB = (window.VB = {});
   const $ = (VB.$ = (s) => document.querySelector(s));
   VB.$$ = (s) => Array.from(document.querySelectorAll(s));
-  VB.VERSION = "2.0.22";
+  VB.VERSION = "2.0.23";
 
   // ---------------- the desk lamp & ink well (themes) ----------------
   // Applied synchronously before first paint, so no theme flash. The
@@ -142,7 +142,8 @@
     lastJobId = id;
     // transfer (not copy) every secret byte array offered with the job
     const SECRETS = ["password", "oldPassword", "newPassword",
-                     "keyData", "oldKeyData", "newKeyData", "secret"];
+                     "keyData", "oldKeyData", "newKeyData", "secret",
+                     "sealData"];
     const transfers = [];
     for (const k of SECRETS) {
       if (job[k] instanceof Uint8Array) {
@@ -205,11 +206,15 @@
       const el = $(inp); if (el) el.type = "password";
       const c = chk && $(chk); if (c) c.checked = false;
     }
-    // keyfiles un-pocketed
-    for (const b of VB.$$("[id$='-keyfile-btn']")) b._file = null;
-    for (const l of VB.$$("[id$='-keyfile-name']")) {
-      l.textContent = ""; l.classList.remove("kfset");
+    // keyfiles & notary picks un-pocketed
+    for (const b of VB.$$("[id$='-keyfile-btn'], [data-pocket]")) b._file = null;
+    for (const l of VB.$$("[id$='-keyfile-name'], [data-pocket-name]")) {
+      l.textContent = ""; l.classList.remove("kfset", "picked");
     }
+    for (const n of VB.$$(".qpnote.nt-clear, [data-burn-note]"))
+      n.innerHTML = "&nbsp;";
+    const ntv = $("#nt-verdict");
+    if (ntv) { ntv.className = "ntverdict"; ntv.textContent = ""; }
     // filings off the counter
     for (const u of VB.$$("ul.files")) u.innerHTML = "";
     // the examining tray is emptied
