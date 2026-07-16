@@ -7,7 +7,59 @@
   const VB = (window.VB = {});
   const $ = (VB.$ = (s) => document.querySelector(s));
   VB.$$ = (s) => Array.from(document.querySelectorAll(s));
-  VB.VERSION = "2.0.10";
+  VB.VERSION = "2.0.11";
+
+  // ---------------- the desk lamp & ink well (themes) ----------------
+  // Applied synchronously before first paint, so no theme flash. The
+  // choice follows the clerk across pages and visits (localStorage).
+  const rootEl = document.documentElement;
+  const INKS = ["carbon", "oxford", "sepia", "ledger", "crimson"];
+  function applyDesk(ink, shift) {
+    if (!INKS.includes(ink)) ink = "carbon";
+    if (shift !== "day") shift = "night";
+    rootEl.setAttribute("data-theme", ink);
+    rootEl.setAttribute("data-shift", shift);
+    try {
+      localStorage.setItem("v100.ink", ink);
+      localStorage.setItem("v100.shift", shift);
+    } catch (e) { /* private booth — keep the default stock */ }
+  }
+  let deskInk = "carbon", deskShift = null;
+  try {
+    deskInk = localStorage.getItem("v100.ink") || deskInk;
+    deskShift = localStorage.getItem("v100.shift");
+  } catch (e) {}
+  if (!deskShift) {
+    deskShift = (rootEl.matchMedia || window.matchMedia)
+      .call(window, "(prefers-color-scheme: light)").matches ? "day" : "night";
+  }
+  applyDesk(deskInk, deskShift);
+  VB.applyDesk = applyDesk;
+
+  function paintShiftBtn() {
+    const b = $("#shift");
+    if (b) b.innerHTML = rootEl.getAttribute("data-shift") === "day"
+      ? "&#9788; day desk" : "&#9789; night desk";
+  }
+  const inkSel = $("#ink"), shiftBtn = $("#shift");
+  if (inkSel) {
+    inkSel.value = rootEl.getAttribute("data-theme") || "carbon";
+    inkSel.addEventListener("change", () => {
+      applyDesk(inkSel.value, rootEl.getAttribute("data-shift"));
+      log(`ink changed — the counter now writes in ${inkSel.value}.`);
+    });
+  }
+  if (shiftBtn) {
+    paintShiftBtn();
+    shiftBtn.addEventListener("click", () => {
+      const next = rootEl.getAttribute("data-shift") === "day" ? "night" : "day";
+      applyDesk(rootEl.getAttribute("data-theme"), next);
+      paintShiftBtn();
+      log(next === "day"
+        ? "office hours — the day desk is lit."
+        : "after hours — the night lamp is on.");
+    });
+  }
 
   // the clerk stamps today's date on the form
   const todayEl = document.getElementById("today");
