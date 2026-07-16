@@ -2,7 +2,22 @@
 "use strict";
 
 (() => {
-  const { $, log, sendJob, download, addResult, estimateStrength } = window.VB;
+  const { $, log, sendJob, download, addResult, estimateStrength,
+          copySecret, sweep, setSweep, getSweep } = window.VB;
+
+  // (e) the office policy — sweep clock lives in common.js for every page
+  const sweepSel = $("#policy-sweep");
+  if (sweepSel) {
+    sweepSel.value = String(getSweep());
+    sweepSel.onchange = () => {
+      setSweep(parseInt(sweepSel.value, 10));
+      log(sweepSel.value === "0"
+        ? "office policy amended — the clerk will never sweep. Your own risk."
+        : `office policy amended — counter sweeps after ${sweepSel.value} idle seconds.`);
+    };
+  }
+  const sweepNow = $("#policy-now");
+  if (sweepNow) sweepNow.onclick = () => window.VB.sweep("manual");
 
   // (a) the keyfile press
   $("#keygen-go").onclick = () => {
@@ -75,8 +90,6 @@
     const r = estimateStrength(pw);
     $("#genpass-strength").textContent = r.label;
   };
-  $("#genpass-copy").onclick = async () => {
-    await navigator.clipboard.writeText($("#genpass-out").value);
-    log("Password copied to clipboard.");
-  };
+  $("#genpass-copy").onclick = () =>
+    copySecret($("#genpass-out").value, "combination");
 })();

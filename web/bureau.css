@@ -501,3 +501,8 @@
     .inkwell,.shiftbtn{padding-top:8px;padding-bottom:8px}
     .shiftbtn{flex:1}
   }
+
+  /* security ops — the peek & the sweep */
+  .facts{display:block;font:9.5px var(--mono);color:var(--faint);
+    letter-spacing:.02em;margin-top:3px}
+  .facts .kf{color:var(--red);font-weight:700}

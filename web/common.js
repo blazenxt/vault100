@@ -7,7 +7,7 @@
   const VB = (window.VB = {});
   const $ = (VB.$ = (s) => document.querySelector(s));
   VB.$$ = (s) => Array.from(document.querySelectorAll(s));
-  VB.VERSION = "2.0.12";
+  VB.VERSION = "2.0.13";
 
   // ---------------- the desk lamp & ink well (themes) ----------------
   // Applied synchronously before first paint, so no theme flash. The
@@ -166,6 +166,104 @@
   VB.disarmCancel = (btnSel) => { const b = $(btnSel); if (b) b.hidden = true; };
   VB.cancelRequested = () => batchCancel;
   VB.isCancelErr = (res) => res && res.kind === "VaultCancelled";
+
+  // ---------------- security ops: the sweep, the panic drill, the furnace ----
+  /* Counter policy (per booth, localStorage "v100.sweep" seconds, 0 = never;
+     default five minutes). Any activity resets the clock; when it rings, the
+     clerk sweeps the counter: every passphrase field emptied, every filing
+     removed, keyfiles un-pocketed, the record book burned and re-opened. */
+  const SWEEP_KEY = "v100.sweep";
+  let sweepSecs = 300;
+  try {
+    const v = parseInt(localStorage.getItem(SWEEP_KEY) || "", 10);
+    if (Number.isFinite(v)) sweepSecs = v;
+  } catch (e) {}
+
+  VB.sweep = function (reason) {
+    if (lastJobId) cancelJob(lastJobId);
+    batchCancel = true;
+    // every secret-bearing field — empty the wells
+    for (const i of VB.$$("input[type=password], input[type=text]")) {
+      if (i.type === "password" || i.type === "text") i.value = "";
+    }
+    for (const [inp, chk] of [["#enc-pw1", "#show-pw"], ["#enc-pw2", "#show-pw"],
+                              ["#dec-pw", null], ["#rw-old", "#rw-show"],
+                              ["#rw-new1", "#rw-show"], ["#rw-new2", "#rw-show"]]) {
+      const el = $(inp); if (el) el.type = "password";
+      const c = chk && $(chk); if (c) c.checked = false;
+    }
+    // keyfiles un-pocketed
+    for (const b of VB.$$("[id$='-keyfile-btn']")) b._file = null;
+    for (const l of VB.$$("[id$='-keyfile-name']")) {
+      l.textContent = ""; l.classList.remove("kfset");
+    }
+    // filings off the counter
+    for (const u of VB.$$("ul.files")) u.innerHTML = "";
+    for (const u of VB.$$("#results")) if (u) u.innerHTML = "";
+    const facts = $("#rw-facts"); if (facts) facts.hidden = true;
+    for (const p of VB.$$("progress")) { p.value = 0;
+      const sib = p.nextElementSibling;
+      if (sib && /%$/.test(sib.textContent)) sib.textContent = ""; }
+    // strength labels
+    for (const s of VB.$$("#enc-strength-label, #rw-strength-label")) {
+      s.textContent = "—"; s.className = ""; }
+    // the record book is burned and re-opened
+    const el = $("#log");
+    if (el) el.innerHTML = "";
+    log(reason === "panic"
+      ? "panic drill — the counter is swept clean; nothing remains."
+      : reason === "idle"
+        ? "the clerk swept the counter — office policy after idle."
+        : "the counter is swept clean.");
+  };
+
+  let sweepTimer = null;
+  function armSweepClock() {
+    if (sweepTimer) clearTimeout(sweepTimer);
+    if (!sweepSecs) return;
+    sweepTimer = setTimeout(() => VB.sweep("idle"), sweepSecs * 1000);
+  }
+  VB.setSweep = function (secs) {
+    sweepSecs = Math.max(0, secs | 0);
+    try { localStorage.setItem(SWEEP_KEY, String(sweepSecs)); } catch (e) {}
+    armSweepClock();
+  };
+  VB.getSweep = () => sweepSecs;
+  for (const ev of ["pointerdown", "keydown", "input", "dragover", "drop"]) {
+    document.addEventListener(ev, armSweepClock, { passive: true });
+  }
+  armSweepClock();
+
+  // panic drill — Esc, Esc (within 0.8 s): sweep, then clear the window to
+  // the front desk
+  let lastEsc = 0;
+  document.addEventListener("keydown", (e) => {
+    if (e.key !== "Escape") return;
+    const now = Date.now();
+    if (now - lastEsc < 800) {
+      lastEsc = 0;
+      VB.sweep("panic");
+      location.replace("index.html");
+    } else {
+      lastEsc = now;
+    }
+  });
+
+  // the furnace — secrets copied to the clipboard are burned after 60 s
+  VB.copySecret = async function (text, what) {
+    if (!text) { log("nothing on the desk to copy.", "err"); return false; }
+    try {
+      await navigator.clipboard.writeText(text);
+    } catch (e) {
+      log("the clipboard refused the scrap — copy by hand.", "err");
+      return false;
+    }
+    log(`${what || "scrap"} copied — the furnace burns it from the clipboard in 60 s.`);
+    setTimeout(async () => {
+      try { await navigator.clipboard.writeText(""); } catch (e) {}
+    }, 60 * 1000);
+    return true;
+  };
 
   // ---------------- clerk's record ----------------
   function log(text, cls = "") {

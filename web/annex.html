@@ -14,7 +14,7 @@
 <link rel="manifest" href="manifest.json">
 <title>ANNEX D · instruments — The Seal Bureau</title>
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 48'%3E%3Crect width='48' height='48' fill='%23111318'/%3E%3Ccircle cx='24' cy='24' r='15' fill='none' stroke='%23ddd6c4' stroke-width='3'/%3E%3Ccircle cx='24' cy='24' r='5' fill='%23e15555'/%3E%3C/svg%3E">
-<link rel="stylesheet" href="bureau.css?v=212">
+<link rel="stylesheet" href="bureau.css?v=213">
 </head>
 <body>
 
@@ -131,6 +131,24 @@
           application — proving the delivered machinery is genuine and
           compatible. The stamp, upper right, records the verdict.</p>
       </div>
+      <div class="rec">
+        <div class="idx">instrument (e)</div>
+        <h3>The office policy</h3>
+        <p>After a spell of stillness the clerk sweeps the counter — every
+          combination, filing and keyfile off the desk, the record book
+          burned and re-opened. <b>Esc, Esc</b> holds a panic drill at any hour.</p>
+        <div class="rowline">
+          <select id="policy-sweep" style="flex:1;min-width:190px">
+            <option value="120">sweep after 2 idle minutes</option>
+            <option value="300">sweep after 5 idle minutes</option>
+            <option value="900">sweep after 15 idle minutes</option>
+            <option value="0">never sweep (your own risk)</option>
+          </select>
+          <button id="policy-now" class="ghost">Sweep now</button>
+        </div>
+        <div class="fnote">kept in this booth only — copies made from the annex
+          are burned from the clipboard after 60 seconds.</div>
+      </div>
     </div>
   </div>
 
@@ -150,7 +168,7 @@
   </div>
 
   <footer>
-    <span><span class="b">Vault100 v2.0.12</span> · the seal bureau · night ledger</span>
+    <span><span class="b">Vault100 v2.0.13</span> · the seal bureau · night ledger</span>
     <span>no accounts · no telemetry · no escrow</span>
     <span>filed in triplicate — <span class="b">zero copies retained</span></span>
   </footer>
@@ -163,7 +181,7 @@
   <span class="curl" aria-hidden="true"></span>
 </div>
 
-<script src="common.js?v=212"></script>
-<script src="annex.js?v=212"></script>
+<script src="common.js?v=213"></script>
+<script src="annex.js?v=213"></script>
 </body>
 </html>
