@@ -7,7 +7,7 @@
   const VB = (window.VB = {});
   const $ = (VB.$ = (s) => document.querySelector(s));
   VB.$$ = (s) => Array.from(document.querySelectorAll(s));
-  VB.VERSION = "2.0.23";
+  VB.VERSION = "2.0.24";
 
   // ---------------- the desk lamp & ink well (themes) ----------------
   // Applied synchronously before first paint, so no theme flash. The
@@ -301,8 +301,45 @@
   }
   VB.log = log;
 
+  VB._b64 = function (u8) {                       // chunked, stack-safe base64
+    const A = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
+    let s = "";
+    const n = u8.length, m = n - (n % 3);
+    for (let i = 0; i < m; i += 3) {
+      const v = (u8[i] << 16) | (u8[i + 1] << 8) | u8[i + 2];
+      s += A[v >> 18] + A[(v >> 12) & 63] + A[(v >> 6) & 63] + A[v & 63];
+    }
+    if (n % 3 === 1) { const v = u8[m] << 16; s += A[v >> 18] + A[(v >> 12) & 63] + "=="; }
+    else if (n % 3 === 2) { const v = (u8[m] << 16) | (u8[m + 1] << 8); s += A[v >> 18] + A[(v >> 12) & 63] + A[(v >> 6) & 63] + "="; }
+    return s;
+  };
+
+  /* The pocket annex (the Android app) exposes a ticketed relay named
+     AndroidVault: filings spool across it, one ticket at a time, and land
+     in the system save tray. On ordinary desktops the bridge is absent
+     and this branch never wakes. */
+  const __v100ackWaiters = new Map();
+  window.__v100ack = function (t) {
+    const w = __v100ackWaiters.get(t);
+    if (w) { __v100ackWaiters.delete(t); w(); }
+  };
+  let __v100relayQ = Promise.resolve();
+
   VB.download = function (name, parts, length) {
     const blob = new Blob(parts, { type: "application/octet-stream" });
+    if (typeof AndroidVault !== "undefined") {     // the pocket annex relay
+      const job = () => blob.arrayBuffer().then((buf) => {
+        const bytes = new Uint8Array(buf);
+        const t = AndroidVault.begin(name, bytes.length);
+        const STEP = 49152;                        // multiple of 3 — clean seams
+        for (let i = 0; i < bytes.length; i += STEP)
+          AndroidVault.append(t, VB._b64(bytes.subarray(i, i + STEP)));
+        AndroidVault.finish(t);
+        return new Promise((res) => __v100ackWaiters.set(t, res));
+      });
+      __v100relayQ = __v100relayQ.then(job, job);
+      return { name, size: length || blob.size };
+    }
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;

@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Vault100 Pocket Annex — deliberately permissionless.
+     No INTERNET, no storage, no camera, nothing: every form is served from
+     the APK's own bundled assets under a private https origin, so the whole
+     bureau (seal / open / rewrap / armor / annex) works with the cable
+     severed. All cryptography runs client-side in the page's web worker —
+     this shell only delivers static filings and ferries finished work. -->
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    package="in.blazenxt.vault100"
+    android:versionCode="20024"
+    android:versionName="2.0.24">
+
+    <uses-sdk android:minSdkVersion="24" android:targetSdkVersion="34" />
+
+    <application
+        android:label="Vault100"
+        android:icon="@drawable/vaulticon"
+        android:theme="@android:style/Theme.Material.NoActionBar"
+        android:hardwareAccelerated="true">
+
+        <activity
+            android:name=".MainActivity"
+            android:exported="true"
+            android:configChanges="keyboardHidden|orientation|screenSize|screenLayout|uiMode">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+    </application>
+</manifest>

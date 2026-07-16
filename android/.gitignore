@@ -1,0 +1,8 @@
+# the pocket annex — build byproducts stay off the record
+assets/
+gen/
+obj/
+dist/
+local.properties
+*.keystore
+*.jks

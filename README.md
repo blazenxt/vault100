@@ -6,13 +6,14 @@
 [![License: MIT](https://img.shields.io/badge/license-MIT-6dbb92)](LICENSE)
 [![Python ≥ 3.10](https://img.shields.io/badge/python-%E2%89%A5%203.10-blue)](#installation)
 [![Web app](https://img.shields.io/badge/web-vault100.blazenxt.in-c9a227)](https://vault100.blazenxt.in/)
-[![Tests](https://img.shields.io/badge/tests-55%20passed-6dbb92)](#testing)
+[![Tests](https://img.shields.io/badge/tests-84%20passed-6dbb92)](#testing)
 
 🌐 **Live zero-knowledge web app:** **[vault100.blazenxt.in](https://vault100.blazenxt.in/)** — installs as an offline PWA · also [self-hostable](#self-hosting) with one zero-dependency Node server
+📱 **Real Android app:** the whole bureau as a signed, **zero-permission** `.apk` — see [the pocket annex](#-the-pocket-annex-android)
 
-| 🖥 Desktop GUI | 💻 CLI engine | 🌐 Web counter (PWA) |
-|---|---|---|
-| Tkinter app — drag files, pick strength, seal | `python -m vault100 encrypt …` | 5 windows, 108 KDF notches, benchmark instruments |
+| 🖥 Desktop GUI | 💻 CLI engine | 🌐 Web counter (PWA) | 📱 Android app |
+|---|---|---|---|
+| Tkinter app — drag files, pick strength, seal | `python -m vault100 encrypt …` | 5 windows, 108 KDF notches, benchmark instruments | [Pocket annex](#-the-pocket-annex-android) — **zero permissions**, offline by physics |
 
 Three bodies, one cloth — **vaults are fully interchangeable** between web, CLI and GUI.
 
@@ -184,10 +185,37 @@ python -m vault100.gui
 **Shred** tab — multi-pass destroyer ·
 **Tools** tab — keyfile generator, instant password change, vault inspector.
 
+<a id="-the-pocket-annex-android"></a>
+## 📱 The pocket annex (Android)
+
+A real, signed **`.apk`** — the entire bureau folded into a handset:
+
+* **Zero Android permissions — not even INTERNET.** Every page, script and
+  primitive ships inside the APK; the app is offline by physics, not policy.
+* **Same engine, byte-for-byte** — the zero-knowledge worker (Argon2id +
+  XChaCha20-Poly1305, libsodium WASM) runs in the WebView exactly as on the
+  web counter; vaults stay interchange-compatible with CLI/web/desktop.
+* **Ticketed save relay** — finished filings (sealed vaults, armor, slips,
+  stamps, record books) land in the system save dialog, one ticket at a time.
+* **Inspectable seal** — the signer certificate digest is published on the
+  [get page](https://vault100.blazenxt.in/get.html); check any bundle with
+  `apksigner verify --print-certs Vault100-<ver>.apk` before sideloading.
+
+```bash
+# build your own (JDK 17+, Android SDK platform-34 + build-tools;34.0.0):
+cd android && ./build.sh        # → dist/Vault100-<ver>.apk (signed, aligned)
+# sideload:
+adb install android/dist/Vault100-<ver>.apk
+```
+
+Keystores/keys are **never** committed (see `android/.gitignore`); bring your
+own via `V100_KEYSTORE`/`V100_STOREPASS_FILE`, or the build reuses the bureau
+keystore at `~/vault100-keys/`.
+
 ---
 
 <a id="-testing"></a>
-## ✅ Tested security properties (55/55 passing)
+## ✅ Tested security properties (84/84 passing)
 
 ```bash
 VAULT100_FAST_KDF=1 python3 -m pytest tests/test_crypto.py -v
@@ -237,6 +265,7 @@ node web/server.mjs    # serves on :8080 (honors $PORT), /health for checks
 **v2.0.x series** (all releases on the
 [releases page](https://github.com/blazenxt/vault100/releases)):
 
+* **2.0.24** — **the pocket annex (Android)**: real signed `.apk` — the entire bureau bundled inside (same worker, same vaults, byte-for-byte) · **zero Android permissions — not even INTERNET** — offline by physics · ticketed save-relay into the system save tray · published signer digest on the get page (`apksigner verify --print-certs`) · `android/` no-Gradle build (`./build.sh`)
 * **2.0.23** — **the notary**: ed25519 endorsements — `vault100 notary mint/endorse/attest` (.v100seal secret + .v100stamp public + detached .v100sig) · Annex instrument (i) mint/endorse/attest desks · byte-exact web↔desk · seal files 0600
 * **2.0.22** — **desk box hardening**: Tkinter night-ledger bureau theme · live strength bar · stopwatch bench button · recently-handled forms (XDG config) · **CLI + GUI `verify`** — prove vaults open clean with ZERO plaintext written · module import smoke-test
 * **2.0.21** — **the courier's corner**: QR stamps (Annex instrument (h) + per-slip **QR ↗** + armorer hand-off, vendored MIT qrcode, camera-only) · clerk's record download as stamped `.txt` on every counter · drag-anywhere intake on filing pages · PWA install button (get) · zone-drop de-dup + rewrap double-inspect fixes
