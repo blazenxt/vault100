@@ -273,6 +273,7 @@
   #log{border:1.5px solid var(--ink);min-height:120px;max-height:230px;overflow:auto;padding:10px 14px;background:rgba(255,255,255,.03);margin-top:10px}
   .logline{font:11px/1.85 var(--mono);color:var(--ink2);border-bottom:1px dotted #26282b;padding:2px 0}
   .logline.err{color:var(--red)}
+  .logline.note{color:var(--amber,#c9a227);font-style:italic}
 
   /* bureau ephemera */
   .foldnote{

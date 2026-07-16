@@ -65,6 +65,14 @@
   class VaultCancelled extends VaultError {}
 
   // -- KDF ------------------------------------------------------------------
+  const MEM_FLOOR_KIB = 8192;   // never fold below 8 MiB (OWASP minimum)
+
+  /** True when an Argon2/WASM failure smells like "not enough scratch RAM". */
+  function isMemError(e) {
+    const s = String((e && (e.message || e)) || e).toLowerCase();
+    return /memory|alloc|oom|abort|out of|array buffer|invalid array/.test(s);
+  }
+
   async function argon2id(passwordBytes, salt, p) {
     const { argon2Hash } = needEnv();
     return new Uint8Array(await argon2Hash({
@@ -72,6 +80,32 @@
       mem: p.memoryKib, parallelism: p.parallelism,
       hashLen: 32, version: 19,
     }));
+  }
+
+  /* Argon2id with a PROVEN memory cost. Browsers (esp. mobile Chrome/Safari)
+     often refuse the requested WASM heap ("Memory allocation error", code
+     -22). Rather than fail the seal, fold the memory cost in half and retry
+     — the parameters that actually RAN are stamped in the vault header, so
+     every Vault100 build (web/CLI/GUI) can still open the result. The time
+     cost and lanes are never weakened. onFold(nextMemKiB) is called per fold. */
+  async function argon2idProven(passwordBytes, salt, p, onFold) {
+    let mem = p.memoryKib;
+    while (true) {
+      try {
+        const raw = await argon2id(passwordBytes, salt, {
+          memoryKib: mem, timeCost: p.timeCost, parallelism: p.parallelism });
+        return { raw, mem };
+      } catch (e) {
+        if (!isMemError(e)) throw e;
+        if (mem <= MEM_FLOOR_KIB)
+          throw new VaultError(
+            "Argon2id could not get scratch RAM from this browser (" +
+            ((e && e.message) || e) +
+            ") — close other tabs or choose a lighter notch");
+        mem = Math.max(MEM_FLOOR_KIB, Math.floor(mem / 2));
+        if (onFold) onFold(mem);
+      }
+    }
   }
 
   async function hkdfSha256(ikm, salt, info, length = 32) {
@@ -90,10 +124,17 @@
     return out.slice(0, length);
   }
 
+  /* KEK from an already-derived Argon2 output (raw is wiped when folded). */
+  async function kekFromRaw(raw, salt, keyData) {
+    if (!keyData) return raw;
+    const out = await hkdfSha256(concat(raw, keyData), salt, u8("V100-KEK-v2"), 32);
+    raw.fill(0);
+    return out;
+  }
+
   async function deriveKek(passwordBytes, salt, params, keyData) {
     const raw = new Uint8Array(await argon2id(passwordBytes, salt, params));
-    if (!keyData) return raw;
-    return hkdfSha256(concat(raw, keyData), salt, u8("V100-KEK-v2"), 32);
+    return kekFromRaw(raw, salt, keyData);
   }
 
   /** Keyfile digest — MUST match keyfile.load_keyfile (keyed BLAKE2b). */
@@ -191,7 +232,11 @@
 
     const salt = randbytes(32);
     const fek = randbytes(cascade ? 64 : 32);
-    const kek = await deriveKek(opts.password, salt, p, opts.keyData || null);
+    // Key turning: fold the memory cost (never the turns/lanes) until the
+    // device really runs it; stamp the PROVEN params into the header below.
+    const proven = await argon2idProven(opts.password, salt, p,
+                                        opts.onKdfFold || null);
+    const kek = await kekFromRaw(proven.raw, salt, opts.keyData || null);
     const wnonce = randbytes(24);
     const wrapped = sodium.crypto_aead_xchacha20poly1305_ietf_encrypt(
       fek, null, null, wnonce, kek);
@@ -200,7 +245,7 @@
     const flags = (cascade ? FLAG_CASCADE : 0) | (opts.keyData ? FLAG_KEYFILE : 0);
     const fixed = new Uint8Array(52);
     fixed.set(concat(u8(MAGIC_V2), new Uint8Array([2, 1]),
-                     le32(p.memoryKib), le32(p.timeCost),
+                     le32(proven.mem), le32(p.timeCost),
                      new Uint8Array([p.parallelism, flags]), salt));
 
     const { state, header: streamHdr } =
@@ -272,9 +317,21 @@
                                        24 + fekLen + 16 + 24);
     const streamCtx = concat(u8("V100-CTX"), streamHdr);
 
-    const kek = await deriveKek(opts.password, h.salt,
-      { memoryKib: h.mem, timeCost: h.t, parallelism: h.par },
-      opts.keyData || null);
+    // Decryption MUST replay the exact stamped params — folding is
+    // impossible here (a different memory cost derives a different key).
+    let kek;
+    try {
+      kek = await deriveKek(opts.password, h.salt,
+        { memoryKib: h.mem, timeCost: h.t, parallelism: h.par },
+        opts.keyData || null);
+    } catch (e) {
+      if (isMemError(e))
+        throw new VaultError(
+          "this vault's key needs " + Math.round(h.mem / 1024) +
+          " MiB of scratch RAM and this browser refused it — close other" +
+          " tabs/apps and retry, or open it on a desktop");
+      throw e;
+    }
     let fek;
     try {
       fek = sodium.crypto_aead_xchacha20poly1305_ietf_decrypt(
@@ -405,10 +462,11 @@
   }
 
   root.VaultFormat = {
-    MAGIC_V2, CHUNK_SIZE, KDF_PROFILES,
+    MAGIC_V2, CHUNK_SIZE, KDF_PROFILES, MEM_FLOOR_KIB,
     VaultError, VaultAuthError, VaultFormatError, VaultCancelled,
     setEnv, keyfileDigest, generateKeyfileBytes, encryptVault, decryptVault,
-    info, calibrateKdf, runSelfTest, SELFTEST,
-    _internals: { hkdfSha256, deriveKek, argon2id, parsePrefix, concat, u8 },
+    info, calibrateKdf, runSelfTest, SELFTEST, isMemError,
+    _internals: { hkdfSha256, deriveKek, argon2id, argon2idProven,
+                  kekFromRaw, parsePrefix, concat, u8 },
   };
 })(typeof self !== "undefined" ? self : globalThis);

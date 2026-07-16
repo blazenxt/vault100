@@ -3,7 +3,7 @@
  */
 "use strict";
 
-const V = "?v=209";
+const V = "?v=210";
 importScripts("vendor/libsodium-sumo.js" + V);
 importScripts("vendor/libsodium-wrappers.js" + V);
 importScripts("vendor/argon2.js" + V);
@@ -14,7 +14,7 @@ let cancelJob = null;
 
 // argon2-browser: serve the WASM binary ourselves (relative to worker scope)
 self.loadArgon2WasmBinary = () =>
-  fetch("vendor/argon2.wasm?v=209").then((r) => {
+  fetch("vendor/argon2.wasm?v=210").then((r) => {
     if (!r.ok) throw new Error("argon2.wasm failed to load (HTTP " + r.status + ")");
     return r.arrayBuffer();
   });
@@ -78,6 +78,7 @@ async function runJob(msg) {
         params: msg.params || null, keyData: keyDigest,
         cascade: !!msg.cascade, metaBaseName: msg.file.name,
         onProgress: progress, shouldCancel,
+        onKdfFold: (mem) => postMessage({ type: "kdf-fold", id, mem }),
       });
       const buffers = res.parts.map((p) => p.buffer.slice(0));
       postMessage({ type: "done", id, op, name: msg.file.name + ".v100",

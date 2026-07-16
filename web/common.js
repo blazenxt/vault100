@@ -7,7 +7,7 @@
   const VB = (window.VB = {});
   const $ = (VB.$ = (s) => document.querySelector(s));
   VB.$$ = (s) => Array.from(document.querySelectorAll(s));
-  VB.VERSION = "2.0.9";
+  VB.VERSION = "2.0.10";
 
   // the clerk stamps today's date on the form
   const todayEl = document.getElementById("today");
@@ -57,6 +57,11 @@
       const p = pending.get(m.id);
       if (p) { p.resolve(m.params); pending.delete(m.id); }
       log(`KDF auto-tuned: ${Math.round(m.params.memoryKib / 1024)} MiB × ${m.params.timeCost} pass(es)`);
+      return;
+    }
+    if (m.type === "kdf-fold") {
+      log(`RAM ledger short — key folded to ${Math.round(m.mem / 1024)} MiB ` +
+          `(turns & lanes unchanged; stamped in the header)`, "note");
       return;
     }
     if (m.type === "info" || m.type === "done" || m.type === "error") {
