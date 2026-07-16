@@ -16,7 +16,8 @@
   }
 
   // ---------------- worker plumbing ----------------
-  const worker = new Worker("worker.js");
+  const VERSION = "2.0.5";
+  const worker = new Worker("worker.js?v=" + VERSION.replace(/\./g, ""));
   let nextId = 1;
   const pending = new Map();       // id -> {progressEl, resolve, reject, kind}
   let engineReady = false;
@@ -33,6 +34,7 @@
     if (m.type === "selftest") {
       setBadge(m.ok ? "ENGINE VERIFIED · v2" : "INSPECTION FAILED",
                m.ok ? "ok" : "bad");
+      if (m.ok) log(`engine ready — Vault100 web v${VERSION} · zero-knowledge verified`);
       $("#selftest-badge").title = m.ok
         ? "This page just decrypted a reference vault produced by the desktop app — the served code is genuine and compatible."
         : "Self-test failed — do not use this deployment.";
