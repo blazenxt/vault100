@@ -139,24 +139,26 @@ def cmd_encrypt(args) -> int:
     params = _kdf_params(args)
 
     ok = True
+    out_ext = ".v100asc" if args.armor else EXT
     for src, arc in targets:
-        if src.endswith(EXT):
+        if src.endswith(EXT) or src.endswith(".v100asc"):
             print(f"  ! already looks encrypted, skipped: {arc}")
             continue
         if args.output:
-            dst = os.path.join(args.output, arc + EXT)
+            dst = os.path.join(args.output, arc + out_ext)
             os.makedirs(os.path.dirname(os.path.abspath(dst)), exist_ok=True)
         else:
-            dst = src + EXT
-        print(f"  encrypt {arc}")
+            dst = src + out_ext
+        print(f"  encrypt {arc}" + (" [armor]" if args.armor else ""))
         prog = _Progress(arc, os.path.getsize(src), args.quiet)
         try:
             encrypt_file(src, dst, pw, profile=args.security
                          if args.security != "max" else DEFAULT_PROFILE,
                          params=params, key_data=key_data,
                          cascade=args.cascade, compress=args.compress,
-                         progress=prog)
-            prog.finish(" [cascade]" if args.cascade else "")
+                         armor=args.armor, progress=prog)
+            prog.finish((" [armor]" if args.armor else "")
+                        + (" [cascade]" if args.cascade else ""))
             if args.shred:
                 shred_file(src, passes=args.passes)
                 if not args.quiet:
@@ -374,6 +376,8 @@ def build_parser() -> argparse.ArgumentParser:
                    help="'max' auto-tunes Argon2id to this machine (~2 s)")
     e.add_argument("--cascade", action="store_true",
                    help="AES-256-GCM inside XChaCha20-Poly1305 (dual cipher)")
+    e.add_argument("--armor", action="store_true",
+                   help="wrap the vault in paste-anywhere ASCII armor (.v100asc)")
     e.add_argument("--compress", action="store_true",
                    help="gzip the payload first (auto-decompressed on open)")
     e.add_argument("--keyfile", help="require this keyfile as second factor")

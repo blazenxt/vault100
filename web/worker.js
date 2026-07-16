@@ -3,7 +3,7 @@
  */
 "use strict";
 
-const V = "?v=218";
+const V = "?v=219";
 importScripts("vendor/libsodium-sumo.js" + V);
 importScripts("vendor/libsodium-wrappers.js" + V);
 importScripts("vendor/argon2.js" + V);
@@ -14,7 +14,7 @@ let cancelJob = null;
 
 // argon2-browser: serve the WASM binary ourselves (relative to worker scope)
 self.loadArgon2WasmBinary = () =>
-  fetch("vendor/argon2.wasm?v=218").then((r) => {
+  fetch("vendor/argon2.wasm?v=219").then((r) => {
     if (!r.ok) throw new Error("argon2.wasm failed to load (HTTP " + r.status + ")");
     return r.arrayBuffer();
   });
@@ -118,6 +118,37 @@ async function runJob(msg) {
       const [parts, transfers] = packParts(res.parts);
       postMessage({ type: "done", id, op, name: msg.file.name,
                     parts, length: res.length }, transfers);
+      return;
+    }
+    if (op === "armor-enc") {
+      // text in → vault → paste-anywhere armor string out
+      const blob = new Blob([VaultFormat._internals.u8(msg.text)]);
+      const res = await VaultFormat.encryptVault(blob, {
+        password: msg.password, profile: msg.profile,
+        params: msg.params || null, cascade: !!msg.cascade,
+        metaBaseName: "message.txt",
+        onKdfFold: (mem) => postMessage({ type: "kdf-fold", id, mem }),
+      });
+      const bytes = new Uint8Array(await new Blob(res.parts).arrayBuffer());
+      const armor = VaultFormat.armorEncode(bytes);
+      bytes.fill(0);
+      postMessage({ type: "done", id, op, armor });
+      return;
+    }
+    if (op === "armor-dec") {
+      const bytes = VaultFormat.armorDecode(msg.armor);
+      const res = await VaultFormat.decryptVault(new Blob([bytes]),
+        { password: msg.password });
+      bytes.fill(0);
+      try {
+        const text = new TextDecoder("utf-8", { fatal: true })
+          .decode(await new Blob(res.parts).arrayBuffer());
+        postMessage({ type: "done", id, op, text });
+      } catch (e) {
+        throw new VaultFormat.VaultError(
+          "armor opened, but its contents are not readable text — " +
+          "this block holds a file; use the open counter");
+      }
       return;
     }
     if (op === "decrypt") {

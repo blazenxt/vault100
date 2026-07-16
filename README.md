@@ -154,6 +154,10 @@ python -m vault100 genpass --passphrase --words 8
 # The timekeeper — device speed trials (cipher throughput + Argon2id cost)
 python -m vault100 bench
 
+# The armorer — fold a vault into paste-anywhere ASCII armor (.v100asc)
+python -m vault100 encrypt note.txt --armor
+python -m vault100 decrypt note.txt.v100asc   # armor auto-detected
+
 # Secure deletion of anything
 python -m vault100 shred old_keys.pem --passes 7
 ```
@@ -225,6 +229,9 @@ node web/server.mjs    # serves on :8080 (honors $PORT), /health for checks
 **v2.0.x series** (all releases on the
 [releases page](https://github.com/blazenxt/vault100/releases)):
 
+* **2.0.19** — **the armorer**: V100A1 ASCII armor (Form 100-M web counter + `encrypt --armor`, byte-exact both ways, decrypt auto-detects) · sweep now empties text wells
+* **2.0.18** — wax-seal medallion icon kit (vector, full PNG family, maskable-safe)
+* **2.0.17** — public-website pages (about/features/faq/get/privacy/terms), registry nav + footer
 * **2.0.16** — public-launch polish: SEO (robots/sitemap/OG/JSON-LD), recorded charter + FAQ, launch docs
 * **2.0.15** — the timekeeper device benchmarks · punched batch receipt serials · CLI `bench` · GUI gzip
 * **2.0.14** — folder→tar sealing · gzip inside the vault · examining-tray preview

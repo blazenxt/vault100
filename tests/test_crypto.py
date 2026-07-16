@@ -412,6 +412,89 @@ class CompressTests(unittest.TestCase):
         self.assertNotIn("gz", meta)
 
 
+class ArmorTests(unittest.TestCase):
+    """V100A1 ASCII armor — writer/reader invariants + file round-trips."""
+
+    def test_armor_encode_decode_and_stream_equivalence(self):
+        from vault100.crypto_core import (armor_encode, armor_decode,
+                                          _ArmorWriter, _ArmorReader,
+                                          ARMOR_BEGIN, ARMOR_END)
+        data = os.urandom(10_000)
+        one_shot = armor_encode(data)
+        self.assertTrue(one_shot.startswith(ARMOR_BEGIN + b"\n"))
+        self.assertTrue(one_shot.endswith(ARMOR_END + b"\n"))
+        # 64-column wrap (full lines; final line is the short tail)
+        lines = one_shot.split(b"\n")[1:-2]
+        for ln in lines[:-1]:
+            self.assertEqual(len(ln), 64)
+        self.assertLessEqual(len(lines[-1]), 64)
+        self.assertEqual(armor_decode(one_shot), data)
+        # streaming writer == one-shot encoder
+        sink = io.BytesIO()
+        w = _ArmorWriter(sink)
+        for i in range(0, len(data), 777):
+            w.write(data[i:i + 777])
+        w.finish()
+        self.assertEqual(sink.getvalue(), one_shot)
+        # streaming reader == one-shot decoder (incl. odd read sizes)
+        r = _ArmorReader(io.BytesIO(one_shot))
+        got = b""
+        while True:
+            chunk = r.read(333)
+            if not chunk:
+                break
+            got += chunk
+        self.assertEqual(got, data)
+
+    def test_armor_tolerates_furniture(self):
+        from vault100.crypto_core import armor_encode, _ArmorReader
+        data = os.urandom(500)
+        messy = (b"# a note from the dispatcher\n\n"
+                 + armor_encode(data) + b"\ntrailing scribbles\n")
+        r = _ArmorReader(io.BytesIO(messy))
+        self.assertEqual(r.read(), data)
+
+    def test_armor_file_roundtrip(self):
+        import tempfile
+        from vault100.crypto_core import encrypt_file, decrypt_file
+        data = b"armorer's proof \u2603 " * 2000
+        with tempfile.TemporaryDirectory() as td:
+            src = os.path.join(td, "note.txt")
+            with open(src, "wb") as f:
+                f.write(data)
+            asc = encrypt_file(src, src + ".v100asc", PW, armor=True)
+            with open(asc, "rb") as f:
+                self.assertTrue(f.read(64).startswith(b"-----BEGIN V100 ARMOR-----"))
+            out = os.path.join(td, "opened.bin")
+            meta = decrypt_file(asc, out, PW)
+            with open(out, "rb") as f:
+                self.assertEqual(f.read(), data)
+            self.assertEqual(meta["name"], "note.txt")
+
+    def test_passwd_refuses_armor_files(self):
+        import tempfile
+        from vault100.crypto_core import encrypt_file, change_password, VaultError
+        with tempfile.TemporaryDirectory() as td:
+            src = os.path.join(td, "n.txt")
+            with open(src, "wb") as f:
+                f.write(b"x" * 1000)
+            asc = encrypt_file(src, src + ".v100asc", PW, armor=True)
+            with self.assertRaises(VaultError):
+                change_password(asc, PW, b"new pass phrase here")
+
+    def test_info_flags_armor(self):
+        import tempfile
+        from vault100.crypto_core import encrypt_file, vault_info
+        with tempfile.TemporaryDirectory() as td:
+            src = os.path.join(td, "n.txt")
+            with open(src, "wb") as f:
+                f.write(b"y" * 1000)
+            asc = encrypt_file(src, src + ".v100asc", PW, armor=True)
+            info = vault_info(asc)
+            self.assertIs(info["armor"], True)
+            self.assertEqual(info["format"], 2)
+
+
 class BenchTests(unittest.TestCase):
     """The timekeeper: trials must produce sane, non-negative timings."""
 

@@ -7,7 +7,7 @@
   const VB = (window.VB = {});
   const $ = (VB.$ = (s) => document.querySelector(s));
   VB.$$ = (s) => Array.from(document.querySelectorAll(s));
-  VB.VERSION = "2.0.18";
+  VB.VERSION = "2.0.19";
 
   // ---------------- the desk lamp & ink well (themes) ----------------
   // Applied synchronously before first paint, so no theme flash. The
@@ -191,6 +191,7 @@
     for (const i of VB.$$("input[type=password], input[type=text]")) {
       if (i.type === "password" || i.type === "text") i.value = "";
     }
+    for (const t of VB.$$("textarea")) t.value = "";   // notes & armor wells
     for (const [inp, chk] of [["#enc-pw1", "#show-pw"], ["#enc-pw2", "#show-pw"],
                               ["#dec-pw", null], ["#rw-old", "#rw-show"],
                               ["#rw-new1", "#rw-show"], ["#rw-new2", "#rw-show"]]) {

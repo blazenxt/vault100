@@ -52,6 +52,7 @@ import json
 import os
 import struct
 import zlib
+import base64
 import tempfile
 import time
 from contextlib import contextmanager
@@ -306,6 +307,127 @@ class _GzipReader:
         return out
 
 
+# ---------------------------------------------------------------------------
+# ASCII armor (V100A1) — the portable, paste-anywhere form of a vault
+# ---------------------------------------------------------------------------
+
+ARMOR_BEGIN = b"-----BEGIN V100 ARMOR-----"
+ARMOR_END = b"-----END V100 ARMOR-----"
+ARMOR_COLS = 64
+
+
+def armor_encode(blob: bytes) -> bytes:
+    """Wrap raw vault bytes as a fenced, 64-column ASCII armor block."""
+    b64 = base64.b64encode(blob).decode("ascii")
+    lines = [b64[i:i + ARMOR_COLS] for i in range(0, len(b64), ARMOR_COLS)]
+    return (ARMOR_BEGIN + b"\n" + "\n".join(lines).encode("ascii")
+            + b"\n" + ARMOR_END + b"\n")
+
+
+def armor_decode(text_bytes: bytes) -> bytes:
+    """Extract and decode the armor block (whitespace/furniture tolerant)."""
+    text = text_bytes.decode("ascii", "strict")
+    i = text.find(ARMOR_BEGIN.decode("ascii"))
+    j = text.find(ARMOR_END.decode("ascii"))
+    if i < 0 or j < 0 or j <= i:
+        raise VaultFormatError("not a Vault100 armor block")
+    body = "".join(text[i + len(ARMOR_BEGIN):j].split())   # strip whitespace
+    try:
+        return base64.b64decode(body, validate=True)
+    except Exception as e:
+        raise VaultFormatError("armor base64 is damaged") from e
+
+
+class _ArmorWriter:
+    """Streams binary vault bytes out as a 64-column ASCII armor block."""
+
+    def __init__(self, fout) -> None:
+        self.fout = fout
+        self._raw = bytearray()
+        self._line = ""
+        self.fout.write(ARMOR_BEGIN + b"\n")
+
+    def _push_b64(self, s: str) -> None:
+        while s:
+            take = ARMOR_COLS - len(self._line)
+            self._line += s[:take]
+            s = s[take:]
+            if len(self._line) == ARMOR_COLS:
+                self.fout.write(self._line.encode("ascii") + b"\n")
+                self._line = ""
+
+    def write(self, data: bytes) -> int:
+        self._raw += data
+        while len(self._raw) >= 57:      # 57 bytes → exactly 76 b64 chars
+            self._push_b64(base64.b64encode(bytes(self._raw[:57])).decode())
+            del self._raw[:57]
+        return len(data)
+
+    def finish(self) -> None:
+        if self._raw:
+            self._push_b64(base64.b64encode(bytes(self._raw)).decode())
+            self._raw.clear()
+        if self._line:
+            self.fout.write(self._line.encode("ascii") + b"\n")
+            self._line = ""
+        self.fout.write(ARMOR_END + b"\n")
+
+
+class _ArmorReader:
+    """Presents an ASCII-armor file as its decoded binary stream."""
+
+    _BLOCK = 4096   # chars (multiple of 4)
+
+    def __init__(self, fin) -> None:
+        self.fin = fin
+        self._state = 0        # 0 pre-fence · 1 in body · 2 drained
+        self._cbuf = b""
+        self._obuf = bytearray()
+
+    def _decode(self, final: bool) -> None:
+        take = len(self._cbuf) if final else len(self._cbuf) & ~3
+        if take == 0 or (not final and take < self._BLOCK):
+            return
+        seg, self._cbuf = self._cbuf[:take], self._cbuf[take:]
+        try:
+            self._obuf += base64.b64decode(seg, validate=True)
+        except Exception as e:
+            raise VaultFormatError("armor base64 is damaged") from e
+
+    def read(self, n: int = -1) -> bytes:
+        while not (n >= 0 and len(self._obuf) >= n):
+            if self._state == 2:
+                break
+            line = self.fin.readline()
+            if self._state == 0:
+                if not line:
+                    raise VaultFormatError("not a Vault100 armor block")
+                if line.startswith(ARMOR_BEGIN):
+                    self._state = 1
+                continue
+            if not line or line.lstrip().startswith(ARMOR_END):
+                self._state = 2
+            else:
+                self._cbuf += b"".join(line.split())
+            self._decode(final=self._state == 2)
+        if n < 0:
+            out = bytes(self._obuf)
+            self._obuf.clear()
+            return out
+        out = bytes(self._obuf[:n])
+        del self._obuf[:n]
+        return out
+
+
+def _maybe_dearmor(fin):
+    """Return an armor-decoding view if *fin* holds an armor block."""
+    head = fin.read(64)
+    fin.seek(0)
+    if head.startswith(ARMOR_BEGIN):
+        return _ArmorReader(fin)
+    return fin
+
+
 def encrypt_stream(fin, fout, password: bytes, *,
                    profile: str = DEFAULT_PROFILE,
                    params: dict | None = None,
@@ -401,14 +523,22 @@ def encrypt_stream(fin, fout, password: bytes, *,
         pending = nxt
 
 
-def encrypt_file(src: str, dst: str, password: bytes, **kw) -> str:
-    """Encrypt file *src* → *dst* (atomically). Returns *dst*."""
+def encrypt_file(src: str, dst: str, password: bytes, armor: bool = False,
+                 **kw) -> str:
+    """Encrypt file *src* → *dst* (atomically). Returns *dst*.
+
+    ``armor=True`` wraps the vault in paste-anywhere ASCII armor (V100A1)."""
     st = os.stat(src)
     metadata = {"name": os.path.basename(src), "size": st.st_size,
                 "mtime": int(st.st_mtime)}
     kw.setdefault("total", st.st_size)
     with open(src, "rb") as fin, _atomic_writer(dst) as fout:
-        encrypt_stream(fin, fout, password, metadata=metadata, **kw)
+        if armor:
+            w = _ArmorWriter(fout)
+            encrypt_stream(fin, w, password, metadata=metadata, **kw)
+            w.finish()
+        else:
+            encrypt_stream(fin, fout, password, metadata=metadata, **kw)
     return dst
 
 
@@ -609,10 +739,13 @@ def _decrypt_stream_v1(fin, fout, password, magic, *, total, progress) -> dict:
 
 
 def decrypt_file(src: str, dst: str, password: bytes, **kw) -> dict:
-    """Decrypt file *src* → *dst* (atomically). Returns metadata."""
+    """Decrypt file *src* → *dst* (atomically). Returns metadata.
+
+    ASCII-armored vaults (``--armor`` output, web armorer blocks saved to
+    disk) are detected and de-armored transparently."""
     kw.setdefault("total", os.stat(src).st_size)
     with open(src, "rb") as fin, _atomic_writer(dst) as fout:
-        return decrypt_stream(fin, fout, password, **kw)
+        return decrypt_stream(_maybe_dearmor(fin), fout, password, **kw)
 
 
 # ---------------------------------------------------------------------------
@@ -655,6 +788,10 @@ def change_password(path: str, old_password: bytes, new_password: bytes, *,
        password can still decrypt that copy (same as LUKS/VeraCrypt).
     """
     with open(path, "r+b") as f:
+        if f.read(64).startswith(ARMOR_BEGIN):
+            raise VaultError("armored vault: open it, then re-seal with "
+                             "--armor — `passwd` edits raw vault bytes only")
+        f.seek(0)
         h = _read_v2_header(f)
         if h["flags"] & FLAG_KEYFILE and old_key_data is None:
             raise VaultError("vault requires its keyfile (--keyfile)")
@@ -691,9 +828,11 @@ def change_password(path: str, old_password: bytes, new_password: bytes, *,
 
 
 def vault_info(path: str) -> dict:
-    """Return non-secret header facts about a vault file."""
+    """Return non-secret header facts about a vault file (armor-aware)."""
     size = os.path.getsize(path)
     with open(path, "rb") as f:
+        f = _maybe_dearmor(f)
+        armored = isinstance(f, _ArmorReader)
         magic = f.read(8)
         if magic == MAGIC_V1:
             rest = _read_exact(f, _HEADER_V1.size - 8)
@@ -702,15 +841,18 @@ def vault_info(path: str) -> dict:
             return dict(format=1, cipher="XChaCha20-Poly1305 (secretstream)",
                         cascade=False, keyfile=False,
                         kdf=dict(memory_kib=mem, time_cost=t_cost,
-                                 parallelism=par), size=size)
-        f.seek(0)
+                                 parallelism=par), size=size, armor=armored)
+        if not armored:
+            f.seek(0)
+        else:
+            f = _ArmorReader(open(path, "rb"))
         h = _read_v2_header(f)
     return dict(format=2,
                 cipher=("AES-256-GCM ⟶ XChaCha20-Poly1305" if h["cascade"]
                         else "XChaCha20-Poly1305 (secretstream)"),
                 cascade=h["cascade"],
                 keyfile=bool(h["flags"] & FLAG_KEYFILE),
-                kdf=h["params"], size=size)
+                kdf=h["params"], size=size, armor=armored)
 
 
 def benchmark(*, stream_mib: int = 32,

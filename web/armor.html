@@ -11,23 +11,23 @@
 <meta name="referrer" content="no-referrer">
 <meta name="theme-color" content="#08090b">
 <meta name="mobile-web-app-capable" content="yes">
-<meta name="description" content="The Seal Bureau's charter copy: why Vault100 exists, its zero-knowledge creed, the three bodies (web, CLI, desktop) and where to send letters — bugs, ideas, and confidential security reports.">
+<meta name="description" content="Form 100-M: the Vault100 armorer — seal plain text messages into paste-anywhere ASCII armor (V100A1 blocks) entirely in your browser, and open armor back to text. Zero-knowledge, byte-compatible with the CLI's --armor.">
 <meta name="robots" content="index,follow,max-image-preview:large">
-<link rel="canonical" href="https://vault100.blazenxt.in/about.html">
+<link rel="canonical" href="https://vault100.blazenxt.in/armor.html">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="Vault100 — The Seal Bureau">
-<meta property="og:title" content="About Vault100 — a bureau that keeps zero copies">
-<meta property="og:description" content="The Seal Bureau's charter copy: why Vault100 exists, its zero-knowledge creed, the three bodies (web, CLI, desktop) and where to send letters — bugs, ideas, and confidential security reports.">
-<meta property="og:url" content="https://vault100.blazenxt.in/about.html">
+<meta property="og:title" content="Form 100-M — the armorer: text to paste-anywhere armor">
+<meta property="og:description" content="Form 100-M: the Vault100 armorer — seal plain text messages into paste-anywhere ASCII armor (V100A1 blocks) entirely in your browser, and open armor back to text. Zero-knowledge, byte-compatible with the CLI's --armor.">
+<meta property="og:url" content="https://vault100.blazenxt.in/armor.html">
 <meta property="og:image" content="https://vault100.blazenxt.in/og-cover.jpg">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
 <meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:title" content="About Vault100 — a bureau that keeps zero copies">
-<meta name="twitter:description" content="The Seal Bureau's charter copy: why Vault100 exists, its zero-knowledge creed, the three bodies (web, CLI, desktop) and where to send letters — bugs, ideas, and confidential security reports.">
+<meta name="twitter:title" content="Form 100-M — the armorer: text to paste-anywhere armor">
+<meta name="twitter:description" content="Form 100-M: the Vault100 armorer — seal plain text messages into paste-anywhere ASCII armor (V100A1 blocks) entirely in your browser, and open armor back to text. Zero-knowledge, byte-compatible with the CLI's --armor.">
 <meta name="twitter:image" content="https://vault100.blazenxt.in/og-cover.jpg">
 <link rel="manifest" href="manifest.json">
-<title>About the Bureau — Vault100 Zero-Knowledge Encryption</title>
+<title>Seal Text · Form 100-M — Vault100 Zero-Knowledge Encryption</title>
 <link rel="icon" type="image/svg+xml" href="icon.svg?v=219">
 <link rel="icon" type="image/png" sizes="32x32" href="icons/icon-32.png?v=219">
 <link rel="icon" type="image/png" sizes="16x16" href="icons/icon-16.png?v=219">
@@ -44,7 +44,7 @@
     </filter>
   </svg>
   <svg class="tear" viewBox="0 0 920 10" preserveAspectRatio="none" aria-hidden="true">
-    <path fill="#111318" d="M0 10 V4 l23 -2 l23 3 l23 -3 l23 2 l23 -1 l23 3 l23 -3 l23 1 l23 -2 l23 3 l23 -3 l23 2 l23 -1 l23 3 l23 -3 l23 1 l23 -2 l23 3 l23 -3 l23 2 l23 -1 l23 3 l23 -3 l23 1 l23 -2 l23 3 l23 -3 l23 2 l23 -1 l23 3 l23 -3 l23 1 l23 -2 l23 3 l23 -3 l23 2 l23 -1 l23 3 l23 -3 l23 1 L920 4 L920 10 Z"/>
+    <path fill="#111318" d="M0 10 V4 l23 -2 l23 3 l23 -3 l23 2 l23 -1 l23 3 l23 -3 l23 1 l23 -2 l23 3 l23 -3 l23 2 l23 -1 l23 3 l23 -3 l23 1 l23 -2 l23 3 l23 -3 l23 2 l23 -1 l23 3 l23 -3 l23 1 l23 -2 l23 3 l23 -3 l23 2 l23 -1 l23 3 l23 -3 l23 1 l23 -2 l23 3 l23 -3 l23 2 l23 -1 l23 3 l23 -3 l23 1 l23 -2 l23 3 l23 -3 l23 1 L920 4 L920 10 Z"/>
   </svg>
   <span class="ring r1" aria-hidden="true"></span>
   <span class="ring r2" aria-hidden="true"></span>
@@ -64,13 +64,13 @@
     <div class="center">
       <div class="bureau">The Seal Bureau · Night Counter</div>
       <div class="wordmark">VAULT-<b>100</b></div>
-      <div class="counterline">charter copy · creed · credentials · post office</div>
+      <div class="counterline">form 100-m · the armorer's desk · letters sealed to travel</div>
     </div>
 
     <div class="rightcol">
       <div class="serial">
-        <b>CHARTER COPY</b><br>
-        ser. № 1010 / 2026<br>
+        <b>FORM 100-M</b><br>
+        ser. № 0091 / 2026<br>
         received: <span id="today" class="blank">&nbsp;</span>
       </div>
       <div id="selftest-badge" class="badge warn">under<br>inspection</div>
@@ -79,9 +79,9 @@
 
   <hr class="double">
   <div class="ribbon">
-    <span>container <i>V100ENC2</i></span>
-    <span>cipher <i>xchacha20-poly1305</i> ⊕ <i>aes-256-gcm</i></span>
-    <span>key turning <i>argon2id</i></span>
+    <span>armor form <i>V100A1</i></span>
+    <span>body <i>base64 · 64 columns</i></span>
+    <span>matches <i>cli --armor · byte-exact</i></span>
     <span>copies retained by bureau <i>none</i></span>
   </div>
 
@@ -92,8 +92,8 @@
       <a class="tabbtn" href="seal.html">Form 100-B · Seal</a>
       <a class="tabbtn" href="open.html">Form 100-C · Open</a>
       <a class="tabbtn" href="rewrap.html">Form 100-R · Recombinate</a>
-            <a class="tabbtn" href="armor.html">Form 100-M · Armorer</a>
-<a class="tabbtn" href="annex.html">Annex D · Instruments</a>
+      <a class="tabbtn active" href="armor.html">Form 100-M · Armorer</a>
+      <a class="tabbtn" href="annex.html">Annex D · Instruments</a>
       <div class="inkkit" role="group" aria-label="counter ink and shift">
         <label class="inkwell" title="the counter's ink"><span class="iwlabel">ink</span><select id="ink" aria-label="counter ink">
           <option value="carbon">carbon black</option>
@@ -108,68 +108,87 @@
     </nav>
     <nav class="pubnav" aria-label="the bureau — public registry">
       <span class="pblabel">the bureau&nbsp;·</span>
-      <a class="on" href="about.html">about</a>
-      <a class="" href="features.html">features</a>
-      <a class="" href="faq.html">faq</a>
-      <a class=" pbget" href="get.html">⭳ get vault100</a>
-      <a class="" href="privacy.html">privacy</a>
-      <a class="" href="terms.html">terms</a>
+      <a href="about.html">about</a>
+      <a href="features.html">features</a>
+      <a href="faq.html">faq</a>
+      <a class="pbget" href="get.html">⭳ get vault100</a>
+      <a href="privacy.html">privacy</a>
+      <a href="terms.html">terms</a>
     </nav>
   </div>
 
-  <!-- ================= ABOUT ================= -->
+  <!-- ================= FORM 100-M ================= -->
   <div class="part">
-    <h2><span class="rn">Charter copy.</span> The bureau, its creed, its credentials</h2>
+    <h2><span class="rn">Form 100-M.</span> The armorer's desk — letters sealed to travel</h2>
+    <p class="fnote" style="margin:2px 0 14px">Ordinary vaults are files; <b>armor is a letter</b> —
+      a vault folded into printing-office characters you may paste into any mail,
+      chat or notice board. Written and read with the CLI's
+      <code class="tag">--armor</code> as well, byte for byte. Keyfiles are not
+      offered at this desk — armor must travel alone. ≤ 512 KiB per letter.</p>
 
-    <div class="writ">
-      <h3 class="wh">why the bureau exists</h3>
-      <p>Vault100 was opened in 2026 by <b>BlazeNXT</b> on one stubborn belief:
-        honest encryption software should never promise magic. No tool on earth
-        can vow “impossible to decrypt” — so instead the bureau <b>layers
-        independent defenses</b>, publishes the entire ledger of its works, and
-        lets you keep every key. If one layer ever falls, the next still holds.</p>
-
-      <h3 class="wh">the creed, stamped thrice</h3>
-      <div class="creedcards">
-        <div class="creed"><b>Zero knowledge.</b> Files, combinations and keys never
-          leave your device. The server only hands out printed paperwork.</div>
-        <div class="creed"><b>Open stock.</b> MIT-licensed from the first ledger line —
-          audit it, fork it, print it, sell it. The notice travels along.</div>
-        <div class="creed"><b>No ledger of you.</b> No accounts, no telemetry, no
-          escrow, no analytics. The bureau keeps zero copies of anything.</div>
+    <div class="recs">
+      <!-- ================= THE STAMPER ================= -->
+      <div class="rec">
+        <div class="idx">counter one · the stamper</div>
+        <h3>Compose &amp; mint the armor</h3>
+        <textarea id="st-text" class="armwell" rows="7"
+                  placeholder="whisper the message here…"></textarea>
+        <div class="rowline" style="margin-top:10px">
+          <input id="st-pw1" type="password" placeholder="combination" style="flex:1">
+          <input id="st-pw2" type="password" placeholder="again, for the grave" style="flex:1">
+        </div>
+        <label class="checkline"><input id="st-show" type="checkbox"> show combination</label>
+        <div class="fnote" style="margin:2px 0 8px">quality —
+          <span id="st-strength-label">—</span></div>
+        <span id="st-strength" hidden></span>
+        <div class="rowline">
+          <select id="ar-security" style="flex:1">
+            <option value="standard" selected>standard — 128 MiB × 3 turns</option>
+            <option value="paranoid">paranoid — 512 MiB × 4 turns</option>
+            <option value="max">max — tuned to this very machine (~2 s)</option>
+          </select>
+        </div>
+        <label class="checkline"><input id="ar-cascade" type="checkbox">
+          double-lock (AES-256-GCM ⟶ XChaCha20)</label>
+        <div class="rowline" style="margin-top:10px">
+          <button id="st-go">Mint the armor</button>
+          <button id="st-cancel" class="ghost" hidden>stay the press</button>
+        </div>
+        <textarea id="st-out" class="armwell tall ro" rows="9" readonly
+                  placeholder="the armor appears here — BEGIN V100 ARMOR to END …"></textarea>
+        <div class="rowline" style="margin-top:8px">
+          <button id="st-copy" class="ghost">Copy armor</button>
+          <button id="st-dl" class="ghost">Download .v100asc</button>
+        </div>
       </div>
 
-      <h3 class="wh">three bodies, one cloth</h3>
-      <ul class="dots">
-        <li><b>The web counter</b> — this very bureau, an offline-capable PWA.
-          Sealed or opened vaults never cross the wire.</li>
-        <li><b>The command engine</b> — <code class="tag">python -m vault100</code>,
-          the reference implementation every build must match byte-for-byte.</li>
-        <li><b>The desktop box</b> — a Tkinter counter for those who prefer a
-          heavier window, same vaults, same notches.</li>
-      </ul>
-
-      <h3 class="wh">credentials &amp; the post office box</h3>
-      <ul class="dots">
-        <li>Source, specification &amp; history —
-          <a href="https://github.com/blazenxt/vault100" rel="noopener">github.com/blazenxt/vault100</a></li>
-        <li>Every release stamped &amp; tagged —
-          <a href="https://github.com/blazenxt/vault100/releases" rel="noopener">tagged releases</a></li>
-        <li>Letters of complaint (bugs) —
-          <a href="https://github.com/blazenxt/vault100/issues" rel="noopener">the issues window</a></li>
-        <li>Confidential matters (security) —
-          <a href="https://github.com/blazenxt/vault100/security/advisories" rel="noopener">private advisories</a>,
-          never a public posting.</li>
-      </ul>
-      <p class="fine">est. 2026 · seat: the open web · proprietor: BlazeNXT ·
-        license to trade: MIT</p>
+      <!-- ================= THE OPENER ================= -->
+      <div class="rec">
+        <div class="idx">counter two · the opener</div>
+        <h3>Break an armor open</h3>
+        <textarea id="op-in" class="armwell tall" rows="9"
+                  placeholder="paste an armor block here — the fences may bring their own furniture…"></textarea>
+        <div class="rowline" style="margin-top:10px">
+          <input id="op-pw" type="password" placeholder="combination" style="flex:1">
+          <button id="op-go">Open the letter</button>
+          <button id="op-cancel" class="ghost" hidden>stay</button>
+        </div>
+        <textarea id="op-out" class="armwell ro" rows="7" readonly
+                  placeholder="the message appears here…"></textarea>
+        <div class="rowline" style="margin-top:8px">
+          <button id="op-copy" class="ghost">Copy message</button>
+        </div>
+        <div class="fnote">the opener speaks CLI fluently — anything minted by
+          <code class="tag">python -m vault100 encrypt --armor</code> reads here,
+          and vice versa.</div>
+      </div>
     </div>
   </div>
 
   <!-- ================= CLERK'S RECORD ================= -->
   <div class="records solo">
     <div>
-      <div class="rechead">Clerk's record · proceedings in the reading room</div>
+      <div class="rechead">Clerk's record · proceedings at the armorer's desk</div>
       <div id="log"></div>
     </div>
   </div>
@@ -178,7 +197,7 @@
 
   <div class="barcodebox">
     <div class="barcode" aria-hidden="true"></div>
-    <div class="barcodenum">№ V100·2026·A·1010</div>
+    <div class="barcodenum">№ V100·2026·M·0091</div>
   </div>
 
   <nav class="sitefoot" aria-label="bureau registry footer">
@@ -214,15 +233,15 @@
     <span>filed in triplicate — <span class="b">zero copies retained</span></span>
   </footer>
 
-
   <div class="stub" aria-hidden="true">
-    <div class="st">about<br>charter copy</div>
-    <div class="sn">№ 1010 / 2026</div>
-    <div class="sf">registry copy —<br>keep for your records</div>
+    <div class="st">form 100-m<br>armorer's stub</div>
+    <div class="sn">№ 0091 / 2026</div>
+    <div class="sf">the armor travels alone —<br>no bureau copy exists</div>
   </div>
   <span class="curl" aria-hidden="true"></span>
 </div>
 
 <script src="common.js?v=219"></script>
+<script src="armor.js?v=219"></script>
 </body>
 </html>

@@ -59,6 +59,42 @@
     for (let i = 0; i < bin.length; i++) out[i] = bin.charCodeAt(i);
     return out;
   }
+  function b64e(buf) {
+    const A = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
+    let out = "";
+    for (let i = 0; i < buf.length; i += 3) {
+      const a = buf[i], b = buf[i + 1], c = buf[i + 2];
+      out += A[a >> 2] + A[((a & 3) << 4) | (b >> 4 || 0)] +
+        (i + 1 < buf.length ? A[((b & 15) << 2) | (c >> 6 || 0)] : "=") +
+        (i + 2 < buf.length ? A[c & 63] : "=");
+    }
+    return out;
+  }
+
+  // -- ASCII armor (V100A1) — keep byte-parity with crypto_core.armor_* ----
+  const ARMOR_BEGIN = "-----BEGIN V100 ARMOR-----";
+  const ARMOR_END = "-----END V100 ARMOR-----";
+  const ARMOR_COLS = 64;
+
+  function armorEncode(bytes) {
+    const b64 = b64e(bytes);
+    const lines = [];
+    for (let i = 0; i < b64.length; i += ARMOR_COLS)
+      lines.push(b64.slice(i, i + ARMOR_COLS));
+    return ARMOR_BEGIN + "\n" + lines.join("\n") + "\n" + ARMOR_END + "\n";
+  }
+
+  function armorDecode(text) {
+    const i = text.indexOf(ARMOR_BEGIN), j = text.indexOf(ARMOR_END);
+    if (i < 0 || j < 0 || j <= i)
+      throw new VaultFormatError("not a Vault100 armor block");
+    const body = text.slice(i + ARMOR_BEGIN.length, j).replace(/\s+/g, "");
+    try {
+      return b64d(body);
+    } catch (e) {
+      throw new VaultFormatError("armor base64 is damaged");
+    }
+  }
   class VaultError extends Error {}
   class VaultAuthError extends VaultError {}
   class VaultFormatError extends VaultError {}
@@ -648,6 +684,7 @@
     VaultError, VaultAuthError, VaultFormatError, VaultCancelled,
     setEnv, keyfileDigest, generateKeyfileBytes, encryptVault, decryptVault,
     recombineVault, info, calibrateKdf, runSelfTest, runBench, SELFTEST, isMemError,
+    armorEncode, armorDecode, ARMOR_BEGIN, ARMOR_END,
     _internals: { hkdfSha256, deriveKek, argon2id, argon2idProven,
                   kekFromRaw, parsePrefix, concat, u8 },
   };
