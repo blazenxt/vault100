@@ -3,7 +3,7 @@
  */
 "use strict";
 
-const V = "?v=211";
+const V = "?v=212";
 importScripts("vendor/libsodium-sumo.js" + V);
 importScripts("vendor/libsodium-wrappers.js" + V);
 importScripts("vendor/argon2.js" + V);
@@ -14,7 +14,7 @@ let cancelJob = null;
 
 // argon2-browser: serve the WASM binary ourselves (relative to worker scope)
 self.loadArgon2WasmBinary = () =>
-  fetch("vendor/argon2.wasm?v=211").then((r) => {
+  fetch("vendor/argon2.wasm?v=212").then((r) => {
     if (!r.ok) throw new Error("argon2.wasm failed to load (HTTP " + r.status + ")");
     return r.arrayBuffer();
   });
@@ -44,6 +44,19 @@ async function init() {
 
 function postProgress(id, done, total) {
   postMessage({ type: "progress", id, done, total });
+}
+
+/* byte parts → transfers; Blob parts are posted by reference (no copy) —
+   recombination leans on this: the payload body is one Blob slice. */
+function packParts(parts) {
+  const out = [], transfers = [];
+  for (const p of parts) {
+    if (p instanceof Blob) { out.push(p); continue; }
+    const b = p.buffer.slice(p.byteOffset, p.byteOffset + p.byteLength);
+    out.push(b);
+    transfers.push(b);
+  }
+  return [out, transfers];
 }
 
 async function runJob(msg) {
@@ -80,9 +93,25 @@ async function runJob(msg) {
         onProgress: progress, shouldCancel,
         onKdfFold: (mem) => postMessage({ type: "kdf-fold", id, mem }),
       });
-      const buffers = res.parts.map((p) => p.buffer.slice(0));
+      const [parts, transfers] = packParts(res.parts);
       postMessage({ type: "done", id, op, name: msg.file.name + ".v100",
-                    parts: buffers, length: res.length }, buffers);
+                    parts, length: res.length }, transfers);
+      return;
+    }
+    if (op === "recombine") {
+      const oldKeyDigest = msg.oldKeyData
+        ? VaultFormat.keyfileDigest(new Uint8Array(msg.oldKeyData)) : null;
+      const newKeyDigest = msg.newKeyData
+        ? VaultFormat.keyfileDigest(new Uint8Array(msg.newKeyData)) : null;
+      const res = await VaultFormat.recombineVault(msg.file, {
+        oldPassword: msg.oldPassword, oldKeyData: oldKeyDigest,
+        newPassword: msg.newPassword, newKeyData: newKeyDigest,
+        profile: msg.profile, params: msg.params || null,
+        onKdfFold: (mem) => postMessage({ type: "kdf-fold", id, mem }),
+      });
+      const [parts, transfers] = packParts(res.parts);
+      postMessage({ type: "done", id, op, name: msg.file.name,
+                    parts, length: res.length }, transfers);
       return;
     }
     if (op === "decrypt") {
@@ -93,9 +122,9 @@ async function runJob(msg) {
       const sane = String(res.meta.name || "decrypted.bin")
         .replace(/[\\/:*?"<>|]/g, "_").replace(/^\.+/, "").slice(0, 255)
         || "decrypted.bin";
-      const buffers = res.parts.map((p) => p.buffer.slice(0));
+      const [parts, transfers] = packParts(res.parts);
       postMessage({ type: "done", id, op, name: sane, meta: res.meta,
-                    parts: buffers, length: res.length }, buffers);
+                    parts, length: res.length }, transfers);
       return;
     }
     throw new Error("unknown op " + op);
@@ -104,8 +133,10 @@ async function runJob(msg) {
                   kind: (e && e.constructor && e.constructor.name) || "Error",
                   message: (e && e.message) || String(e) });
   } finally {
-    if (msg.password && msg.password.fill) msg.password.fill(0); // best effort
-    if (msg.keyData && msg.keyData.fill) msg.keyData.fill(0);
+    for (const k of ["password", "oldPassword", "newPassword",
+                     "keyData", "oldKeyData", "newKeyData"]) {
+      if (msg[k] && msg[k].fill) msg[k].fill(0);   // best effort
+    }
     if (cancelJob === id) cancelJob = null;
   }
 }

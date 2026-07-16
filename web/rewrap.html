@@ -12,7 +12,7 @@
 <meta name="theme-color" content="#08090b">
 <meta name="mobile-web-app-capable" content="yes">
 <link rel="manifest" href="manifest.json">
-<title>FORM 100-C · open counter — The Seal Bureau</title>
+<title>FORM 100-R · recombinate counter — The Seal Bureau</title>
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 48'%3E%3Crect width='48' height='48' fill='%23111318'/%3E%3Ccircle cx='24' cy='24' r='15' fill='none' stroke='%23ddd6c4' stroke-width='3'/%3E%3Ccircle cx='24' cy='24' r='5' fill='%23e15555'/%3E%3C/svg%3E">
 <link rel="stylesheet" href="bureau.css?v=212">
 </head>
@@ -26,7 +26,7 @@
     </filter>
   </svg>
   <svg class="tear" viewBox="0 0 920 10" preserveAspectRatio="none" aria-hidden="true">
-    <path fill="#111318" d="M0 10 V4 l23 -2 l23 3 l23 -3 l23 2 l23 -1 l23 3 l23 -3 l23 1 l23 -2 l23 3 l23 -3 l23 2 l23 -1 l23 3 l23 -3 l23 1 l23 -2 l23 3 l23 -3 l23 2 l23 -1 l23 3 l23 -3 l23 1 l23 -2 l23 3 l23 -3 l23 2 l23 -1 l23 3 l23 -3 l23 2 l23 -1 l23 3 l23 -3 l23 1 L920 4 L920 10 Z"/>
+    <path fill="#111318" d="M0 10 V4 l23 -2 l23 3 l23 -3 l23 2 l23 -1 l23 3 l23 -3 l23 1 l23 -2 l23 3 l23 -3 l23 2 l23 -1 l23 3 l23 -3 l23 1 l23 -2 l23 3 l23 -3 l23 2 l23 -1 l23 3 l23 -3 l23 2 l23 -1 l23 3 l23 -3 l23 2 l23 -1 l23 3 l23 -3 l23 2 l23 -1 l23 3 l23 -3 l23 1 L920 4 L920 10 Z"/>
   </svg>
   <span class="ring r1" aria-hidden="true"></span>
   <span class="ring r2" aria-hidden="true"></span>
@@ -46,13 +46,13 @@
     <div class="center">
       <div class="bureau">The Seal Bureau · Night Counter</div>
       <div class="wordmark">VAULT-<b>100</b></div>
-      <div class="counterline">form 100-c · request to open · night stock · third revision</div>
+      <div class="counterline">form 100-r · change of combination · night stock · third revision</div>
     </div>
 
     <div class="rightcol">
       <div class="serial">
-        <b>FORM 100-C</b><br>
-        ser. № 0047 / 2026<br>
+        <b>FORM 100-R</b><br>
+        ser. № 0051 / 2026<br>
         received: <span id="today" class="blank">&nbsp;</span>
       </div>
       <div id="selftest-badge" class="badge warn">under<br>inspection</div>
@@ -61,9 +61,9 @@
 
   <hr class="double">
   <div class="ribbon">
-    <span>container <i>V100ENC2</i></span>
-    <span>cipher <i>xchacha20-poly1305</i> ⊕ <i>aes-256-gcm</i></span>
-    <span>key turning <i>argon2id</i></span>
+    <span>body <i>untouched</i></span>
+    <span>head <i>re-issued</i></span>
+    <span>fek <i>never leaves the metal</i></span>
     <span>copies retained by bureau <i>none</i></span>
   </div>
 
@@ -72,8 +72,8 @@
     <nav class="switch" role="navigation" aria-label="bureau counters">
       <a class="tabbtn desk" href="index.html">❦ front desk</a>
       <a class="tabbtn" href="seal.html">Form 100-B · Seal</a>
-      <a class="tabbtn active" href="open.html">Form 100-C · Open</a>
-      <a class="tabbtn" href="rewrap.html">Form 100-R · Recombinate</a>
+      <a class="tabbtn" href="open.html">Form 100-C · Open</a>
+      <a class="tabbtn active" href="rewrap.html">Form 100-R · Recombinate</a>
       <a class="tabbtn" href="annex.html">Annex D · Instruments</a>
       <div class="inkkit" role="group" aria-label="counter ink and shift">
         <label class="inkwell" title="the counter's ink"><span class="iwlabel">ink</span><select id="ink" aria-label="counter ink">
@@ -89,49 +89,86 @@
     </nav>
   </div>
 
-  <!-- ================= FORM 100-C · OPEN ================= -->
+  <!-- ================= FORM 100-R · RECOMBINATE ================= -->
   <div class="part">
     <h2><span class="rn">Part I.</span> The sealed document</h2>
-    <div id="dec-drop" class="intake">
+    <div id="rw-drop" class="intake">
       <span class="corner tl"></span><span class="corner tr"></span>
       <span class="corner bl"></span><span class="corner br"></span>
       <svg width="34" height="34" viewBox="0 0 34 34" fill="none" stroke="#6d685a" stroke-width="1.6" aria-hidden="true">
         <rect x="8" y="14" width="18" height="13" rx="1.5"/>
-        <path d="M12 14v-3.5a5 5 0 0 1 10 0V14" stroke="#e15555"/>
+        <path d="M17 11l2.4 4.8h-4.8z" stroke="#e15555"/>
         <circle cx="17" cy="20.5" r="1.6"/>
       </svg>
       <div class="big">Present the vault to the clerk</div>
-      <div class="small">drop .v100 — or click to retrieve it from the drawer</div>
-      <input id="dec-pick" type="file" multiple accept=".v100">
+      <div class="small">drop .v100 — however large; only its head is re-issued</div>
+      <input id="rw-pick" type="file" accept=".v100">
     </div>
-    <ul id="dec-list" class="files"></ul>
+    <ul id="rw-list" class="files"></ul>
+    <div id="rw-facts" class="fnote" hidden></div>
   </div>
 
   <div class="duo">
     <div class="part">
-      <h2><span class="rn">Part II.</span> The combination</h2>
+      <h2><span class="rn">Part II.</span> The present combination</h2>
       <div class="frow">
-        <label class="flabel" for="dec-pw">1. Passphrase</label>
-        <input id="dec-pw" type="password" autocomplete="current-password">
+        <label class="flabel" for="rw-old">1. Current passphrase</label>
+        <input id="rw-old" type="password" autocomplete="current-password">
+      </div>
+      <div id="rw-oldkey-row" class="frow" hidden>
+        <label class="flabel">Current keyfile <span style="color:var(--red)">· required</span></label>
+        <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+          <button id="rw-oldkey-btn" class="ghost" type="button">Present keyfile…</button>
+          <span id="rw-oldkey-name" class="fnote" style="margin:0"></span>
+        </div>
+        <input id="rw-oldkey" type="file" hidden>
       </div>
     </div>
     <div class="part">
-      <h2><span class="rn">Part III.</span> Second key</h2>
-      <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
-        <button id="dec-keyfile-btn" class="ghost" type="button">Present keyfile…</button>
-        <span id="dec-keyfile-name" class="fnote" style="margin:0"></span>
+      <h2><span class="rn">Part III.</span> The new combination</h2>
+      <div class="frow">
+        <label class="flabel" for="rw-new1">2. New passphrase</label>
+        <input id="rw-new1" type="password" autocomplete="new-password"
+               placeholder="four or five respectable words…">
+        <progress id="rw-strength" class="strength" max="4" value="0"></progress>
+        <div class="fnote">combination quality — <span id="rw-strength-label">—</span></div>
       </div>
-      <input id="dec-keyfile" type="file" hidden>
-      <div class="fnote">required only if the vault was sealed with one. The
-        document's true name is returned with it, inside the envelope.</div>
+      <div class="frow">
+        <label class="flabel" for="rw-new2">3. New passphrase, once more</label>
+        <input id="rw-new2" type="password" autocomplete="new-password">
+      </div>
+      <label class="checkline"><input id="rw-show" type="checkbox">
+        permit me to see the words</label>
+      <div class="frow" style="margin-top:14px">
+        <label class="flabel" for="rw-security">4. Key turning (argon2id)</label>
+        <select id="rw-security">
+          <option value="standard" selected>standard — 128 MiB × 3 turns</option>
+          <option value="paranoid">paranoid — 512 MiB × 4 turns</option>
+          <option value="max">max for this device (auto-tuned)</option>
+        </select>
+        <div class="fnote">fresh salt &amp; nonce; proven on this device, stamped
+          in the head. Heavy notches on a small device fold honestly.</div>
+      </div>
+      <div class="frow">
+        <label class="flabel">5. New keyfile (optional)</label>
+        <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+          <button id="rw-newkey-btn" class="ghost" type="button">Present keyfile…</button>
+          <span id="rw-newkey-name" class="fnote" style="margin:0"></span>
+        </div>
+        <input id="rw-newkey" type="file" hidden>
+        <div class="fnote">presenting a keyfile binds the vault to it; leaving
+          this empty lifts any old binding.</div>
+      </div>
     </div>
   </div>
 
   <div class="part">
     <h2><span class="rn">Part IV.</span> Authorization</h2>
     <div class="action-row">
-      <button id="dec-go" class="go">Turn the key &amp; open</button>
-      <button id="dec-cancel" class="ghost" type="button" hidden>stay the stamp — cancel</button>
+      <button id="rw-go" class="go">Press the new wrap &amp; re-issue</button>
+      <button id="rw-cancel" class="ghost" type="button" hidden>stay the stamp — cancel</button>
+      <div class="fnote">the old wrap is melted in the clerk's furnace. The
+        document's body — every chunk, every byte — is carried over unchanged.</div>
     </div>
   </div>
 
@@ -140,7 +177,7 @@
     <div>
       <div class="rechead">Clerk's record · issued documents</div>
       <ul id="results">
-        <div id="results-empty">Nothing yet issued. Opened documents
+        <div id="results-empty">Nothing yet issued. Recombinated vaults
           are entered here, one line per instrument.</div>
       </ul>
     </div>
@@ -154,7 +191,7 @@
 
   <div class="barcodebox">
     <div class="barcode" aria-hidden="true"></div>
-    <div class="barcodenum">№ V100·2026·C·0047</div>
+    <div class="barcodenum">№ V100·2026·R·0051</div>
   </div>
 
   <footer>
@@ -164,14 +201,14 @@
   </footer>
 
   <div class="stub" aria-hidden="true">
-    <div class="st">form 100-c<br>receipt stub</div>
-    <div class="sn">№ 0047 / 2026</div>
+    <div class="st">form 100-r<br>receipt stub</div>
+    <div class="sn">№ 0051 / 2026</div>
     <div class="sf">keep this stub —<br>it is your only receipt</div>
   </div>
   <span class="curl" aria-hidden="true"></span>
 </div>
 
 <script src="common.js?v=212"></script>
-<script src="open.js?v=212"></script>
+<script src="rewrap.js?v=212"></script>
 </body>
 </html>

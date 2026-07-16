@@ -150,7 +150,7 @@
 
   /* ---------------- folder tabs ---------------- */
   .tabwrap{border-bottom:2px solid var(--ink);margin:26px 0 0}
-  .switch{display:flex;gap:4px}
+  .switch{display:flex;gap:4px;flex-wrap:wrap}
   .tabbtn{
     appearance:none;cursor:pointer;
     background:var(--paper2);border:1.5px solid var(--ink);border-bottom:none;

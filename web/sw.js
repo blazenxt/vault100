@@ -8,7 +8,7 @@
  */
 "use strict";
 
-const VERSION = "211";
+const VERSION = "212";
 const CACHE = "vault100-" + VERSION;
 const Q = "?v=" + VERSION;
 const ASSETS = [
@@ -17,11 +17,13 @@ const ASSETS = [
   "/seal.html",
   "/open.html",
   "/annex.html",
+  "/rewrap.html",
   "/bureau.css" + Q,
   "/common.js" + Q,
   "/seal.js" + Q,
   "/open.js" + Q,
   "/annex.js" + Q,
+  "/rewrap.js" + Q,
   "/worker.js" + Q,
   "/vault-format.js" + Q,
   "/vendor/libsodium-sumo.js" + Q,

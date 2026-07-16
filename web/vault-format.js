@@ -398,6 +398,85 @@
     return { parts, length, meta };
   }
 
+  // -- recombination ---------------------------------------------------------
+  /* FORM 100-R: change a vault's combination WITHOUT re-encrypting the body.
+     The FEK never leaves the metal: unwrap with the old KEK, press a fresh
+     wrap (new salt, new nonce, new key-turning, optional new keyfile) and
+     re-issue the compact head. Chunks stay byte-for-byte — a 10 GB vault
+     recombinates as fast as a 10 KB one. The cascade flag (and FEK size)
+     is a property of the body and is always preserved.
+     opts: { oldPassword, oldKeyData?, newPassword, newKeyData?,
+             profile|params, onKdfFold? } → {parts, length, cascade}   */
+  async function recombineVault(blob, opts) {
+    const { sodium, randbytes } = needEnv();
+    const prefix = new Uint8Array(await blob.slice(0, 52).arrayBuffer());
+    const h = parsePrefix(prefix);
+    const cascade = !!(h.flags & FLAG_CASCADE);
+    const fekLen = cascade ? 64 : 32;
+    const bodyOff = 52 + 24 + fekLen + 16 + 24;
+    if (blob.size < bodyOff) throw new VaultFormatError("truncated header");
+    if ((h.flags & FLAG_KEYFILE) && !opts.oldKeyData)
+      throw new VaultError("this vault requires its keyfile");
+
+    const hdrRest = new Uint8Array(await blob.slice(52, bodyOff).arrayBuffer());
+    const wnonce = hdrRest.subarray(0, 24);
+    const wrapped = hdrRest.subarray(24, 24 + fekLen + 16);
+    const streamHdr = hdrRest.subarray(24 + fekLen + 16, bodyOff - 52);
+
+    // old wrap comes off (exact stamped params — no folding here)
+    let kek;
+    try {
+      kek = await deriveKek(opts.oldPassword, h.salt,
+        { memoryKib: h.mem, timeCost: h.t, parallelism: h.par },
+        opts.oldKeyData || null);
+    } catch (e) {
+      if (isMemError(e))
+        throw new VaultError(
+          "this vault's current key needs " + Math.round(h.mem / 1024) +
+          " MiB of scratch RAM and this browser refused it — close other" +
+          " tabs/apps and retry, or use a desktop");
+      throw e;
+    }
+    let fek;
+    try {
+      fek = sodium.crypto_aead_xchacha20poly1305_ietf_decrypt(
+        null, wrapped, null, wnonce, kek);
+    } catch (e) {
+      throw new VaultAuthError("wrong password/keyfile or corrupted vault");
+    } finally {
+      kek.fill(0);
+    }
+
+    // new wrap goes on — params proven on THIS device, stamped in the head
+    const p = opts.params || KDF_PROFILES[opts.profile || "standard"];
+    if (!p || !Number.isFinite(p.memoryKib) ||
+        !Number.isFinite(p.timeCost) || !Number.isFinite(p.parallelism))
+      throw new VaultFormatError("invalid KDF parameters");
+    validateKdf(p.memoryKib, p.timeCost, p.parallelism);
+
+    const salt2 = randbytes(32);
+    const proven = await argon2idProven(opts.newPassword, salt2, p,
+                                        opts.onKdfFold || null);
+    const kek2 = await kekFromRaw(proven.raw, salt2, opts.newKeyData || null);
+    const wnonce2 = randbytes(24);
+    const wrapped2 = sodium.crypto_aead_xchacha20poly1305_ietf_encrypt(
+      fek, null, null, wnonce2, kek2);
+    kek2.fill(0);
+    fek.fill(0);
+
+    const flags2 = (h.flags & FLAG_CASCADE) |
+                   (opts.newKeyData ? FLAG_KEYFILE : 0);
+    const fixed2 = new Uint8Array(52);
+    fixed2.set(concat(u8(MAGIC_V2), new Uint8Array([2, 1]),
+                      le32(proven.mem), le32(p.timeCost),
+                      new Uint8Array([p.parallelism, flags2]), salt2));
+
+    const body = blob.slice(bodyOff);   // view — no copy of the payload
+    const length = bodyOff + (blob.size - bodyOff);
+    return { parts: [fixed2, wnonce2, wrapped2, streamHdr, body],
+             length, cascade };
+  }
+
   // -- KDF calibration ("max") -----------------------------------------------
   /* Browsers vary wildly in how much WASM memory Argon2 may grab. Sample at
      64 MiB first; if the device refuses, step down until one works. Then
@@ -465,7 +544,7 @@
     MAGIC_V2, CHUNK_SIZE, KDF_PROFILES, MEM_FLOOR_KIB,
     VaultError, VaultAuthError, VaultFormatError, VaultCancelled,
     setEnv, keyfileDigest, generateKeyfileBytes, encryptVault, decryptVault,
-    info, calibrateKdf, runSelfTest, SELFTEST, isMemError,
+    recombineVault, info, calibrateKdf, runSelfTest, SELFTEST, isMemError,
     _internals: { hkdfSha256, deriveKek, argon2id, argon2idProven,
                   kekFromRaw, parsePrefix, concat, u8 },
   };

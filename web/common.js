@@ -7,7 +7,7 @@
   const VB = (window.VB = {});
   const $ = (VB.$ = (s) => document.querySelector(s));
   VB.$$ = (s) => Array.from(document.querySelectorAll(s));
-  VB.VERSION = "2.0.11";
+  VB.VERSION = "2.0.12";
 
   // ---------------- the desk lamp & ink well (themes) ----------------
   // Applied synchronously before first paint, so no theme flash. The
@@ -135,17 +135,18 @@
     job.id = id;
     job.type = "job";
     lastJobId = id;
-    if (job.password) {                     // transfer (not copy) secret bytes
-      const buf = job.password.buffer.slice(0);
-      job.password = new Uint8Array(buf);
-      worker.postMessage(job, [buf]);
-    } else if (job.keyData) {
-      const buf = job.keyData.buffer.slice(0);
-      job.keyData = new Uint8Array(buf);
-      worker.postMessage(job, [buf]);
-    } else {
-      worker.postMessage(job);
+    // transfer (not copy) every secret byte array offered with the job
+    const SECRETS = ["password", "oldPassword", "newPassword",
+                     "keyData", "oldKeyData", "newKeyData"];
+    const transfers = [];
+    for (const k of SECRETS) {
+      if (job[k] instanceof Uint8Array) {
+        const buf = job[k].buffer.slice(0);
+        job[k] = new Uint8Array(buf);
+        transfers.push(buf);
+      }
     }
+    worker.postMessage(job, transfers);
     return new Promise((resolve) => pending.set(id, { progressEl, resolve }));
   };
   const cancelJob = (id) => worker.postMessage({ type: "cancel", id });
@@ -307,8 +308,8 @@
   /* memory tiers (MiB) × turning counts, graded weakest → heaviest.
      Values ride as raw params: p:<memKiB>:<turns>:<lanes>. They are stamped
      into the vault header, so every notch opens in the CLI & desktop app. */
-  VB.buildLadder = function () {
-    const selx = $("#enc-security");
+  VB.buildLadder = function (sel) {
+    const selx = typeof sel === "string" ? $(sel) : (sel || $("#enc-security"));
     if (!selx) return;
     const MEM = [16, 24, 32, 48, 64, 96, 128, 160, 192, 256, 320, 384,
                  448, 512, 640, 768, 896, 1024];
