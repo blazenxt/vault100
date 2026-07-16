@@ -19,10 +19,11 @@ from .crypto_core import (
     encrypt_file,
     encrypt_stream,
     vault_info,
+    verify_file,
 )
 from .keyfile import generate_keyfile, load_keyfile
 
-__version__ = "2.0.21"
+__version__ = "2.0.22"
 __all__ = [
     "DEFAULT_PROFILE",
     "KDF_PROFILES",
@@ -39,5 +40,6 @@ __all__ = [
     "generate_keyfile",
     "load_keyfile",
     "vault_info",
+    "verify_file",
     "__version__",
 ]

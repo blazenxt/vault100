@@ -163,6 +163,9 @@ python -m vault100 share split combo.txt -n 5 -m 3
 python -m vault100 share join combo.slip-1-of-5.v100s \
     combo.slip-3-of-5.v100s combo.slip-4-of-5.v100s -o combo.txt
 
+# The custody clerk — prove vaults open clean, write NOTHING to disk
+python -m vault100 verify secret.pdf.v100 backup.v100asc
+
 # Secure deletion of anything
 python -m vault100 shred old_keys.pem --passes 7
 ```
@@ -234,6 +237,7 @@ node web/server.mjs    # serves on :8080 (honors $PORT), /health for checks
 **v2.0.x series** (all releases on the
 [releases page](https://github.com/blazenxt/vault100/releases)):
 
+* **2.0.22** — **desk box hardening**: Tkinter night-ledger bureau theme · live strength bar · stopwatch bench button · recently-handled forms (XDG config) · **CLI + GUI `verify`** — prove vaults open clean with ZERO plaintext written · module import smoke-test
 * **2.0.21** — **the courier's corner**: QR stamps (Annex instrument (h) + per-slip **QR ↗** + armorer hand-off, vendored MIT qrcode, camera-only) · clerk's record download as stamped `.txt` on every counter · drag-anywhere intake on filing pages · PWA install button (get) · zone-drop de-dup + rewrap double-inspect fixes
 * **2.0.20** — **the quorum press**: Shamir M-of-N secret sharing over GF(2⁸) — Annex D instrument (g) + CLI `share split/join`, checksum-pressed slips, byte-exact web↔desk
 * **2.0.19** — **the armorer**: V100A1 ASCII armor (Form 100-M web counter + `encrypt --armor`, byte-exact both ways, decrypt auto-detects) · sweep now empties text wells

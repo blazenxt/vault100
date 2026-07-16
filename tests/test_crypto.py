@@ -630,5 +630,89 @@ class QuorumPressTests(unittest.TestCase):
                  "-o", os.path.join(td, "nope.bin")]), 1)
 
 
+class CustodyVerifyTests(unittest.TestCase):
+    """The custody clerk — prove vaults open clean, keep nothing."""
+
+    def _vault(self, td, name="doc.txt", body=None, **kw):
+        from vault100.crypto_core import encrypt_file
+        src = os.path.join(td, name)
+        with open(src, "wb") as f:
+            f.write(body if body is not None else os.urandom(4096))
+        dst = src + ".v100"
+        encrypt_file(src, dst, PW, profile="standard", **kw)
+        return src, dst
+
+    def test_verify_ok_and_writes_nothing(self):
+        from vault100.crypto_core import verify_file
+        with tempfile.TemporaryDirectory() as td:
+            src, dst = self._vault(td)
+            before = set(os.listdir(td))
+            meta = verify_file(dst, PW)
+            self.assertEqual(meta.get("name"), os.path.basename(src))
+            self.assertEqual(set(os.listdir(td)), before)
+
+    def test_verify_tampered_refused(self):
+        from vault100.crypto_core import VaultAuthError as VAE, verify_file
+        with tempfile.TemporaryDirectory() as td:
+            _, dst = self._vault(td)
+            blob = bytearray(open(dst, "rb").read())
+            blob[-20] ^= 1
+            open(dst, "wb").write(blob)
+            with self.assertRaises((VAE, VaultError)):
+                verify_file(dst, PW)
+
+    def test_verify_wrong_password_refused(self):
+        from vault100.crypto_core import VaultAuthError as VAE, verify_file
+        with tempfile.TemporaryDirectory() as td:
+            _, dst = self._vault(td)
+            with self.assertRaises((VAE, VaultError)):
+                verify_file(dst, PW2)
+
+    def test_verify_armored_vault(self):
+        from vault100.crypto_core import encrypt_file, verify_file
+        with tempfile.TemporaryDirectory() as td:
+            src = os.path.join(td, "note.txt")
+            open(src, "wb").write(b"armored custody")
+            dst = src + ".v100asc"
+            encrypt_file(src, dst, PW, profile="standard", armor=True)
+            self.assertEqual(verify_file(dst, PW).get("name"), "note.txt")
+
+    def test_cli_verify_batch(self):
+        from vault100 import cli
+        old = os.environ.get("VAULT100_PASSWORD")
+        os.environ["VAULT100_PASSWORD"] = PW.decode()
+        try:
+            with tempfile.TemporaryDirectory() as td:
+                _, good = self._vault(td, "a.txt")
+                _, bad = self._vault(td, "b.txt")
+                blob = bytearray(open(bad, "rb").read()); blob[-20] ^= 1
+                open(bad, "wb").write(blob)
+                self.assertEqual(cli.main(["verify", good]), 0)
+                self.assertEqual(cli.main(["verify", good, bad]), 1)
+                self.assertEqual(cli.main(
+                    ["verify", os.path.join(td, "missing.v100")]), 1)
+        finally:
+            if old is None:
+                del os.environ["VAULT100_PASSWORD"]
+            else:
+                os.environ["VAULT100_PASSWORD"] = old
+
+    def test_gui_module_imports(self):
+        """The desk box must at least construct headlessly (no display)."""
+        import importlib
+        m = importlib.import_module("vault100.gui")
+        self.assertTrue(hasattr(m, "Vault100App"))
+        self.assertTrue(hasattr(m, "recents_load"))
+        # recents round-trip via a redirected config home
+        with tempfile.TemporaryDirectory() as td:
+            os.environ["XDG_CONFIG_HOME"] = td
+            m.recents_add(os.path.join(td, "x.v100"))
+            m.recents_add(os.path.join(td, "y.txt"))
+            got = m.recents_load()
+            self.assertEqual(got[0].endswith("y.txt"), True)
+            self.assertEqual(len(got), 2)
+            del os.environ["XDG_CONFIG_HOME"]
+
+
 if __name__ == "__main__":
     unittest.main(verbosity=2)

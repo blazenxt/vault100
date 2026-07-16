@@ -23,7 +23,8 @@ import time
 from .crypto_core import (DEFAULT_PROFILE, KDF_PROFILES, VaultAuthError,
                           VaultCancelled, VaultError, calibrate_profile,
                           change_password, decrypt_file, encrypt_file,
-                          sanitize_filename, unique_path, vault_info)
+                          sanitize_filename, unique_path, vault_info,
+                          verify_file)
 from .genpass import gen_passphrase, gen_password
 from .keyfile import KeyfileError, generate_keyfile, identify, load_keyfile
 from .shamir import (SHARE_EXT, ShareError, join_from_text, press_id_of,
@@ -353,6 +354,33 @@ def cmd_shred(args) -> int:
     return 0 if ok else 1
 
 
+def cmd_verify(args) -> int:
+    pw = _read_password(args, confirm=False)
+    key_data = _load_key(getattr(args, "keyfile", None))
+    quiet = getattr(args, "quiet", False)
+    ok_all = True
+    for path in args.paths:
+        if not os.path.isfile(path):
+            print(f"  ✗ {path}: no such file", file=sys.stderr)
+            ok_all = False
+            continue
+        t0 = time.time()
+        size = os.path.getsize(path)
+        try:
+            meta = verify_file(path, pw, key_data=key_data)
+            name = meta.get("name") or "?"
+            print(f"  ✓ {path} — integrity proven; “{name}” opens clean "
+                  f"({size:,} B in {time.time() - t0:.1f}s; nothing written)")
+        except VaultAuthError:
+            print(f"  ✗ {path} — REFUSED: wrong password/keyfile or "
+                  f"tampered vault")
+            ok_all = False
+        except (VaultError, OSError) as e:
+            print(f"  ✗ {path} — {e}")
+            ok_all = False
+    return 0 if ok_all else 1
+
+
 def cmd_share(args) -> int:
     if args.share_op == "split":
         with open(args.file, "rb") as f:
@@ -503,6 +531,17 @@ def build_parser() -> argparse.ArgumentParser:
     qj.add_argument("-o", "--out", help="output file "
                                         "(default: recovered-secret.bin)")
     q.set_defaults(func=cmd_share)
+
+    v = sub.add_parser("verify", help="the custody clerk — prove vaults open "
+                                      "clean WITHOUT writing any files")
+    v.add_argument("paths", nargs="+", help="vaults (.v100 / .v100asc) "
+                                            "to prove")
+    v.add_argument("--keyfile", help="keyfile the vaults are bound to")
+    v.add_argument("--password-file", help="read password from file "
+                                           "(first line)")
+    v.add_argument("-q", "--quiet", action="store_true",
+                   help="less ceremony")
+    v.set_defaults(func=cmd_verify)
     return p
 
 

@@ -748,6 +748,29 @@ def decrypt_file(src: str, dst: str, password: bytes, **kw) -> dict:
         return decrypt_stream(_maybe_dearmor(fin), fout, password, **kw)
 
 
+class _NullWriter:
+    """Custody sink for the verify desk — proves, keeps nothing."""
+    def write(self, data: bytes) -> int:
+        return len(data)
+
+    def flush(self) -> None:        # pragma: no cover - trivial
+        pass
+
+
+def verify_file(src: str, password: bytes, *, key_data=None,
+                progress=None) -> dict:
+    """Prove a vault opens cleanly WITHOUT writing any plaintext.
+
+    Every chunk is decrypted and authenticated exactly as decryption would,
+    but the plaintext falls into a null sink. Armored vaults are detected
+    transparently. Returns metadata on success; raises VaultAuthError on a
+    wrong combination/keyfile or any tampering."""
+    with open(src, "rb") as fin:
+        return decrypt_stream(_maybe_dearmor(fin), _NullWriter(), password,
+                              key_data=key_data,
+                              total=os.stat(src).st_size, progress=progress)
+
+
 # ---------------------------------------------------------------------------
 # Password change / inspection / calibration
 # ---------------------------------------------------------------------------

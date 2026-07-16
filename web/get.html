@@ -28,11 +28,11 @@
 <meta name="twitter:image" content="https://vault100.blazenxt.in/og-cover.jpg">
 <link rel="manifest" href="manifest.json">
 <title>Get Vault100 — Web PWA, CLI, Desktop & Self-Host</title>
-<link rel="icon" type="image/svg+xml" href="icon.svg?v=221">
-<link rel="icon" type="image/png" sizes="32x32" href="icons/icon-32.png?v=221">
-<link rel="icon" type="image/png" sizes="16x16" href="icons/icon-16.png?v=221">
-<link rel="apple-touch-icon" href="icons/icon-180.png?v=221">
-<link rel="stylesheet" href="bureau.css?v=221">
+<link rel="icon" type="image/svg+xml" href="icon.svg?v=222">
+<link rel="icon" type="image/png" sizes="32x32" href="icons/icon-32.png?v=222">
+<link rel="icon" type="image/png" sizes="16x16" href="icons/icon-16.png?v=222">
+<link rel="apple-touch-icon" href="icons/icon-180.png?v=222">
+<link rel="stylesheet" href="bureau.css?v=222">
 </head>
 <body>
 
@@ -144,13 +144,16 @@ cd vault100
 pip install -r requirements.txt
 python -m vault100 encrypt secret.pdf --cascade
 python -m vault100 decrypt secret.pdf.v100
-python -m vault100 bench          <span class="c1"># the timekeeper</span></pre>
+python -m vault100 bench          <span class="c1"># the timekeeper</span>
+python -m vault100 verify x.v100  <span class="c1"># custody check, nothing written</span>
+python -m vault100 share split combo.txt -n 5 -m 3  <span class="c1"># quorum press</span></pre>
       </div>
       <div class="rec">
         <div class="idx">way the third · heavier window</div>
         <h3>The desktop box</h3>
-        <p>A Tkinter counter for the desk-drawer sort — same vaults, same notches,
-          plus a strength gauge and one-click keyfile minting.</p>
+        <p>A Tkinter counter in the night-ledger livery — same vaults, same
+          notches, live strength bar, stopwatch bench, recently-handled forms,
+          and a verify desk that proves vaults without writing a byte.</p>
         <pre class="cmd"><span class="c1"># Debian/Ubuntu first: sudo apt install python3-tk</span>
 python -m vault100.gui</pre>
       </div>
@@ -209,7 +212,7 @@ node web/server.mjs   <span class="c1"># → http://localhost:8080</span></pre>
   </nav>
 
   <footer>
-    <span><span class="b">Vault100 v2.0.21</span> · the seal bureau · night ledger</span>
+    <span><span class="b">Vault100 v2.0.22</span> · the seal bureau · night ledger</span>
     <span>© 2026 BlazeNXT ·
       <a href="https://github.com/blazenxt/vault100/blob/main/LICENSE" rel="noopener">MIT license</a>
       · no accounts · no telemetry · no escrow</span>
@@ -225,6 +228,6 @@ node web/server.mjs   <span class="c1"># → http://localhost:8080</span></pre>
   <span class="curl" aria-hidden="true"></span>
 </div>
 
-<script src="common.js?v=221"></script>
+<script src="common.js?v=222"></script>
 </body>
 </html>

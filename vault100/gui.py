@@ -1,33 +1,155 @@
 """Vault100 desktop GUI v2 (Tkinter — no extra dependencies).
 
 Run:  python -m vault100.gui
+
+v2.0.22 — night-ledger bureau theme, live strength bar, the timekeeper
+(bench), recently-handled forms, and a vault-verify desk.
 """
 
 from __future__ import annotations
 
+import json
 import os
 import queue
 import threading
+import time
 import tkinter as tk
 from tkinter import filedialog, messagebox, ttk
 
 from .crypto_core import (DEFAULT_PROFILE, KDF_PROFILES, VaultAuthError,
                           VaultCancelled, VaultError, calibrate_profile,
                           change_password, decrypt_file, encrypt_file,
-                          sanitize_filename, unique_path, vault_info)
+                          sanitize_filename, unique_path, vault_info,
+                          verify_file)
 from .keyfile import KeyfileError, generate_keyfile, identify, load_keyfile
 from .shredder import ShredError, shred_file
 from .strength import estimate
+from . import __version__
 
 SECURITY_CHOICES = sorted(KDF_PROFILES) + ["max (auto-tune)"]
+
+# -- night-ledger palette (matches the web counter) ---------------------------
+SHEET = "#121317"     # desk felt
+PAPER = "#1c1e24"     # form paper
+PAPER2 = "#23262e"    # raised paper
+LINE = "#3a3d46"      # ruling lines
+INK = "#ddd6c4"       # carbon ink
+INK2 = "#8b8574"      # faded ink
+RED = "#e15555"       # official stamp red
+RED_D = "#a83838"     # stamp shadow
+GREEN = "#58b368"
+AMBER = "#e0a055"
+
+STRENGTH_COLORS = ["#c0392b", "#e67e22", "#f1c40f", "#27ae60", "#1e8449"]
+
+
+def _apply_theme(root: tk.Tk) -> ttk.Style:
+    """Dress the whole box in the bureau's night ledger."""
+    style = ttk.Style(root)
+    style.theme_use("clam")
+    root.configure(bg=SHEET)
+    style.configure(".", background=SHEET, foreground=INK,
+                    fieldbackground=PAPER, bordercolor=LINE,
+                    darkcolor=SHEET, lightcolor=SHEET, troughcolor=SHEET,
+                    selectbackground=RED_D, selectforeground="#ffffff")
+    style.configure("TFrame", background=SHEET)
+    style.configure("TLabel", background=SHEET, foreground=INK)
+    style.configure("Hint.TLabel", background=SHEET, foreground=INK2)
+    style.configure("Title.TLabel", background=SHEET, foreground=INK,
+                    font=("TkDefaultFont", 10, "bold"))
+    style.configure("TLabelframe", background=SHEET, foreground=INK,
+                    bordercolor=LINE)
+    style.configure("TLabelframe.Label", background=SHEET, foreground=RED,
+                    font=("TkDefaultFont", 9, "bold"))
+    style.configure("TButton", background=PAPER, foreground=INK,
+                    bordercolor=LINE, padding=(10, 5))
+    style.map("TButton",
+              background=[("active", PAPER2), ("pressed", RED_D),
+                          ("disabled", SHEET)],
+              foreground=[("disabled", INK2), ("pressed", "#ffffff")])
+    style.configure("Go.TButton", background=RED_D, foreground="#ffffff",
+                    bordercolor=RED)
+    style.map("Go.TButton",
+              background=[("active", RED), ("pressed", RED_D)])
+    style.configure("TCheckbutton", background=SHEET, foreground=INK)
+    style.map("TCheckbutton", background=[("active", SHEET)])
+    style.configure("TEntry", fieldbackground=PAPER, foreground=INK,
+                    insertcolor=INK, bordercolor=LINE)
+    style.configure("TCombobox", fieldbackground=PAPER, foreground=INK,
+                    arrowcolor=INK, bordercolor=LINE, insertcolor=INK)
+    style.map("TCombobox",
+              fieldbackground=[("readonly", PAPER)],
+              foreground=[("readonly", INK)],
+              selectbackground=[("readonly", PAPER)],
+              selectforeground=[("readonly", INK)])
+    style.configure("TSpinbox", fieldbackground=PAPER, foreground=INK,
+                    arrowcolor=INK, bordercolor=LINE, insertcolor=INK)
+    style.configure("TNotebook", background=SHEET, bordercolor=LINE,
+                    tabmargins=(2, 4, 2, 0))
+    style.configure("TNotebook.Tab", background=PAPER, foreground=INK2,
+                    padding=(16, 7), bordercolor=LINE)
+    style.map("TNotebook.Tab",
+              background=[("selected", PAPER2)],
+              foreground=[("selected", RED)])
+    style.configure("Horizontal.TProgressbar", background=RED,
+                    troughcolor=PAPER, bordercolor=LINE)
+    style.configure("TScrollbar", background=PAPER2, troughcolor=SHEET,
+                    arrowcolor=INK, bordercolor=SHEET)
+    style.map("TScrollbar", background=[("active", LINE)])
+    root.option_add("*TCombobox*Listbox.background", PAPER)
+    root.option_add("*TCombobox*Listbox.foreground", INK)
+    root.option_add("*TCombobox*Listbox.selectBackground", RED_D)
+    return style
+
+
+def _plain(widget_parent, kind, **kw):
+    """A palette-dressed tk.Listbox / tk.Text (the non-ttk widgets)."""
+    base = dict(bg=PAPER, fg=INK, highlightthickness=1,
+                highlightbackground=LINE, highlightcolor=RED,
+                selectbackground=RED_D, selectforeground="#ffffff",
+                relief="flat", bd=0)
+    if kind is not tk.Listbox:               # listbox has no insertion cursor
+        base["insertbackground"] = INK
+    base.update(kw)
+    return kind(widget_parent, **base)
+
+
+# -- recently handled forms (kept on the user's own desk) ---------------------
+def _recents_path() -> str:
+    cfg = os.environ.get("XDG_CONFIG_HOME") or os.path.join(
+        os.path.expanduser("~"), ".config")
+    d = os.path.join(cfg, "vault100")
+    os.makedirs(d, exist_ok=True)
+    return os.path.join(d, "recent.json")
+
+
+def recents_load() -> list[str]:
+    try:
+        with open(_recents_path(), "r", encoding="utf-8") as f:
+            items = json.load(f)
+        return [p for p in items if isinstance(p, str)][:8]
+    except (OSError, ValueError):
+        return []
+
+
+def recents_add(path: str) -> None:
+    path = os.path.abspath(path)
+    items = [p for p in recents_load() if p != path]
+    items.insert(0, path)
+    try:
+        with open(_recents_path(), "w", encoding="utf-8") as f:
+            json.dump(items[:8], f)
+    except OSError:
+        pass
 
 
 class Vault100App(tk.Tk):
     def __init__(self) -> None:
         super().__init__()
-        self.title("Vault100 v2 — Maximum-Security File Encryption")
-        self.geometry("820x700")
-        self.minsize(700, 600)
+        self.title(f"Vault100 v{__version__} — the seal bureau's desk box")
+        self.geometry("860x720")
+        self.minsize(720, 620)
+        self._style = _apply_theme(self)
 
         self._tasks: queue.Queue = queue.Queue()
         self._cancel = threading.Event()
@@ -39,8 +161,8 @@ class Vault100App(tk.Tk):
         self.dec_tab = _CryptoTab(nb, self, mode="decrypt")
         self.shred_tab = _ShredTab(nb, self)
         self.tools_tab = _ToolsTab(nb, self)
-        nb.add(self.enc_tab, text="  Encrypt  ")
-        nb.add(self.dec_tab, text="  Decrypt  ")
+        nb.add(self.enc_tab, text="  Seal  ")
+        nb.add(self.dec_tab, text="  Open  ")
         nb.add(self.shred_tab, text="  Shred  ")
         nb.add(self.tools_tab, text="  Tools  ")
         nb.add(_AboutTab(nb), text="  About  ")
@@ -114,7 +236,7 @@ class _BaseTab(ttk.Frame):
         self.app = app
 
     def log(self, text):
-        pass
+        raise NotImplementedError
 
     def set_progress(self, frac, text):
         pass
@@ -123,18 +245,21 @@ class _BaseTab(ttk.Frame):
         def cb(done, total):
             if self.app._cancel.is_set():
                 raise VaultCancelled()
-            self.app.progress(done / total if total else 0.0, label)
+            if total:
+                self.app.progress(min(1.0, done / total), label)
         return cb
 
     def _log_area(self, parent_frame):
-        box = tk.Text(parent_frame, height=6, state="disabled", wrap="word")
+        box = _plain(parent_frame, tk.Text, height=6, state="disabled",
+                     wrap="word")
         return box
 
     def _write_log(self, box, text):
         box.configure(state="normal")
-        box.insert("end", text + "\n")
-        box.see("end")
+        stamp = time.strftime("%H:%M:%S")
+        box.insert("end", f"[{stamp}] {text}\n")
         box.configure(state="disabled")
+        box.see("end")
 
 
 class _CryptoTab(_BaseTab):
@@ -142,16 +267,17 @@ class _CryptoTab(_BaseTab):
         super().__init__(parent, app)
         self.mode = mode
         pad = {"padx": 6, "pady": 4}
-        verb = "Encrypt" if mode == "encrypt" else "Decrypt"
+        verb = "Seal" if mode == "encrypt" else "Open"
 
         ttk.Label(self,
-                  text="Files / folders to encrypt" if mode == "encrypt"
-                  else "Vault100 files (.v100) to decrypt",
-                  font=("TkDefaultFont", 10, "bold")).pack(anchor="w", **pad)
+                  text="Files / folders to seal" if mode == "encrypt"
+                  else "Vault100 files (.v100) to open",
+                  style="Title.TLabel").pack(anchor="w", **pad)
 
         lb_frame = ttk.Frame(self)
         lb_frame.pack(fill="both", expand=True, **pad)
-        self.listbox = tk.Listbox(lb_frame, height=6, selectmode="extended")
+        self.listbox = _plain(lb_frame, tk.Listbox, height=6,
+                              selectmode="extended")
         sb = ttk.Scrollbar(lb_frame, command=self.listbox.yview)
         self.listbox.configure(yscrollcommand=sb.set)
         self.listbox.pack(side="left", fill="both", expand=True)
@@ -169,6 +295,12 @@ class _CryptoTab(_BaseTab):
         ttk.Button(btns, text="Clear",
                    command=lambda: self.listbox.delete(0, "end")
                    ).pack(side="left")
+        self.recent = tk.StringVar(value="recently handled…")
+        self.recents_box = ttk.Combobox(
+            btns, textvariable=self.recent, width=28, state="readonly",
+            postcommand=self._recents_refresh)
+        self.recents_box.pack(side="right")
+        self.recents_box.bind("<<ComboboxSelected>>", self._recents_pick)
 
         opts = ttk.LabelFrame(self, text="Options")
         opts.pack(fill="x", **pad)
@@ -190,7 +322,7 @@ class _CryptoTab(_BaseTab):
                    ).grid(row=1, column=2, **pad)
         hint = ("optional second factor — vault then needs BOTH"
                 if mode == "encrypt" else "required if vault was made with one")
-        ttk.Label(opts, text=hint, foreground="#666"
+        ttk.Label(opts, text=hint, style="Hint.TLabel"
                   ).grid(row=1, column=3, sticky="w", **pad)
 
         self.shred = tk.BooleanVar(value=False)
@@ -237,9 +369,12 @@ class _CryptoTab(_BaseTab):
             self.pw2 = ttk.Entry(pwbox, show="•", width=36)
             self.pw2.grid(row=0, column=1, **pad)
             widgets.append(self.pw2)
-            self.strength_lbl = ttk.Label(pwbox, text="strength: —")
-            self.strength_lbl.grid(row=1, column=0, columnspan=2,
-                                   sticky="w", **pad)
+            self.strength_bar = ttk.Progressbar(
+                pwbox, mode="determinate", maximum=4, length=110)
+            self.strength_bar.grid(row=1, column=1, sticky="e", **pad)
+            self.strength_lbl = ttk.Label(pwbox, text="strength: —",
+                                          style="Hint.TLabel")
+            self.strength_lbl.grid(row=1, column=0, sticky="w", **pad)
             self.pw1.bind("<KeyRelease>", self._strength)
         ttk.Checkbutton(
             pwbox, text="Show", variable=show,
@@ -248,7 +383,8 @@ class _CryptoTab(_BaseTab):
 
         act = ttk.Frame(self)
         act.pack(fill="x", **pad)
-        ttk.Button(act, text=f"▶  {verb}", command=self._go).pack(side="left")
+        ttk.Button(act, text=f"▶  {verb}", style="Go.TButton",
+                   command=self._go).pack(side="left")
         ttk.Button(act, text="✖  Cancel", command=self.app._cancel.set
                    ).pack(side="left", padx=8)
         self.bar = ttk.Progressbar(act, mode="determinate")
@@ -281,13 +417,28 @@ class _CryptoTab(_BaseTab):
         if p:
             self.keyfile.set(p)
 
+    def _recents_refresh(self):
+        want = "" if self.mode == "encrypt" else ".v100"
+        items = [p for p in recents_load()
+                 if (p.endswith(".v100") if want else not p.endswith(".v100"))
+                 and os.path.exists(p)]
+        self.recents_box["values"] = items or ["(nothing handled recently)"]
+
+    def _recents_pick(self, _evt):
+        p = self.recent.get()
+        if p and os.path.exists(p) and p not in self.listbox.get(0, "end"):
+            self.listbox.insert("end", p)
+        self.recent.set("recently handled…")
+
     def _strength(self, _evt):
         rep = estimate(self.pw1.get())
-        colors = ["#c0392b", "#e67e22", "#f1c40f", "#27ae60", "#1e8449"]
+        self.strength_bar["value"] = rep["score"]
+        self.strength_bar.configure(
+            style=f"S{rep['score']}.Horizontal.TProgressbar")
         self.strength_lbl.configure(
             text=f"strength: {rep['label']} (offline-attack resistance: "
                  f"{rep['crack_time']})",
-            foreground=colors[rep["score"]])
+            foreground=STRENGTH_COLORS[rep["score"]])
 
     def log(self, text):
         self._write_log(self.logbox, text)
@@ -317,10 +468,10 @@ class _CryptoTab(_BaseTab):
                     "Vault100", f"Password strength: {rep['label']}.\n"
                     + "\n".join(rep["tips"]) + "\n\nUse it anyway?"):
                 return
-            self.app.start_task(f"Encrypting {len(paths)} item(s)…",
+            self.app.start_task(f"Sealing {len(paths)} item(s)…",
                                 lambda: self._encrypt_all(paths, pw))
         else:
-            self.app.start_task(f"Decrypting {len(paths)} file(s)…",
+            self.app.start_task(f"Opening {len(paths)} file(s)…",
                                 lambda: self._decrypt_all(paths, pw))
 
     # -- workers ------------------------------------------------------------
@@ -360,7 +511,7 @@ class _CryptoTab(_BaseTab):
                             exist_ok=True)
             else:
                 dst = src + ".v100"
-            self.app.log(f"  encrypt {arc}"
+            self.app.log(f"  seal {arc}"
                          + (" [cascade]" if self.cascade.get() else "")
                          + (" [gzip]" if self.compress.get() else ""))
             encrypt_file(src, dst, pw.encode(), profile=profile,
@@ -368,6 +519,7 @@ class _CryptoTab(_BaseTab):
                          cascade=self.cascade.get(),
                          compress=self.compress.get(),
                          progress=self._progress_cb(arc))
+            recents_add(dst)
             if self.shred.get():
                 shred_file(src)
                 self.app.log(f"    shredded {arc}")
@@ -378,7 +530,7 @@ class _CryptoTab(_BaseTab):
         for src in paths:
             if self.app._cancel.is_set():
                 raise VaultCancelled()
-            self.app.log(f"  decrypt {os.path.basename(src)}")
+            self.app.log(f"  open {os.path.basename(src)}")
             tmp = unique_path(src + ".out")
             try:
                 meta = decrypt_file(src, tmp, pw.encode(),
@@ -397,6 +549,8 @@ class _CryptoTab(_BaseTab):
             d = outdir or os.path.dirname(src)
             dst = unique_path(os.path.join(d, final))
             os.replace(tmp, dst)
+            recents_add(dst)
+            recents_add(src)
             self.app.log(f"    → {dst}")
             if self.shred.get():
                 shred_file(src)
@@ -407,8 +561,9 @@ class _ShredTab(_BaseTab):
         super().__init__(parent, app)
         pad = {"padx": 6, "pady": 4}
         ttk.Label(self, text="Permanently destroy files (unrecoverable)",
-                  font=("TkDefaultFont", 10, "bold")).pack(anchor="w", **pad)
-        self.listbox = tk.Listbox(self, height=8, selectmode="extended")
+                  style="Title.TLabel").pack(anchor="w", **pad)
+        self.listbox = _plain(self, tk.Listbox, height=8,
+                              selectmode="extended")
         self.listbox.pack(fill="both", expand=True, **pad)
         row = ttk.Frame(self)
         row.pack(fill="x", **pad)
@@ -425,8 +580,8 @@ class _ShredTab(_BaseTab):
                     textvariable=self.passes).pack(side="left")
         self.bar = ttk.Progressbar(self, mode="determinate")
         self.bar.pack(fill="x", **pad)
-        ttk.Button(self, text="🔥  SHRED NOW", command=self._go
-                   ).pack(anchor="w", **pad)
+        ttk.Button(self, text="🔥  SHRED NOW", style="Go.TButton",
+                   command=self._go).pack(anchor="w", **pad)
         self.logbox = self._log_area(self)
         self.logbox.pack(fill="both", expand=False, **pad)
 
@@ -439,31 +594,26 @@ class _ShredTab(_BaseTab):
     def _go(self):
         paths = [self.listbox.get(i) for i in range(self.listbox.size())]
         if not paths:
-            messagebox.showwarning("Vault100", "Add files first.")
+            messagebox.showwarning("Vault100", "Add at least one file.")
             return
         if not messagebox.askyesno(
-                "Vault100", f"PERMANENTLY destroy {len(paths)} file(s)?\n"
-                "This cannot be undone."):
+                "Vault100",
+                f"PERMANENTLY destroy {len(paths)} file(s)?"):
             return
-        n = self.passes.get()
 
         def work():
-            for pth in paths:
+            for p in paths:
                 if self.app._cancel.is_set():
                     raise VaultCancelled()
-                self.app.log(f"  shredding {pth}")
-                shred_file(pth, passes=n,
+                self.app.log(f"  shred {p}")
+                shred_file(p, passes=self.passes.get(),
                            progress=lambda d, t: self.app.progress(
-                               d / max(t, 1), pth))
-                self.app.log("    gone.")
-            self.listbox.delete(0, "end")
+                               min(1.0, d / t) if t else 0.0))
 
-        self.app.start_task(f"Shredding {len(paths)} file(s)…", work)
+        self.app.start_task("Shredding…", work)
 
 
 class _ToolsTab(_BaseTab):
-    """keygen / change password / vault info."""
-
     def __init__(self, parent, app):
         super().__init__(parent, app)
         pad = {"padx": 6, "pady": 4}
@@ -483,8 +633,9 @@ class _ToolsTab(_BaseTab):
         pc.pack(fill="x", **pad)
         self.pc_file = tk.StringVar()
         ttk.Label(pc, text="Vault:").grid(row=0, column=0, sticky="w", **pad)
-        ttk.Entry(pc, textvariable=self.pc_file, width=44
-                  ).grid(row=0, column=1, **pad)
+        self.pc_vault = ttk.Combobox(pc, textvariable=self.pc_file, width=41,
+                                     postcommand=self._pc_recents)
+        self.pc_vault.grid(row=0, column=1, **pad)
         ttk.Button(pc, text="Browse…", command=lambda: self._pick(
             self.pc_file)).grid(row=0, column=2, **pad)
         ttk.Label(pc, text="Current password:").grid(row=1, column=0,
@@ -505,10 +656,14 @@ class _ToolsTab(_BaseTab):
         ttk.Button(pc, text="Change password", command=self._pc_go
                    ).grid(row=4, column=1, sticky="w", **pad)
 
-        iv = ttk.LabelFrame(self, text="Vault info (no secrets)")
+        iv = ttk.LabelFrame(self, text="Vault desks — inspect & prove")
         iv.pack(fill="x", **pad)
         ttk.Button(iv, text="Inspect a .v100 file…", command=self._info_go
                    ).pack(side="left", **pad)
+        ttk.Button(iv, text="Verify integrity (no files written)…",
+                   command=self._verify_go).pack(side="left", **pad)
+        ttk.Button(iv, text="⏱ Engage the stopwatch (bench)",
+                   command=self._bench_go).pack(side="left", **pad)
 
         self.logbox = self._log_area(self)
         self.logbox.pack(fill="both", expand=True, **pad)
@@ -520,6 +675,11 @@ class _ToolsTab(_BaseTab):
         p = filedialog.askopenfilename()
         if p:
             var.set(p)
+
+    def _pc_recents(self):
+        items = [p for p in recents_load()
+                 if p.endswith(".v100") and os.path.exists(p)]
+        self.pc_vault["values"] = items
 
     def _kg_browse(self):
         p = filedialog.asksaveasfilename(defaultextension=".v100key")
@@ -535,6 +695,7 @@ class _ToolsTab(_BaseTab):
         def work():
             self.app.log(f"  generating {path}")
             generate_keyfile(path, overwrite=False)
+            recents_add(path)
             self.app.log("  guard it like a house key — and back it up.")
 
         self.app.start_task("Generating keyfile…", work)
@@ -553,6 +714,7 @@ class _ToolsTab(_BaseTab):
                 self.pc_new.get().encode(),
                 old_key_data=load_keyfile(kf) if kf else None,
                 new_key_data=load_keyfile(kf) if kf else None)
+            recents_add(vault)
             self.app.log("  password re-sealed; the old one is now useless "
                          "for this vault")
 
@@ -575,11 +737,74 @@ class _ToolsTab(_BaseTab):
                  f"keyfile {'required' if info['keyfile'] else 'no'}")
         self.log(f"    Argon2id {k['memory_kib'] // 1024} MiB × "
                  f"{k['time_cost']} · {info['size']:,} bytes")
+        recents_add(p)
+
+    def _verify_go(self):
+        paths = filedialog.askopenfilenames(
+            filetypes=[("Vault100", "*.v100*"), ("All files", "*")])
+        if not paths:
+            return
+        pw = self.pc_old.get()
+        if not pw:
+            messagebox.showwarning(
+                "Vault100",
+                "Enter the vault's password in “Current password” above — "
+                "integrity is proven WITH the combination, never without.")
+            return
+        kf = self.pc_key.get().strip()
+
+        def work():
+            key_data = load_keyfile(kf) if kf else None
+            for p in paths:
+                if self.app._cancel.is_set():
+                    raise VaultCancelled()
+                t0 = time.time()
+                self.app.log(f"  custody check {os.path.basename(p)}…")
+                try:
+                    meta = verify_file(p, pw.encode(), key_data=key_data,
+                                       progress=self._progress_cb(
+                                           os.path.basename(p)))
+                except VaultAuthError:
+                    self.app.log(f"    ✗ REFUSED — wrong combination/keyfile"
+                                 f" or tampered vault: {p}")
+                    continue
+                name = meta.get("name") or "?"
+                self.app.log(
+                    f"    ✓ integrity proven — “{name}” opens clean "
+                    f"({time.time() - t0:.1f}s; nothing written to disk)")
+                recents_add(p)
+
+        self.app.start_task(f"Verifying {len(paths)} vault(s)…", work)
+
+    def _bench_go(self):
+        def work():
+            from .crypto_core import benchmark
+            rep = benchmark(stream_mib=16, kdf_mibs=(8, 32, 64))
+            x = rep["xchacha"]
+            self.app.log(f"  xchacha20-poly1305 : {x['mib_s']:.1f} MiB/s")
+            a = rep["aes"]
+            self.app.log(f"  aes-256-gcm        : "
+                         + (f"{a['mib_s']:.1f} MiB/s" if a else "unavailable"))
+            for n in rep["argon2"]:
+                if n["seconds"] is None:
+                    self.app.log(f"  argon2id {n['memory_kib'] // 1024} MiB"
+                                 f" ×1t : refused (out of memory)")
+                else:
+                    self.app.log(f"  argon2id {n['memory_kib'] // 1024} MiB"
+                                 f" ×1t : {n['seconds']:.2f} s (4 lanes)")
+            s = rep["standard_seconds"]
+            if s is not None:
+                self.app.log(f"  → standard profile (128 MiB × 3) ≈ {s:.1f} s"
+                             f" per unlock on this desk")
+            self.app.log("  advice: pick a notch whose cost stays ≈ 1–4 s "
+                         "on this device")
+
+        self.app.start_task("The timekeeper clocks this device…", work)
 
 
 class _AboutTab(ttk.Frame):
-    TEXT = """\
-Vault100 v2 — security design
+    TEXT = f"""\
+Vault100 v{__version__} — the seal bureau's desk box · security design
 
   Vault key   Random per-file key (FEK), wrapped by your password key
               ⇒ password changes are instant; data is never re-encrypted
@@ -596,17 +821,24 @@ Vault100 v2 — security design
               to your machine (~2 s per unlock, forever for attackers)
 
   Integrity   AEAD per chunk + header bound as AAD at both layers —
-              tampering, reordering, truncation all fail loudly
+              tampering, reordering, truncation all fail loudly;
+              Tools → “Verify integrity” proves a vault opens clean
+              without writing a single byte to disk
+
+  Shield      Armor (V100A1) folds vaults into paste-anywhere text;
+              the quorum press (vault100 share) splits a secret into
+              N slips, any M of which reprint it
 
   Privacy     Original filename + metadata encrypted inside the vault
 
 No backdoors, no telemetry, no key escrow. Lose both your password and
-keyfile and the data is gone forever — keep backups of what matters.
+keyfile and the data is gone forever — keep backups of what matters,
+and lodge quorum slips apart for what you fear forgetting.
 """
 
     def __init__(self, parent):
         super().__init__(parent)
-        t = tk.Text(self, wrap="word", relief="flat", state="normal")
+        t = _plain(self, tk.Text, wrap="word", state="normal")
         t.insert("1.0", self.TEXT)
         t.configure(state="disabled")
         t.pack(fill="both", expand=True, padx=10, pady=10)
@@ -614,6 +846,11 @@ keyfile and the data is gone forever — keep backups of what matters.
 
 def main() -> None:
     app = Vault100App()
+    # per-score strength bar styles need the live style object
+    st = app._style
+    for i, col in enumerate(STRENGTH_COLORS):
+        st.configure(f"S{i}.Horizontal.TProgressbar", background=col,
+                     troughcolor=PAPER, bordercolor=LINE)
     app.mainloop()
 
 
