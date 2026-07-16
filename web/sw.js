@@ -8,7 +8,7 @@
  */
 "use strict";
 
-const VERSION = "217";
+const VERSION = "218";
 const CACHE = "vault100-" + VERSION;
 const Q = "?v=" + VERSION;
 const ASSETS = [
@@ -39,6 +39,13 @@ const ASSETS = [
   "/manifest.json",
   "/icon.svg",
   "/icon-maskable.svg",
+  "/icons/icon-16.png",
+  "/icons/icon-32.png",
+  "/icons/icon-180.png",
+  "/icons/icon-192.png",
+  "/icons/icon-512.png",
+  "/icons/icon-maskable-192.png",
+  "/icons/icon-maskable-512.png",
 ];
 
 self.addEventListener("install", (e) => {
