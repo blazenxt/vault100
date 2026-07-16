@@ -7,7 +7,7 @@
   const VB = (window.VB = {});
   const $ = (VB.$ = (s) => document.querySelector(s));
   VB.$$ = (s) => Array.from(document.querySelectorAll(s));
-  VB.VERSION = "2.0.14";
+  VB.VERSION = "2.0.15";
 
   // ---------------- the desk lamp & ink well (themes) ----------------
   // Applied synchronously before first paint, so no theme flash. The
@@ -114,6 +114,11 @@
     if (m.type === "kdf-fold") {
       log(`RAM ledger short — key folded to ${Math.round(m.mem / 1024)} MiB ` +
           `(turns & lanes unchanged; stamped in the header)`, "note");
+      return;
+    }
+    if (m.type === "bench") {
+      const p = pending.get(m.id);
+      if (p) { p.resolve(m.res); pending.delete(m.id); }
       return;
     }
     if (m.type === "info" || m.type === "done" || m.type === "error") {
@@ -562,6 +567,22 @@
       lbl.classList.remove("kfset");
       log("keyfile pocketed again.");
     };
+  };
+
+  // ---------------- the receipt punch ---------------------------------
+  /* Bureau-style batch serial. Pure ceremony — the bureau keeps no ledger
+     of these; the serial exists only in this page's record book. */
+  VB.makeSerial = function (kind) {
+    const d = new Date();
+    const ymd = String(d.getFullYear()).slice(-2) +
+      String(d.getMonth() + 1).padStart(2, "0") +
+      String(d.getDate()).padStart(2, "0");
+    const A = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";   // no I/O/0/1 — unambiguous
+    const buf = new Uint8Array(4);
+    crypto.getRandomValues(buf);
+    let r = "";
+    for (const b of buf) r += A[b % A.length];
+    return `№ V100·${ymd}·${kind}·${r}`;
   };
 
   // ---------------- the fine ladder: 108 key-turning notches ----------------

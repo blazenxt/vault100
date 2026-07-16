@@ -56,6 +56,12 @@
     const keyData = keyBtn._file
       ? new Uint8Array(await keyBtn._file.arrayBuffer()) : null;
 
+    // a batch of two or more documents is issued a receipt serial
+    const serial = rows.length > 1 ? window.VB.makeSerial("B") : null;
+    if (serial)
+      log(`receipt punched — ${serial} · ${rows.length} documents listed ` +
+          `(the bureau keeps no ledger; this stub lives only here)`);
+
     $("#enc-go").disabled = true;
     armCancel("#enc-cancel");
     for (const { file, prog } of rows) {
@@ -77,6 +83,7 @@
     $("#enc-pw1").value = $("#enc-pw2").value = "";
     $("#enc-go").disabled = false;
     disarmCancel("#enc-cancel");
-    log("Batch finished.");
+    log(serial ? `batch finished — receipt ${serial} closed & filed.`
+               : "Batch finished.");
   };
 })();

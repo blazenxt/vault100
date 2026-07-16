@@ -412,5 +412,31 @@ class CompressTests(unittest.TestCase):
         self.assertNotIn("gz", meta)
 
 
+class BenchTests(unittest.TestCase):
+    """The timekeeper: trials must produce sane, non-negative timings."""
+
+    def test_benchmark_shape_and_speed(self):
+        from vault100.crypto_core import benchmark
+        rep = benchmark(fast=True)          # small trials for CI
+        x = rep["xchacha"]
+        self.assertGreater(x["mib"], 0)
+        self.assertGreater(x["seconds"], 0)
+        self.assertGreater(x["mib_s"], 0)
+        if rep["aes"] is not None:
+            self.assertGreater(rep["aes"]["mib_s"], 0)
+        self.assertTrue(rep["argon2"])
+        for n in rep["argon2"]:
+            self.assertGreaterEqual(n["memory_kib"], 8 * 1024)
+        big = next((n for n in rep["argon2"] if n["seconds"] is not None),
+                   None)
+        self.assertIsNotNone(big)
+        self.assertGreater(rep["standard_seconds"], 0)
+
+    def test_cli_bench_runs(self):
+        from vault100 import cli
+        rc = cli.main(["bench", "--quick"])
+        self.assertEqual(rc, 0)
+
+
 if __name__ == "__main__":
     unittest.main(verbosity=2)

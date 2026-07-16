@@ -713,6 +713,75 @@ def vault_info(path: str) -> dict:
                 kdf=h["params"], size=size)
 
 
+def benchmark(*, stream_mib: int = 32,
+              kdf_mibs=(4, 16, 64), fast: bool | None = None) -> dict:
+    """The timekeeper — clock this device's ciphers and key-turning costs.
+
+    Returns a dict: ``xchacha``/``aes`` hold ``{mib, seconds, mib_s}``,
+    ``argon2`` is a list of ``{memory_kib, seconds}`` (``None`` when the
+    allocation was refused), and ``standard_seconds`` extrapolates the
+    standard profile's unlock cost on this device. Purely local timing.
+    """
+    if fast is None:
+        fast = os.environ.get("VAULT100_FAST_KDF") == "1"
+    if fast:
+        stream_mib = min(stream_mib, 8)
+        kdf_mibs = (8,)
+
+    out: dict = {}
+
+    # 1) XChaCha20-Poly1305 secretstream throughput
+    chunk = b"\x00" * CHUNK_SIZE
+    total = max(1, stream_mib) * 1024 * 1024
+    n_chunks = max(1, total // CHUNK_SIZE)
+    state, _hdr = _init_push(b"\x01" * KEY_BYTES)
+    t0 = time.perf_counter()
+    for i in range(n_chunks):
+        tag = TAG_FINAL if i == n_chunks - 1 else TAG_MESSAGE
+        _nb.crypto_secretstream_xchacha20poly1305_push(
+            state, chunk, b"", tag)
+    dt = max(time.perf_counter() - t0, 1e-6)
+    done_mib = n_chunks * CHUNK_SIZE / 1048576
+    out["xchacha"] = {"mib": done_mib, "seconds": dt, "mib_s": done_mib / dt}
+
+    # 2) AES-256-GCM (OpenSSL hardware path)
+    if _AESGCM is not None:
+        slab = b"\x00" * (max(1, stream_mib) * 1024 * 1024)
+        aes = _new_aes(b"\x02" * KEY_BYTES)
+        t0 = time.perf_counter()
+        aes.encrypt(_ctr_nonce(0), slab, b"")
+        dt = max(time.perf_counter() - t0, 1e-6)
+        mib = len(slab) / 1048576
+        out["aes"] = {"mib": mib, "seconds": dt, "mib_s": mib / dt}
+    else:
+        out["aes"] = None
+
+    # 3) Argon2id — one turn x 4 lanes at several memory notches
+    out["argon2"] = []
+    pw, salt = b"vault100-bench", b"\x03" * SALT_BYTES
+    for mib in kdf_mibs:
+        try:
+            t0 = time.perf_counter()
+            _derive_key(pw, salt, memory_kib=int(mib) * 1024,
+                        time_cost=1, parallelism=4)
+            out["argon2"].append({"memory_kib": int(mib) * 1024,
+                                  "seconds": time.perf_counter() - t0})
+        except Exception:
+            out["argon2"].append({"memory_kib": int(mib) * 1024,
+                                  "seconds": None})
+
+    # extrapolate the standard profile's per-unlock cost on this device
+    big = next((n for n in reversed(out["argon2"])
+                if n["seconds"] is not None), None)
+    if big is not None:
+        std = KDF_PROFILES["standard"]
+        out["standard_seconds"] = (big["seconds"] / big["memory_kib"]
+                                   * std["memory_kib"] * std["time_cost"])
+    else:
+        out["standard_seconds"] = None
+    return out
+
+
 def calibrate_profile(target_seconds: float = 2.0, *,
                       max_kib: int = 1024 * 1024,
                       parallelism: int = 4) -> dict:

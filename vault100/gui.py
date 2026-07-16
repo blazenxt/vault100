@@ -203,14 +203,19 @@ class _CryptoTab(_BaseTab):
                          state="readonly",
                          values=SECURITY_CHOICES).grid(row=2, column=1,
                                                        sticky="w", **pad)
+            self.compress = tk.BooleanVar(value=False)
             ttk.Checkbutton(
                 opts, variable=self.cascade,
                 text="Cascade mode (AES-256-GCM + XChaCha20, dual cipher)"
                 ).grid(row=3, column=0, columnspan=3, sticky="w", **pad)
             ttk.Checkbutton(
+                opts, variable=self.compress,
+                text="Compress first (gzip inside the vault)") \
+                .grid(row=4, column=0, columnspan=3, sticky="w", **pad)
+            ttk.Checkbutton(
                 opts, variable=self.shred,
                 text="Shred originals after encryption").grid(
-                row=4, column=0, columnspan=3, sticky="w", **pad)
+                row=5, column=0, columnspan=3, sticky="w", **pad)
         else:
             self.restore = tk.BooleanVar(value=True)
             ttk.Checkbutton(opts, variable=self.restore,
@@ -356,10 +361,12 @@ class _CryptoTab(_BaseTab):
             else:
                 dst = src + ".v100"
             self.app.log(f"  encrypt {arc}"
-                         + (" [cascade]" if self.cascade.get() else ""))
+                         + (" [cascade]" if self.cascade.get() else "")
+                         + (" [gzip]" if self.compress.get() else ""))
             encrypt_file(src, dst, pw.encode(), profile=profile,
                          params=params, key_data=key_data,
                          cascade=self.cascade.get(),
+                         compress=self.compress.get(),
                          progress=self._progress_cb(arc))
             if self.shred.get():
                 shred_file(src)

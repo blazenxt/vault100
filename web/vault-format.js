@@ -580,11 +580,74 @@
     return text === SELFTEST.expect && res.meta.name === SELFTEST.name;
   }
 
+  /* The timekeeper — clocks THIS device's cipher and key-turning speeds.
+     Everything runs locally inside the worker; nothing is transmitted.
+     Ciphers over a 32 MiB slab; Argon2id single-turn at three notches,
+     fold-proofed at each (details stamped nowhere — report only). */
+  async function runBench() {
+    const env = needEnv();
+    const out = {};
+    // 1) XChaCha20-Poly1305 secretstream, 32 MiB in 4 MiB messages
+    {
+      const TOTAL = 32 * 1024 * 1024, CH = 4 * 1024 * 1024;
+      const key = env.randbytes(32);
+      const { state } =
+        env.sodium.crypto_secretstream_xchacha20poly1305_init_push(key);
+      const buf = new Uint8Array(CH);
+      let pushed = 0;
+      const t0 = root.performance.now();
+      for (let done = 0; done < TOTAL; done += CH) {
+        env.sodium.crypto_secretstream_xchacha20poly1305_push(
+          state, buf, null, done + CH >= TOTAL ? TAG_FINAL : TAG_MESSAGE);
+        pushed += CH;
+      }
+      const dt = Math.max((root.performance.now() - t0) / 1000, 0.001);
+      key.fill(0); buf.fill(0);
+      out.xchacha = { mib: pushed / 1048576, dt,
+                      mbps: (pushed / 1048576) / dt };
+    }
+    // 2) AES-256-GCM via WebCrypto (hardware path when the device has one)
+    try {
+      const ck = await env.subtle.generateKey(
+        { name: "AES-GCM", length: 256 }, false, ["encrypt"]);
+      const iv = env.randbytes(12);
+      const big = new Uint8Array(32 * 1024 * 1024);
+      const t0 = root.performance.now();
+      await env.subtle.encrypt({ name: "AES-GCM", iv }, ck, big);
+      const dt = Math.max((root.performance.now() - t0) / 1000, 0.001);
+      big.fill(0);
+      out.aes = { mib: 32, dt, mbps: 32 / dt };
+    } catch (e) { out.aes = null; }
+    // 3) Argon2id — one turn × 4 lanes at 4 / 16 / 64 MiB (fold-proven)
+    out.argon2 = [];
+    for (const mib of [4, 16, 64]) {
+      const t0 = root.performance.now();
+      try {
+        const { raw, mem } = await argon2idProven(
+          u8("vault100-bench"), rand16(),
+          { memoryKib: mib * 1024, timeCost: 1, parallelism: 4 });
+        raw.fill(0);
+        out.argon2.push({ memKib: mem,
+                          dt: Math.max((root.performance.now() - t0) / 1000, 0.001) });
+      } catch (e) {
+        out.argon2.push({ memKib: mib * 1024, dt: null });
+      }
+    }
+    // extrapolate the standard profile (128 MiB × 3 turns) on this device
+    const big = out.argon2.filter((n) => n.dt != null).pop();
+    if (big) {
+      const perTurnPerMib = big.dt / big.memKib;
+      const std = KDF_PROFILES.standard;
+      out.standard = perTurnPerMib * std.memoryKib * std.timeCost;
+    } else out.standard = null;
+    return out;
+  }
+
   root.VaultFormat = {
     MAGIC_V2, CHUNK_SIZE, KDF_PROFILES, MEM_FLOOR_KIB,
     VaultError, VaultAuthError, VaultFormatError, VaultCancelled,
     setEnv, keyfileDigest, generateKeyfileBytes, encryptVault, decryptVault,
-    recombineVault, info, calibrateKdf, runSelfTest, SELFTEST, isMemError,
+    recombineVault, info, calibrateKdf, runSelfTest, runBench, SELFTEST, isMemError,
     _internals: { hkdfSha256, deriveKek, argon2id, argon2idProven,
                   kekFromRaw, parsePrefix, concat, u8 },
   };

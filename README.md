@@ -99,6 +99,9 @@ python -m vault100 info wallet.dat.v100
 python -m vault100 genpass --count 3
 python -m vault100 genpass --passphrase --words 8
 
+# The timekeeper — device speed trials (cipher throughput + Argon2id cost)
+python -m vault100 bench
+
 # Secure deletion of anything
 python -m vault100 shred old_keys.pem --passes 7
 ```

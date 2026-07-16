@@ -92,4 +92,50 @@
   };
   $("#genpass-copy").onclick = () =>
     copySecret($("#genpass-out").value, "combination");
+
+  // (f) the timekeeper — device speed trials, all inside the worker
+  const benchBtn = $("#bench-go"), benchOut = $("#bench-out");
+  const setReport = (lines) => {
+    benchOut.innerHTML = "";
+    for (const ln of lines) {
+      const div = document.createElement("div");
+      div.textContent = ln;
+      benchOut.appendChild(div);
+    }
+  };
+  if (benchBtn) benchBtn.onclick = async () => {
+    benchBtn.disabled = true;
+    benchOut.textContent = "the clerk winds the stopwatch…";
+    log("timekeeper engaged — clocking this device's ciphers & key turns…");
+    const r = await sendJob({ op: "bench" });
+    benchBtn.disabled = false;
+    if (!r || r.type === "error" || !r.xchacha) {
+      setReport(["the stopwatch jammed — " +
+                 ((r && r.message) || "an unknown fault")]);
+      return log("✗ timekeeper: " + ((r && r.message) || "unknown fault"), "err");
+    }
+    const lines = [];
+    lines.push(`xchacha20-poly1305 — ${r.xchacha.mbps.toFixed(0)} MiB/s ` +
+               `(${r.xchacha.mib} MiB in ${r.xchacha.dt.toFixed(2)} s)`);
+    lines.push(r.aes
+      ? `aes-256-gcm (hardware path) — ${r.aes.mbps.toFixed(0)} MiB/s ` +
+        `(${r.aes.mib} MiB in ${r.aes.dt.toFixed(2)} s)`
+      : "aes-256-gcm — not offered by this browser's WebCrypto");
+    for (const n of r.argon2) {
+      lines.push(n.dt == null
+        ? `argon2id ${Math.round(n.memKib / 1024)} MiB × 1 turn × 4 lanes — ` +
+          `refused (this booth's RAM ledger is short)`
+        : `argon2id ${Math.round(n.memKib / 1024)} MiB × 1 turn × 4 lanes — ` +
+          `${n.dt.toFixed(2)} s`);
+    }
+    lines.push(r.standard != null
+      ? `standard profile (128 MiB × 3 turns) on this desk ≈ ` +
+        `${r.standard.toFixed(1)} s per seal / unseal`
+      : "standard profile — could not be estimated here");
+    lines.push("advice — pick a notch whose cost stays ≈ 1–4 s on this desk;");
+    lines.push("turns multiply cost, memory multiplies the attacker's bill.");
+    setReport(lines);
+    log("timekeeper's report filed at instrument (f) —");
+    for (const ln of lines) log("  " + ln);
+  };
 })();

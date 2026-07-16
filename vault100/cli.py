@@ -9,6 +9,7 @@ Examples
     python -m vault100 passwd wallet.dat.v100
     python -m vault100 info wallet.dat.v100
     python -m vault100 genpass --passphrase
+    python -m vault100 bench
 """
 
 from __future__ import annotations
@@ -288,6 +289,36 @@ def cmd_genpass(args) -> int:
     return 0
 
 
+def cmd_bench(args) -> int:
+    from .crypto_core import benchmark
+    from . import __version__
+    print(f"vault100 {__version__} — the timekeeper (trials on this device)")
+    mib = 8 if args.quick else 32
+    kdf = (8,) if args.quick else (4, 16, 64)
+    rep = benchmark(stream_mib=mib, kdf_mibs=kdf)
+    x = rep["xchacha"]
+    print(f"  xchacha20-poly1305 : {x['mib_s']:8.1f} MiB/s"
+          f"  ({x['mib']:.0f} MiB in {x['seconds']:.2f} s)")
+    a = rep["aes"]
+    if a:
+        print(f"  aes-256-gcm        : {a['mib_s']:8.1f} MiB/s"
+              f"  ({a['mib']:.0f} MiB in {a['seconds']:.2f} s)")
+    else:
+        print("  aes-256-gcm        : unavailable (cryptography not installed)")
+    for n in rep["argon2"]:
+        mib_n = n["memory_kib"] / 1024
+        if n["seconds"] is None:
+            print(f"  argon2id {mib_n:4.0f} MiB x1t : refused (out of memory)")
+        else:
+            print(f"  argon2id {mib_n:4.0f} MiB x1t : {n['seconds']:6.2f} s"
+                  f"   (4 lanes)")
+    s = rep["standard_seconds"]
+    if s is not None:
+        print(f"  → standard profile (128 MiB × 3) ≈ {s:.1f} s per unlock here")
+    print("  advice: pick a notch whose cost stays ≈ 1–4 s on this device")
+    return 0
+
+
 def cmd_shred(args) -> int:
     files = [os.path.abspath(p) for p in args.paths if os.path.isfile(p)]
     if not files:
@@ -403,6 +434,11 @@ def build_parser() -> argparse.ArgumentParser:
     s.add_argument("-y", "--yes", action="store_true")
     s.add_argument("-q", "--quiet", action="store_true")
     s.set_defaults(func=cmd_shred)
+
+    b = sub.add_parser("bench", help="the timekeeper — device speed trials")
+    b.add_argument("--quick", action="store_true",
+                   help="short trials (8 MiB), for slow machines or CI")
+    b.set_defaults(func=cmd_bench)
     return p
 
 
