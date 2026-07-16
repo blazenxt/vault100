@@ -7,7 +7,7 @@
   const VB = (window.VB = {});
   const $ = (VB.$ = (s) => document.querySelector(s));
   VB.$$ = (s) => Array.from(document.querySelectorAll(s));
-  VB.VERSION = "2.0.13";
+  VB.VERSION = "2.0.14";
 
   // ---------------- the desk lamp & ink well (themes) ----------------
   // Applied synchronously before first paint, so no theme flash. The
@@ -199,6 +199,13 @@
     }
     // filings off the counter
     for (const u of VB.$$("ul.files")) u.innerHTML = "";
+    // the examining tray is emptied
+    const ppart = $("#preview-part"), pbox = $("#preview");
+    if (ppart && pbox) {
+      ppart.hidden = true;
+      if (previewURL) { URL.revokeObjectURL(previewURL); previewURL = null; }
+      pbox.innerHTML = "";
+    }
     for (const u of VB.$$("#results")) if (u) u.innerHTML = "";
     const facts = $("#rw-facts"); if (facts) facts.hidden = true;
     for (const p of VB.$$("progress")) { p.value = 0;
@@ -299,6 +306,161 @@
   };
 
   VB.kb = (n) => new TextEncoder().encode(n);
+
+  // ---------------- filings: folder → tar bundling ----------------
+  /* Walks a directory picker FileList and staples it into one .tar under
+     the user's nose (POSIX ustar — `tar -xf` and Python's tarfile read it
+     as-is). Long names ride the ustar prefix field. */
+  VB.bundleFolder = async function (files, bundleName) {
+    const list = Array.from(files || []);
+    if (!list.length) return null;
+    const enc = new TextEncoder();
+    const parts = [];
+    const push = (u8) => parts.push(u8);
+    const zeros = (n) => new Uint8Array(n);
+
+    function ustar(path, size, mtime) {
+      function splitName(p) {
+        if (enc.encode(p).length <= 100) return [p, ""];
+        const seg = p.split("/");
+        // slide the split until name ≤100 and prefix ≤155
+        for (let k = 1; k < seg.length; k++) {
+          const name = seg.slice(k).join("/");
+          const prefix = seg.slice(0, k).join("/");
+          if (enc.encode(name).length <= 100 &&
+              enc.encode(prefix).length <= 155) return [name, prefix];
+        }
+        return [seg[seg.length - 1].slice(-100), ""];   // last resort
+      }
+      const [name, prefix] = splitName(path);
+      const h = new Uint8Array(512);
+      const put = (str, off, len) => {
+        const b = enc.encode(String(str));
+        h.set(b.subarray(0, len), off);
+      };
+      const oct = (n, off, len) => {
+        put(n.toString(8).padStart(len - 1, "0"), off, len - 1);
+        h[off + len - 1] = 0;
+      };
+      put(name, 0, 100);
+      oct(0o644, 100, 8); oct(0, 108, 8); oct(0, 116, 8);
+      const sz = h.subarray(124, 136);            // size: 11 octal + space
+      const so = size.toString(8).padStart(11, "0");
+      for (let i = 0; i < 11; i++) sz[i] = so.charCodeAt(i);
+      sz[11] = 32;
+      put(Math.floor(mtime / 1000).toString(8).padStart(11, "0"), 136, 147);
+      h[147] = 32;
+      h.fill(32, 148, 156);                       // checksum field: blanks
+      h[156] = 48;                                // typeflag '0'
+      put("ustar", 257, 6); h[257 + 5] = 0;
+      put("00", 263, 265);
+      put("vault100", 265, 273);
+      put(prefix, 345, 500);
+      let sum = 0;
+      for (let i = 0; i < 512; i++) sum += h[i];
+      const cs = sum.toString(8).padStart(6, "0");
+      for (let i = 0; i < 6; i++) h[148 + i] = cs.charCodeAt(i);
+      h[154] = 0; h[155] = 32;
+      return h;
+    }
+
+    let entries = 0, bytes = 0;
+    for (const f of list) {
+      const rel = f.webkitRelativePath || f.name;
+      const norm = rel.replace(/^\/+/, "").replace(/\.\.(\/|$)/g, "_$1");
+      if (!norm || norm.endsWith("/") || norm.includes("\0")) continue;
+      const data = new Uint8Array(await f.arrayBuffer());
+      push(ustar(norm, data.length, f.lastModified || Date.now()));
+      push(data);
+      const rem = data.length % 512;
+      if (rem) push(zeros(512 - rem));
+      entries++; bytes += data.length;
+    }
+    if (!entries) return null;
+    push(zeros(1024));                            // two end-of-archive blocks
+    let root = bundleName;
+    if (!root) {
+      const first = list[0].webkitRelativePath || "bundle";
+      root = first.split("/")[0] || "bundle";
+    }
+    const file = new File(parts, root.replace(/[^\w.-]+/g, "_") + ".tar",
+                          { type: "application/x-tar" });
+    return { file, entries, bytes };
+  };
+
+  // ---------------- the examining tray (preview after opening) -------------
+  let previewURL = null;
+  VB.maybePreview = async function (name, parts, length) {
+    const part = $("#preview-part"), box = $("#preview");
+    if (!part || !box) return;
+    if (previewURL) { URL.revokeObjectURL(previewURL); previewURL = null; }
+    box.innerHTML = "";
+    part.hidden = true;
+    const CAP = 25 * 1024 * 1024;
+    if (!length || length > CAP) return;
+    const ext = (name.includes(".") ? name.split(".").pop() : "").toLowerCase();
+    const TEXT = new Set(["txt", "md", "markdown", "json", "log", "csv",
+      "py", "js", "ts", "html", "css", "xml", "yml", "yaml", "ini", "conf",
+      "cfg", "sh", "bat", "toml", "env", "sql", "r", "java", "c", "h",
+      "cpp", "go", "rs", "rb", "pl", "tex", "nfo", "srt"]);
+    const IMG = new Set(["png", "jpg", "jpeg", "gif", "webp", "bmp", "avif"]);
+    const head = document.createElement("div");
+    head.className = "pvhead";
+    const blob = new Blob(parts);
+    let node = null, kind = null;
+
+    if (TEXT.has(ext)) {
+      let text = await blob.text();
+      if (text.includes("\0")) return;              // not really text
+      const full = text.length;
+      if (text.length > 200000) text = text.slice(0, 200000);
+      node = document.createElement("pre");
+      node.className = "pvtext";
+      node.textContent = text +
+        (full > 200000 ? `\n… (${(full - 200000).toLocaleString()} more chars — download for the whole document)` : "");
+      kind = "text";
+    } else if (IMG.has(ext)) {
+      node = document.createElement("img");
+      node.className = "pvimg";
+      node.alt = name;
+      if (length <= 6 * 1024 * 1024) {
+        // data: URL — works even where blob: subresources are restricted
+        const rd = new FileReader();
+        const ready = new Promise((res) => { rd.onload = res; });
+        rd.readAsDataURL(blob);
+        await ready;
+        node.src = String(rd.result);
+      } else {
+        previewURL = URL.createObjectURL(blob);
+        node.src = previewURL;
+      }
+      kind = "image";
+    } else if (ext === "pdf") {
+      node = document.createElement("iframe");
+      node.className = "pvpdf";
+      node.title = name;
+      if (length <= 8 * 1024 * 1024) {
+        const rd = new FileReader();
+        const ready = new Promise((res) => { rd.onload = res; });
+        rd.readAsDataURL(blob);
+        await ready;
+        node.src = String(rd.result);
+      } else {
+        previewURL = URL.createObjectURL(blob);
+        node.src = previewURL;
+      }
+      kind = "document";
+    } else {
+      return;                                        // nothing for the tray
+    }
+
+    head.textContent = `${name} — ${length.toLocaleString()} B · ${kind} · ` +
+      "laid on the tray unsealed; the sweep empties it";
+    box.appendChild(head);
+    box.appendChild(node);
+    part.hidden = false;
+  };
+
   // keyfile raw bytes are sent to the worker, which digests them
   // (BLAKE2b keyed — same scheme as the desktop app) inside the sandbox.
 

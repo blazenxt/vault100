@@ -77,6 +77,7 @@
       const saved = download(res.name, res.parts, res.length);
       addResult(saved.name, saved.size);
       log(`✓ ${res.name} restored (${saved.size.toLocaleString()} B)`);
+      window.VB.maybePreview(res.name, res.parts, res.length);
     }
     $("#dec-pw").value = "";
     $("#dec-go").disabled = false;

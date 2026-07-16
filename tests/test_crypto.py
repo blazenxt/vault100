@@ -373,5 +373,44 @@ class Strength(unittest.TestCase):
         self.assertLess(estimate("aB1!")["score"], 2)
 
 
+class CompressTests(unittest.TestCase):
+    """gzip shrink-wrap: transparent wrap on seal, unwrap on open."""
+
+    def roundtrip(self, data, **kw):
+        buf = io.BytesIO()
+        from vault100.crypto_core import decrypt_stream
+        encrypt_stream(io.BytesIO(data), buf, PW, progress=lambda d, t: None,
+                       **kw)
+        out = io.BytesIO()
+        meta = decrypt_stream(io.BytesIO(buf.getvalue()), out, PW,
+                              key_data=kw.get("key_data"))
+        return out.getvalue(), meta
+
+    def test_compress_roundtrip_cascade(self):
+        data = os.urandom(200_000) + b"ledger " * 60_000
+        got, meta = self.roundtrip(data, cascade=True, compress=True)
+        self.assertEqual(got, data)
+        self.assertIs(meta.get("gz"), True)
+
+    def test_compress_actually_shrinks(self):
+        data = b"A" * 500_000
+        plain = io.BytesIO()
+        encrypt_stream(io.BytesIO(data), plain, PW)
+        smallVault = io.BytesIO()
+        encrypt_stream(io.BytesIO(data), smallVault, PW, compress=True)
+        self.assertLess(len(smallVault.getvalue()), len(plain.getvalue()))
+
+    def test_compress_with_keyfile_multichunk(self):
+        data = os.urandom(100_000) + b"z" * 3_000_000
+        got, meta = self.roundtrip(data, compress=True, key_data=b"K" * 32)
+        self.assertEqual(got, data)
+        self.assertIs(meta.get("gz"), True)
+
+    def test_plain_vault_has_no_gz_flag(self):
+        data = os.urandom(50_000)
+        _, meta = self.roundtrip(data)
+        self.assertNotIn("gz", meta)
+
+
 if __name__ == "__main__":
     unittest.main(verbosity=2)

@@ -506,3 +506,12 @@
   .facts{display:block;font:9.5px var(--mono);color:var(--faint);
     letter-spacing:.02em;margin-top:3px}
   .facts .kf{color:var(--red);font-weight:700}
+
+  /* the examining tray — previews of unsealed documents */
+  .pvhead{font:700 10px var(--mono);letter-spacing:.16em;text-transform:uppercase;
+    color:var(--ink2);margin-bottom:10px}
+  .pvtext{margin:0;max-height:46vh;overflow:auto;white-space:pre-wrap;
+    word-break:break-word;font:11.5px/1.7 var(--mono);color:var(--ink)}
+  .pvimg{display:block;max-width:100%;max-height:60vh;margin:0 auto;
+    border:1.5px solid var(--ink);background:rgba(var(--washtri),.04)}
+  .pvpdf{width:100%;height:64vh;border:1.5px solid var(--ink);background:#fff}

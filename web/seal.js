@@ -17,6 +17,20 @@
     e.target.value = "";
   };
 
+  // the folders drawer — a whole folder arrives as one .tar filing
+  $("#enc-folder-btn").onclick = () => $("#enc-folder").click();
+  $("#enc-folder").onchange = async (e) => {
+    const files = e.target.files;
+    e.target.value = "";
+    if (!files || !files.length) return;
+    log("stapling the folder into one filing…");
+    const bundle = await window.VB.bundleFolder(files);
+    if (!bundle) return log("nothing in that folder to file.", "err");
+    addFileRow("#enc-list", bundle.file);
+    log(`folder filed as ${bundle.file.name} — ${bundle.entries} entries, ` +
+        `${bundle.bytes.toLocaleString()} B`);
+  };
+
   $("#show-pw").onchange = (e) => {
     for (const s of ["#enc-pw1", "#enc-pw2"]) {
       const i = $(s); if (i) i.type = e.target.checked ? "text" : "password";
@@ -37,6 +51,7 @@
     const sel = $("#enc-security").value;
     const { profile, params } = await resolveProfile(sel);
     const cascade = $("#enc-cascade").checked;
+    const compress = $("#enc-compress").checked;
     const keyBtn = $("#enc-keyfile-btn");
     const keyData = keyBtn._file
       ? new Uint8Array(await keyBtn._file.arrayBuffer()) : null;
@@ -48,7 +63,7 @@
       log(`encrypt ${file.name}${cascade ? " [cascade]" : ""}`);
       const res = await sendJob({
         op: "encrypt", file, password: kb(pw1), profile, params,
-        keyData, cascade,
+        keyData, cascade, compress,
       }, prog);
       if (res.type === "error") {
         if (isCancelErr(res)) { log(`✗ ${file.name}: stayed by request`, "err"); break; }

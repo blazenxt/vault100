@@ -51,6 +51,7 @@ import hmac
 import json
 import os
 import struct
+import zlib
 import tempfile
 import time
 from contextlib import contextmanager
@@ -269,11 +270,48 @@ def unique_path(path: str) -> str:
 # Encryption (v2)
 # ---------------------------------------------------------------------------
 
+class _GzipReader:
+    """File-like adapter: pulls plaintext, yields its gzip stream.
+
+    Used by ``compress=True`` so the cipher only ever sees the (usually
+    smaller) gzip bytes; the metadata flag ``"gz": true`` makes readers
+    reverse the wrap transparently.
+    """
+
+    def __init__(self, fin) -> None:
+        self._fin = fin
+        self._co = zlib.compressobj(6, zlib.DEFLATED, 16 + zlib.MAX_WBITS)
+        self._buf = bytearray()
+        self._eof = False
+
+    def _fill(self, want: int) -> None:
+        while len(self._buf) < want and not self._eof:
+            chunk = self._fin.read(max(want - len(self._buf), 65536))
+            if chunk:
+                self._buf += self._co.compress(chunk)
+            else:
+                self._buf += self._co.flush()
+                self._eof = True
+
+    def read(self, n: int = -1) -> bytes:
+        if n is None or n < 0:
+            while not self._eof:
+                self._fill(1 << 20)
+            out = bytes(self._buf)
+            self._buf.clear()
+            return out
+        self._fill(n)
+        out = bytes(self._buf[:n])
+        del self._buf[:n]
+        return out
+
+
 def encrypt_stream(fin, fout, password: bytes, *,
                    profile: str = DEFAULT_PROFILE,
                    params: dict | None = None,
                    key_data: bytes | None = None,
                    cascade: bool = False,
+                   compress: bool = False,
                    total: int | None = None,
                    progress=None,
                    metadata: dict | None = None) -> None:
@@ -282,11 +320,21 @@ def encrypt_stream(fin, fout, password: bytes, *,
     *params*    explicit KDF dict (overrides *profile*).
     *key_data*  digest of a keyfile (from keyfile.load_keyfile) — becomes
                 a mandatory second factor, recorded in the header flags.
+    *compress*  gzip the payload first; recorded as ``"gz": true`` in the
+                metadata and reversed transparently on decryption.
     *progress*  callable ``progress(done, total)``; may raise
                 :class:`VaultCancelled`.
     """
     p = dict(params) if params else _profile_params(profile)
     _validate_kdf(**p)
+
+    if compress:
+        # stream-compress: the encrypted stream carries gzip bytes, the
+        # metadata records the flag (reversed transparently on decrypt)
+        fin = _GzipReader(fin)
+        metadata = dict(metadata or {})
+        metadata["gz"] = True
+        total = None            # compressed length is unknowable up front
 
     salt = os.urandom(SALT_BYTES)
     fek = os.urandom(64 if cascade else KEY_BYTES)
@@ -433,6 +481,7 @@ def _decrypt_stream_v2(fin, fout, password, magic, *, key_data, total,
     idx = 0
     metadata: dict | None = None
     done = len(header)
+    gunzip = None   # zlib.decompressobj once metadata says "gz": true
 
     while True:
         raw_len = fin.read(LEN_PREFIX.size)
@@ -469,13 +518,29 @@ def _decrypt_stream_v2(fin, fout, password, magic, *, key_data, total,
                 raise VaultFormatError("corrupt metadata chunk")
             if progress is not None:
                 progress(done, total if total is not None else 0)
+            if isinstance(metadata, dict) and metadata.get("gz") is True:
+                gunzip = zlib.decompressobj(16 + zlib.MAX_WBITS)
             continue
 
+        if gunzip is not None:
+            try:
+                payload = gunzip.decompress(payload)
+            except zlib.error:
+                raise VaultFormatError("corrupt gzip payload") from None
         fout.write(payload)
         if progress is not None:
             progress(done, total if total is not None else 0)
         if tag == TAG_FINAL:
             break
+
+    if gunzip is not None:
+        try:
+            payload = gunzip.flush()
+        except zlib.error:
+            raise VaultFormatError("corrupt gzip payload") from None
+        if not gunzip.eof:
+            raise VaultFormatError("truncated gzip payload")
+        fout.write(payload)
 
     if fin.read(1):
         raise VaultFormatError("trailing data after end of encrypted stream")

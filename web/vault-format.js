@@ -64,6 +64,35 @@
   class VaultFormatError extends VaultError {}
   class VaultCancelled extends VaultError {}
 
+  // -- shrink-wrap (gzip) --------------------------------------------------
+  /* "gz": true in the metadata means the payload is one gzip stream —
+     wrapped on seal (CompressionStream), unwrapped on open. The desktop
+     CLI reverses it transparently too (zlib, wbits 31). */
+  async function gzipBlob(blob) {
+    const cs = blob.stream().pipeThrough(new CompressionStream("gzip"));
+    return new Response(cs).blob();
+  }
+  async function gunzipParts(parts) {
+    let ds;
+    try {
+      ds = new Blob(parts).stream().pipeThrough(new DecompressionStream("gzip"));
+    } catch (e) {
+      throw new VaultFormatError("corrupt gzip payload");
+    }
+    const rd = ds.getReader();
+    const out = [];
+    try {
+      for (;;) {
+        const r = await rd.read();
+        if (r.done) break;
+        out.push(r.value);
+      }
+    } catch (e) {
+      throw new VaultFormatError("corrupt gzip payload");
+    }
+    return out;
+  }
+
   // -- KDF ------------------------------------------------------------------
   const MEM_FLOOR_KIB = 8192;   // never fold below 8 MiB (OWASP minimum)
 
@@ -216,8 +245,8 @@
   // -- encryption ------------------------------------------------------------
   /**
    * Encrypt a Blob/File into Vault100 v2 bytes.
-   * opts: { password, profile|params, keyData?, cascade?, metaBaseName,
-   *         onProgress(done,total), shouldCancel() }
+   * opts: { password, profile|params, keyData?, cascade?, compress?,
+   *         metaBaseName, onProgress(done,total), shouldCancel() }
    * Returns Uint8Array chunks array + total length {parts, length, meta}.
    */
   async function encryptVault(file, opts) {
@@ -228,7 +257,10 @@
       throw new VaultFormatError("invalid KDF parameters");
     validateKdf(p.memoryKib, p.timeCost, p.parallelism);
     const cascade = !!opts.cascade;
-    const total = file.size;
+    const compress = !!opts.compress &&
+      typeof CompressionStream !== "undefined";
+    const source = compress ? await gzipBlob(file) : file;
+    const total = source.size;
 
     const salt = randbytes(32);
     const fek = randbytes(cascade ? 64 : 32);
@@ -272,6 +304,7 @@
     }
 
     const meta = Object.assign({ name: opts.metaBaseName || "file", v: 2 },
+                               compress ? { gz: true, usize: file.size } : {},
                                opts.metadata || {});
     let metaBlob = u8(JSON.stringify(meta));
     if (metaBlob.length > META_MAX) throw new VaultError("metadata too large");
@@ -281,7 +314,7 @@
     while (true) {
       if (opts.shouldCancel && opts.shouldCancel()) throw new VaultCancelled();
       const end = Math.min(offset + CHUNK_SIZE, total);
-      const chunk = new Uint8Array(await file.slice(offset, end).arrayBuffer());
+      const chunk = new Uint8Array(await source.slice(offset, end).arrayBuffer());
       const isFinal = end >= total;
       push(state, await seal(chunk), null, isFinal ? TAG_FINAL : TAG_MESSAGE);
       done += chunk.length;
@@ -395,6 +428,13 @@
     }
     if (!sawFinal) throw new VaultFormatError("missing final chunk");
     if (off < total) throw new VaultFormatError("trailing data after stream");
+    if (meta && meta.gz === true && typeof DecompressionStream !== "undefined") {
+      const plain = await gunzipParts(parts);
+      let plen = 0;
+      for (const b of plain) plen += b.length;
+      for (const b of parts) b.fill(0);
+      return { parts: plain, length: plen, meta };
+    }
     return { parts, length, meta };
   }
 

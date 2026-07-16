@@ -14,7 +14,7 @@
 <link rel="manifest" href="manifest.json">
 <title>FORM 100-B · seal counter — The Seal Bureau</title>
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 48'%3E%3Crect width='48' height='48' fill='%23111318'/%3E%3Ccircle cx='24' cy='24' r='15' fill='none' stroke='%23ddd6c4' stroke-width='3'/%3E%3Ccircle cx='24' cy='24' r='5' fill='%23e15555'/%3E%3C/svg%3E">
-<link rel="stylesheet" href="bureau.css?v=213">
+<link rel="stylesheet" href="bureau.css?v=214">
 </head>
 <body>
 
@@ -105,6 +105,12 @@
       <input id="enc-pick" type="file" multiple>
     </div>
     <ul id="enc-list" class="files"></ul>
+    <div style="margin-top:10px;display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+      <button id="enc-folder-btn" class="ghost" type="button">File a whole folder…</button>
+      <span class="fnote" style="margin:0">stapled into one .tar under your
+        nose — <code>tar -xf</code> opens it after the vault is opened</span>
+    </div>
+    <input id="enc-folder" type="file" webkitdirectory hidden>
   </div>
 
   <div class="duo">
@@ -142,8 +148,11 @@
       </div>
       <label class="checkline"><input id="enc-cascade" type="checkbox" checked>
         4. double-lock — AES-256-GCM within XChaCha20</label>
+      <label class="checkline"><input id="enc-compress" type="checkbox">
+        5. shrink-wrap first — gzip inside the vault; texts &amp; ledgers
+        shrink the most. Reversed on open, by any Vault100.</label>
       <div class="frow" style="margin-top:14px">
-        <label class="flabel">5. physical second key (optional)</label>
+        <label class="flabel">6. physical second key (optional)</label>
         <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
           <button id="enc-keyfile-btn" class="ghost" type="button">Present keyfile…</button>
           <span id="enc-keyfile-name" class="fnote" style="margin:0"></span>
@@ -194,7 +203,7 @@
   </div>
 
   <footer>
-    <span><span class="b">Vault100 v2.0.13</span> · the seal bureau · night ledger</span>
+    <span><span class="b">Vault100 v2.0.14</span> · the seal bureau · night ledger</span>
     <span>no accounts · no telemetry · no escrow</span>
     <span>filed in triplicate — <span class="b">zero copies retained</span></span>
   </footer>
@@ -207,7 +216,7 @@
   <span class="curl" aria-hidden="true"></span>
 </div>
 
-<script src="common.js?v=213"></script>
-<script src="seal.js?v=213"></script>
+<script src="common.js?v=214"></script>
+<script src="seal.js?v=214"></script>
 </body>
 </html>

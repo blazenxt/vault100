@@ -153,7 +153,8 @@ def cmd_encrypt(args) -> int:
             encrypt_file(src, dst, pw, profile=args.security
                          if args.security != "max" else DEFAULT_PROFILE,
                          params=params, key_data=key_data,
-                         cascade=args.cascade, progress=prog)
+                         cascade=args.cascade, compress=args.compress,
+                         progress=prog)
             prog.finish(" [cascade]" if args.cascade else "")
             if args.shred:
                 shred_file(src, passes=args.passes)
@@ -342,6 +343,8 @@ def build_parser() -> argparse.ArgumentParser:
                    help="'max' auto-tunes Argon2id to this machine (~2 s)")
     e.add_argument("--cascade", action="store_true",
                    help="AES-256-GCM inside XChaCha20-Poly1305 (dual cipher)")
+    e.add_argument("--compress", action="store_true",
+                   help="gzip the payload first (auto-decompressed on open)")
     e.add_argument("--keyfile", help="require this keyfile as second factor")
     e.add_argument("--shred", action="store_true",
                    help="securely delete originals after encrypting")
