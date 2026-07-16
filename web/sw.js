@@ -8,7 +8,7 @@
  */
 "use strict";
 
-const VERSION = "207";
+const VERSION = "208";
 const CACHE = "vault100-" + VERSION;
 const Q = "?v=" + VERSION;
 const ASSETS = [
