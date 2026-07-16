@@ -203,7 +203,11 @@
       dl.className = "ghost"; dl.type = "button"; dl.textContent = "Download";
       dl.onclick = () => download(
         `vault100.slip-${i + 1}-of-${n}.v100s`, [slip], slip.length);
-      row.appendChild(cp); row.appendChild(dl);
+      const qrb = document.createElement("button");
+      qrb.className = "ghost"; qrb.type = "button"; qrb.textContent = "QR ↗";
+      qrb.title = "courier stamp for this slip — camera hand-off, no wire";
+      qrb.onclick = () => stampCourier(slip, `slip ${i + 1} of ${n}`);
+      row.appendChild(cp); row.appendChild(dl); row.appendChild(qrb);
       box.appendChild(head); box.appendChild(ta); box.appendChild(row);
       qpSlips.appendChild(box);
     });
@@ -245,7 +249,6 @@
       $("#qp-joined-note").textContent =
         `a binary secret (${b.length} bytes) — “Download bytes” saves it raw.`;
     }
-    $("#qp-joined").dataset.raw = "";
     log("quorum satisfied — the secret stands reprinted on the counter.");
   };
 
@@ -262,5 +265,44 @@
       download("vault100-reprinted-secret.bin", [b], b.length);
       log("raw reprinted bytes downloaded — guard the file like the secret.");
     }
+  };
+
+  // (h) the courier's corner — QR stamps, camera-only hand-off
+  const stampCourier = (text, what) => {
+    const r = window.VB.makeQR(text);
+    if (r.error) return log(`✗ the courier refused ${what || "the scrap"}: ` +
+                            r.error + ".", "err");
+    $("#cr-in").value = text;
+    $("#cr-frame").innerHTML = r.svg;
+    $("#cr-meta").innerHTML = "";
+    const d = document.createElement("div");
+    d.textContent = `${r.chars.toLocaleString()} ch pressed into a ` +
+      `${r.size}×${r.size} stamp · scan with any phone camera — ` +
+      "no cable, no cloud, no record";
+    const d2 = document.createElement("div");
+    d2.innerHTML = "&nbsp;";
+    const d3 = document.createElement("div");
+    d3.textContent = what ? `carrying: ${what}` : "";
+    $("#cr-meta").appendChild(d);
+    if (what) $("#cr-meta").appendChild(d3);
+    $("#cr-out").hidden = false;
+    $("#cr-dl").hidden = false;
+    $("#cr-note").textContent = `stamped — ${r.size}×${r.size} modules, ECC M`;
+    $("#cr-out").scrollIntoView({ behavior: "smooth", block: "nearest" });
+    log(`courier stamp pressed${what ? " for " + what : ""} — ` +
+        `${r.chars.toLocaleString()} ch; the phone reads ink, not wires.`);
+    return true;
+  };
+  $("#cr-go").onclick = () => {
+    const text = $("#cr-in").value;
+    if (!text) return log("the courier needs a scrap to carry.", "err");
+    stampCourier(text);
+  };
+  $("#cr-dl").onclick = () => {
+    const svg = $("#cr-frame").innerHTML;
+    if (!svg) return log("no stamp to file yet.", "err");
+    const saved = download(
+      `vault100-courier-${Date.now().toString(36)}.svg`, [svg], svg.length);
+    log(`stamp filed as ${saved.name} — print it, or flash the screen.`);
   };
 })();

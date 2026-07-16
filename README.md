@@ -40,7 +40,7 @@ Three bodies, one cloth — **vaults are fully interchangeable** between web, CL
 | Form 100-B · Seal | files & whole folders → `.v100` · 108 KDF notches · cascade · keyfile · gzip |
 | Form 100-C · Open | local decrypt · original names restored · peeking facts · examining tray preview |
 | Form 100-R · Recombinate | instant passphrase/keyfile change — head re-sealed, body untouched |
-| Annex D · Instruments | keyfile press · passphrase mint · examining glass · **timekeeper** benchmarks · office sweep · **quorum press** (Shamir M-of-N) |
+| Annex D · Instruments | keyfile press · passphrase mint · examining glass · **timekeeper** · sweep · **quorum press** (Shamir) · **courier's corner** (QR) |
 | Esc, Esc anywhere | panic drill — wipes the counter and burns the record book |
 
 ![Annex D instruments — the timekeeper](docs/img/annex-timekeeper.png)
@@ -234,6 +234,7 @@ node web/server.mjs    # serves on :8080 (honors $PORT), /health for checks
 **v2.0.x series** (all releases on the
 [releases page](https://github.com/blazenxt/vault100/releases)):
 
+* **2.0.21** — **the courier's corner**: QR stamps (Annex instrument (h) + per-slip **QR ↗** + armorer hand-off, vendored MIT qrcode, camera-only) · clerk's record download as stamped `.txt` on every counter · drag-anywhere intake on filing pages · PWA install button (get) · zone-drop de-dup + rewrap double-inspect fixes
 * **2.0.20** — **the quorum press**: Shamir M-of-N secret sharing over GF(2⁸) — Annex D instrument (g) + CLI `share split/join`, checksum-pressed slips, byte-exact web↔desk
 * **2.0.19** — **the armorer**: V100A1 ASCII armor (Form 100-M web counter + `encrypt --armor`, byte-exact both ways, decrypt auto-detects) · sweep now empties text wells
 * **2.0.18** — wax-seal medallion icon kit (vector, full PNG family, maskable-safe)

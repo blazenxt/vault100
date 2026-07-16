@@ -17,6 +17,12 @@
     e.target.value = "";
   };
 
+  // deliveries land anywhere on this counter, not just the intake tray
+  window.VB.onFilesDropped = (files) => {
+    for (const f of files) addFileRow("#enc-list", f);
+    log(`${files.length} filing(s) delivered to the counter floor — listed.`);
+  };
+
   // the folders drawer — a whole folder arrives as one .tar filing
   $("#enc-folder-btn").onclick = () => $("#enc-folder").click();
   $("#enc-folder").onchange = async (e) => {

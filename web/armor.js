@@ -69,6 +69,42 @@
     log(`armor filed as ${saved.name}`);
   };
 
+  // courier hand-off — short armor scraps fly to the phone by camera, not wire
+  $("#st-qr").onclick = () => {
+    const a = $("#st-out").value;
+    if (!a) return log("Nothing to stamp — mint first.", "err");
+    const r = window.VB.makeQR(a);
+    if (r.error)
+      return log("✗ the courier refused: " + r.error +
+        ". Long letters travel as .v100asc files; the stamp is for short scraps.", "err");
+    let box = $("#st-qrbox");
+    if (!box) {
+      box = document.createElement("div");
+      box.id = "st-qrbox";
+      box.className = "qrbox";
+      box.hidden = true;
+      const frame = document.createElement("div");
+      frame.className = "qrframe";
+      frame.setAttribute("role", "img");
+      frame.setAttribute("aria-label", "courier QR stamp");
+      const meta = document.createElement("div");
+      meta.className = "qrmeta";
+      box.appendChild(frame); box.appendChild(meta);
+      const out = $("#st-out");
+      out.parentElement.insertBefore(box, out.nextSibling);
+    }
+    box.hidden = false;
+    box.querySelector(".qrframe").innerHTML = r.svg;
+    box.querySelector(".qrmeta").innerHTML = "";
+    const d = document.createElement("div");
+    d.textContent = `${r.chars.toLocaleString()} ch pressed into a ` +
+      `${r.size}×${r.size} stamp · scan with any phone camera — ` +
+      "no cable, no cloud, no record";
+    box.querySelector(".qrmeta").appendChild(d);
+    log(`courier stamp pressed — ${r.chars.toLocaleString()} ch; ` +
+        `the phone reads ${r.size}×${r.size} ink`);
+  };
+
   // ---------------- counter two: the opener ----------------
   $("#op-go").onclick = async () => {
     const armor = $("#op-in").value.trim();

@@ -7,7 +7,7 @@
   const VB = (window.VB = {});
   const $ = (VB.$ = (s) => document.querySelector(s));
   VB.$$ = (s) => Array.from(document.querySelectorAll(s));
-  VB.VERSION = "2.0.20";
+  VB.VERSION = "2.0.21";
 
   // ---------------- the desk lamp & ink well (themes) ----------------
   // Applied synchronously before first paint, so no theme flash. The
@@ -195,6 +195,10 @@
     const qps = $("#qp-slips");                          // quorum slips — burned
     if (qps) qps.innerHTML = "";
     const qpn = $("#qp-joined-note"); if (qpn) qpn.textContent = " ";
+    for (const q of VB.$$(".qrbox")) {                   // courier stamps — burned
+      q.hidden = true;
+      const f = q.querySelector(".qrframe"); if (f) f.innerHTML = "";
+    }
     for (const [inp, chk] of [["#enc-pw1", "#show-pw"], ["#enc-pw2", "#show-pw"],
                               ["#dec-pw", null], ["#rw-old", "#rw-show"],
                               ["#rw-new1", "#rw-show"], ["#rw-new2", "#rw-show"]]) {
@@ -518,7 +522,8 @@
     zone.addEventListener("dragover", (e) => { e.preventDefault(); zone.classList.add("over"); });
     zone.addEventListener("dragleave", () => zone.classList.remove("over"));
     zone.addEventListener("drop", (e) => {
-      e.preventDefault(); zone.classList.remove("over");
+      e.preventDefault(); e.stopPropagation();   // zone has first claim
+      zone.classList.remove("over");
       for (const f of e.dataTransfer.files) VB.addFileRow(listSel, f);
     });
   };
@@ -631,6 +636,132 @@
       "⚠ this browser limits Argon2 memory — vault tuned to what the device " +
       "allows. The desktop app can go higher.");
     return { params: res };
+  };
+
+  // ---------------- the courier's corner (QR stamping) ----------------
+  /* vendor/qrcode.js (Kazuhiko Arase, MIT) rides only on pages that stamp;
+     makeQR returns { svg, size, chars } or a polite refusal string. */
+  const QR_CAP = 1200;   // EC level M — still a comfortable phone scan
+  VB.QR_CAP = QR_CAP;
+  VB.makeQR = function (text) {
+    if (typeof qrcode === "undefined")
+      return { error: "the courier's ink is not loaded at this window" };
+    if (!text) return { error: "nothing to stamp" };
+    if (text.length > QR_CAP)
+      return { error: `${text.length.toLocaleString()} characters — too long ` +
+                      `for one stamp (cap ${QR_CAP.toLocaleString()}). Split ` +
+                      "the scrap, or send a file instead" };
+    qrcode.stringToBytes = qrcode.stringToBytesFuncs["UTF-8"];
+    const q = qrcode(0, "M");
+    q.addData(text);
+    q.make();
+    return {
+      svg: q.createSvgTag({ cellSize: 5, margin: 12, scalable: true }),
+      size: q.getModuleCount(), chars: text.length,
+    };
+  };
+
+  // ---------------- clerk's record — take a stamped copy ----------------
+  function wireRecordBooks() {
+    for (const head of VB.$$(".rechead")) {
+      if (head.querySelector(".recdl")) continue;
+      const box = head.parentElement &&
+                  head.parentElement.querySelector("#log");
+      if (!box) continue;
+      const b = document.createElement("button");
+      b.type = "button";
+      b.className = "recdl";
+      b.textContent = "⭳ record (.txt)";
+      b.title = "take the clerk's record of this counter, stamped, as a .txt";
+      b.onclick = () => {
+        const lines = [];
+        for (const n of Array.from(box.children).reverse())
+          lines.push(n.textContent);
+        const bar = "─".repeat(52);
+        const txt =
+          "┌" + "─".repeat(54) + "┐\n" +
+          "│   THE SEAL BUREAU · CLERK'S RECORD — CERTIFIED COPY     │\n" +
+          "└" + "─".repeat(54) + "┘\n" +
+          `window    : ${document.title || location.pathname}\n` +
+          `received  : ${new Date().toISOString()}\n` +
+          `serial    : ${VB.makeSerial("R")}\n` +
+          `engine    : Vault100 web v${VB.VERSION} · zero-knowledge\n` +
+          bar + "\n" +
+          (lines.length ? lines.join("\n")
+                        : "the record book is blank — no proceedings yet") +
+          "\n" + bar + "\n" +
+          "the bureau retains NO copy of this record.\n" +
+          "it exists only in this file and, until swept, on the counter.\n";
+        const saved = VB.download(
+          `vault100-record-${Date.now().toString(36)}.txt`, [txt],
+          new TextEncoder().encode(txt).length);
+        log(`record booked — ${saved.name} handed over the counter.`);
+      };
+      head.appendChild(b);
+    }
+  }
+  wireRecordBooks();
+
+  // ---------------- the intake bell — deliveries anywhere on the counter ----
+  /* A page opts in by assigning VB.onFilesDropped(files). The veil is only
+     raised when one is listening. Bound zones (.intake) keep first claim —
+     bindDrop stops propagation, so a drop on a zone never double-files. */
+  const veil = document.createElement("div");
+  veil.className = "dropveil";
+  const vc = document.createElement("div");
+  vc.className = "veilcard";
+  vc.textContent = "❦ the clerk accepts deliveries anywhere on this " +
+                   "counter — drop to file ❦";
+  veil.appendChild(vc);
+  document.body.appendChild(veil);
+  let veilDepth = 0;
+  const veilShow = (on) => {
+    veilDepth = Math.max(0, veilDepth + (on ? 1 : -1));
+    if (!veilDepth) veil.classList.remove("on");
+    else if (on) veil.classList.add("on");
+  };
+  document.addEventListener("dragenter", (e) => {
+    if (typeof VB.onFilesDropped !== "function") return;
+    const types = e.dataTransfer ? Array.from(e.dataTransfer.types) : [];
+    if (!types.includes("Files")) return;
+    if (e.target && e.target.closest && e.target.closest(".intake")) return;
+    veilShow(true);
+  });
+  document.addEventListener("dragleave", () => veilShow(false));
+  document.addEventListener("dragover", (e) => e.preventDefault());
+  document.addEventListener("drop", (e) => {
+    e.preventDefault();
+    veilDepth = 0; veil.classList.remove("on");
+    const files = e.dataTransfer ? Array.from(e.dataTransfer.files) : [];
+    if (!files.length) return;
+    if (typeof VB.onFilesDropped === "function") VB.onFilesDropped(files);
+    else log("this window takes no deliveries of paper — try Form 100-B " +
+             "or Form 100-C.", "err");
+  });
+
+  // ---------------- carry the counter home (PWA install) ----------------
+  let deferredInstall = null;
+  window.addEventListener("beforeinstallprompt", (e) => {
+    e.preventDefault();
+    deferredInstall = e;
+    const b = $("#pwa-install");
+    if (b) {
+      b.disabled = false;
+      b.textContent = "⭳ Install the counter now";
+    }
+    const h = $("#pwa-hint");
+    if (h) h.textContent = "this device offers the install — one click," +
+                           " and the bureau lives here";
+  });
+  const pwaBtn = $("#pwa-install");
+  if (pwaBtn) pwaBtn.onclick = async () => {
+    if (!deferredInstall) return;
+    pwaBtn.disabled = true;
+    const choice = await deferredInstall.prompt();
+    log(choice.outcome === "accepted"
+      ? "the bureau is being carried home — installed to this device."
+      : "install declined — the counter stays open to visitors all the same.");
+    deferredInstall = null;
   };
 
   // ---------------- offline service worker ----------------

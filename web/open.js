@@ -14,6 +14,12 @@
     e.target.value = "";
   };
 
+  // deliveries land anywhere on this counter, not just the intake tray
+  window.VB.onFilesDropped = (files) => {
+    for (const f of files) addFileRow("#dec-list", f);
+    log(`${files.length} vault(s) delivered to the counter floor — heads read.`);
+  };
+
   // ---------------- the peek — the clerk reads the head aloud ----------------
   // Every vault placed on the counter gets its public head read BEFORE any
   // passphrase is asked: key-turning notch, double-lock, keyfile binding.

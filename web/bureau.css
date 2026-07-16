@@ -617,3 +617,27 @@
   .qpslip textarea{min-height:74px;font-size:11px;white-space:pre;overflow-x:auto}
   .qpslip .rowline{margin-top:8px}
   .rec .fnote.qpnote{margin-top:10px}
+
+  /* ---------- the courier's corner + record book + anywhere intake (v2.0.21) ---------- */
+  .qrbox{display:flex;gap:16px;align-items:flex-start;flex-wrap:wrap;margin-top:12px}
+  .qrframe{background:#f6f2e7;border:1px solid rgba(var(--linetri),.45);
+    border-radius:8px;padding:10px;line-height:0;box-shadow:2px 2px 0 rgba(0,0,0,.18)}
+  .qrframe svg{display:block;width:232px;height:232px}
+  .qrmeta{flex:1;min-width:210px;font:11px/1.75 var(--mono);color:var(--ink2)}
+  .qrmeta b{color:var(--ink)}
+  .recdl{margin-left:auto;font:10px var(--mono);letter-spacing:.14em;
+    text-transform:uppercase;background:none;cursor:pointer;
+    border:1px dashed rgba(var(--linetri),.5);border-radius:6px;
+    color:var(--ink2);padding:3px 9px}
+  .recdl:hover{color:var(--red);border-color:var(--red)}
+  .rechead::after{order:2}
+  .recdl{order:3}
+  .dropveil{position:fixed;inset:0;z-index:60;display:none;align-items:center;
+    justify-content:center;background:rgba(8,9,11,.7);pointer-events:none}
+  .dropveil.on{display:flex}
+  .dropveil .veilcard{border:2px dashed #e15555;border-radius:12px;
+    padding:24px 32px;background:#15161a;color:#ddd6c4;text-align:center;
+    font:700 13px/1.9 var(--mono);letter-spacing:.1em;text-transform:uppercase;
+    box-shadow:6px 6px 0 rgba(0,0,0,.45)}
+  .rec .pwainstall{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:4px}
+  .pwahint{font:10.5px var(--mono);color:var(--ink2);letter-spacing:.04em}

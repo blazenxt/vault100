@@ -22,7 +22,14 @@
     if (!f) return;
     $("#rw-list").innerHTML = "";
     window.VB.addFileRow("#rw-list", f);
-    inspect(f);
+    // the observer below inspects exactly once per document presented
+  };
+
+  // deliveries land anywhere on this counter, not just the intake tray
+  // (the MutationObserver below keeps exactly the last one, as ever)
+  window.VB.onFilesDropped = (files) => {
+    for (const f of files) window.VB.addFileRow("#rw-list", f);
+    log("delivery made on the counter floor — the last vault stands in line.");
   };
   // bindDrop appends rows; keep facts in step with whatever is there
   new MutationObserver(() => {

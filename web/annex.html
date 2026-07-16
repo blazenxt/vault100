@@ -28,11 +28,11 @@
 <meta name="twitter:image" content="https://vault100.blazenxt.in/og-cover.jpg">
 <link rel="manifest" href="manifest.json">
 <title>Instruments · Annex D — Vault100 Encryption Toolkit</title>
-<link rel="icon" type="image/svg+xml" href="icon.svg?v=220">
-<link rel="icon" type="image/png" sizes="32x32" href="icons/icon-32.png?v=220">
-<link rel="icon" type="image/png" sizes="16x16" href="icons/icon-16.png?v=220">
-<link rel="apple-touch-icon" href="icons/icon-180.png?v=220">
-<link rel="stylesheet" href="bureau.css?v=220">
+<link rel="icon" type="image/svg+xml" href="icon.svg?v=221">
+<link rel="icon" type="image/png" sizes="32x32" href="icons/icon-32.png?v=221">
+<link rel="icon" type="image/png" sizes="16x16" href="icons/icon-16.png?v=221">
+<link rel="apple-touch-icon" href="icons/icon-180.png?v=221">
+<link rel="stylesheet" href="bureau.css?v=221">
 </head>
 <body>
 
@@ -232,6 +232,29 @@
           <i>M</i> untampered slips learns the whole secret — guard each slip
           like a key, and retire the set when one goes missing.</div>
       </div>
+      <div class="rec wide">
+        <div class="idx">instrument (h)</div>
+        <h3>The courier's corner</h3>
+        <p>Folds a short scrap — a quorum slip, an armor block, a note for a
+          phone — into a stamped QR square the camera reads. Nothing travels a
+          wire: the ink moves by eye and lens alone. Royal capacity
+          ≈ 1,200 characters; beyond that, send a sealed file instead.</p>
+        <div class="qdesk">
+          <div class="qph">stamp the courier square</div>
+          <textarea id="cr-in" rows="3"
+            placeholder="paste a slip, an armor scrap, any short note…"></textarea>
+          <div class="rowline">
+            <button id="cr-go" class="ghost">Stamp the QR</button>
+            <button id="cr-dl" class="ghost" hidden>⭳ Download (.svg)</button>
+            <span class="fnote" id="cr-note">&nbsp;</span>
+          </div>
+          <div class="qrbox" id="cr-out" hidden>
+            <div class="qrframe" id="cr-frame" role="img"
+                 aria-label="courier QR stamp"></div>
+            <div class="qrmeta" id="cr-meta"></div>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 
@@ -276,7 +299,7 @@
   </nav>
 
   <footer>
-    <span><span class="b">Vault100 v2.0.20</span> · the seal bureau · night ledger</span>
+    <span><span class="b">Vault100 v2.0.21</span> · the seal bureau · night ledger</span>
     <span>© 2026 BlazeNXT ·
       <a href="https://github.com/blazenxt/vault100/blob/main/LICENSE" rel="noopener">MIT license</a>
       · no accounts · no telemetry · no escrow</span>
@@ -291,7 +314,8 @@
   <span class="curl" aria-hidden="true"></span>
 </div>
 
-<script src="common.js?v=220"></script>
-<script src="annex.js?v=220"></script>
+<script src="common.js?v=221"></script>
+<script src="vendor/qrcode.js?v=221"></script>
+<script src="annex.js?v=221"></script>
 </body>
 </html>

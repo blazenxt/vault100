@@ -8,7 +8,7 @@
  */
 "use strict";
 
-const VERSION = "220";
+const VERSION = "221";
 const CACHE = "vault100-" + VERSION;
 const Q = "?v=" + VERSION;
 const ASSETS = [
@@ -38,6 +38,7 @@ const ASSETS = [
   "/vendor/libsodium-wrappers.js" + Q,
   "/vendor/argon2.js" + Q,
   "/vendor/argon2.wasm" + Q,
+  "/vendor/qrcode.js" + Q,
   "/manifest.json",
   "/icon.svg",
   "/icon-maskable.svg",
