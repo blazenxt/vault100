@@ -7,8 +7,11 @@
       content="default-src 'none'; script-src 'self' 'wasm-unsafe-eval';
                worker-src 'self'; style-src 'unsafe-inline';
                img-src 'self' data:; connect-src 'self'; font-src 'none';
-               form-action 'none'; base-uri 'none'; manifest-src 'none'">
+               form-action 'none'; base-uri 'none'; manifest-src 'self'">
 <meta name="referrer" content="no-referrer">
+<meta name="theme-color" content="#08090b">
+<meta name="mobile-web-app-capable" content="yes">
+<link rel="manifest" href="manifest.json">
 <title>FORM 100-B — The Seal Bureau · night counter</title>
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 48'%3E%3Crect width='48' height='48' fill='%23111318'/%3E%3Ccircle cx='24' cy='24' r='15' fill='none' stroke='%23ddd6c4' stroke-width='3'/%3E%3Ccircle cx='24' cy='24' r='5' fill='%23e15555'/%3E%3C/svg%3E">
 <style>
@@ -154,6 +157,8 @@
   }
   .ro{background:rgba(255,255,255,.06)!important;border-bottom-style:solid!important}
   .fnote{font:10.5px/1.7 var(--mono);color:var(--faint);margin-top:5px}
+  .kfset{cursor:pointer;border-bottom:1px dotted var(--faint)}
+  .kfset:hover{color:var(--red)}
 
   .checkline{display:flex;gap:9px;align-items:center;font:11.5px var(--mono);color:var(--ink2);cursor:pointer;margin-top:10px;user-select:none}
   input[type=checkbox]{
@@ -401,15 +406,15 @@
         <div class="frow">
           <label class="flabel" for="enc-security">3. Key turning (argon2id)</label>
           <select id="enc-security">
-            <option value="standard" selected>standard — 64 MiB × 3 turns</option>
-            <option value="paranoid">paranoid — 256 MiB × 4 turns</option>
+            <option value="standard" selected>standard — 128 MiB × 3 turns</option>
+            <option value="paranoid">paranoid — 512 MiB × 4 turns</option>
             <option value="max">max — tuned to this very machine (~2 s)</option>
           </select>
           <div class="fnote">3 bureau presets + a 108-notch ladder below them —
             higher № = harder to crack, slower to open. Heavy notches may exceed
             small devices; the clerk reports honestly if one will not run.</div>
         </div>
-        <label class="checkline"><input id="enc-cascade" type="checkbox">
+        <label class="checkline"><input id="enc-cascade" type="checkbox" checked>
           4. double-lock — AES-256-GCM within XChaCha20</label>
         <div class="frow" style="margin-top:14px">
           <label class="flabel">5. physical second key (optional)</label>
@@ -433,6 +438,7 @@
       <h2><span class="rn">Part IV.</span> Authorization</h2>
       <div class="action-row">
         <button id="enc-go" class="go">Turn the key &amp; seal the vault</button>
+        <button id="enc-cancel" class="ghost" type="button" hidden>stay the stamp — cancel</button>
         <p class="fnote">Originals never leave this device. One to two gigabytes
           per document fits comfortably within a browser tab.</p>
       </div>
@@ -483,6 +489,7 @@
       <h2><span class="rn">Part IV.</span> Authorization</h2>
       <div class="action-row">
         <button id="dec-go" class="go">Turn the key &amp; open</button>
+        <button id="dec-cancel" class="ghost" type="button" hidden>stay the stamp — cancel</button>
       </div>
     </div>
   </section>
@@ -557,7 +564,7 @@
   </div>
 
   <footer>
-    <span><span class="b">Vault100 v2.0.6</span> · the seal bureau · night ledger</span>
+    <span><span class="b">Vault100 v2.0.7</span> · the seal bureau · night ledger</span>
     <span>no accounts · no telemetry · no escrow</span>
     <span>filed in triplicate — <span class="b">zero copies retained</span></span>
   </footer>
@@ -569,6 +576,6 @@
   </div>
 </div>
 
-<script src="app.js?v=206"></script>
+<script src="app.js?v=207"></script>
 </body>
 </html>

@@ -16,7 +16,7 @@
   }
 
   // ---------------- worker plumbing ----------------
-  const VERSION = "2.0.6";
+  const VERSION = "2.0.7";
   const worker = new Worker("worker.js?v=" + VERSION.replace(/\./g, ""));
   let nextId = 1;
   const pending = new Map();       // id -> {progressEl, resolve, reject, kind}
@@ -79,10 +79,13 @@
     const b = $("#selftest-badge");
     b.textContent = text;
     b.className = "badge " + cls;
-  }  function sendJob(job, progressEl) {
+  }  let lastJobId = null;
+  let batchCancel = false;
+  function sendJob(job, progressEl) {
     const id = nextId++;
     job.id = id;
     job.type = "job";
+    lastJobId = id;
     if (job.password) {                     // transfer (not copy) secret bytes
       const buf = job.password.buffer.slice(0);
       job.password = new Uint8Array(buf);
@@ -97,6 +100,21 @@
     return new Promise((resolve) => pending.set(id, { progressEl, resolve }));
   }
   const cancelJob = (id) => worker.postMessage({ type: "cancel", id });
+
+  // "stay the stamp" — cancelling a batch mid-flight
+  function armCancel(btnSel) {
+    const b = $(btnSel);
+    if (!b) return;
+    batchCancel = false;
+    b.hidden = false;
+    b.onclick = () => {
+      batchCancel = true;
+      if (lastJobId) cancelJob(lastJobId);
+      log("stay requested — releasing the current document…");
+    };
+  }
+  const disarmCancel = (btnSel) => { const b = $(btnSel); if (b) b.hidden = true; };
+  const isCancelErr = (res) => res && res.kind === "VaultCancelled";
 
   // ---------------- helpers ----------------
   function log(text, cls = "") {
@@ -220,9 +238,24 @@
     if (!btn) continue;
     btn.onclick = () => $(inpSel).click();
     $(inpSel).onchange = (e) => {
-      $(lblSel).textContent = e.target.files[0]
-        ? "🔑 " + e.target.files[0].name : "";
       btn._file = e.target.files[0] || null;
+      const lbl = $(lblSel);
+      if (btn._file) {
+        lbl.textContent = "🔑 " + btn._file.name + "  ✖";
+        lbl.classList.add("kfset");
+        lbl.title = "keyfile attached — click to remove it";
+      } else {
+        lbl.textContent = "";
+        lbl.classList.remove("kfset");
+      }
+    };
+    // keyfile is a physical key: it must also be possible to pocket it again
+    $(lblSel).onclick = () => {
+      btn._file = null;
+      $(inpSel).value = "";
+      $(lblSel).textContent = "";
+      $(lblSel).classList.remove("kfset");
+      log("keyfile pocketed again.");
     };
   }
   bindStrength("#enc-pw1", "#enc-strength", "#enc-strength-label");
@@ -268,10 +301,10 @@
     const res = await sendJob({ op: "calibrate" });
     if (!res || res.type === "error" || !Number.isFinite(res.memoryKib)) {
       log("✗ calibration failed: " + ((res && res.message) || "no result") +
-          " — falling back to standard (64 MiB × 3).", "err");
+          " — falling back to standard (128 MiB × 3).", "err");
       return { profile: "standard" };
     }
-    if (res.memoryKib < 64 * 1024) log(
+    if (res.memoryKib < 128 * 1024) log(
       "⚠ this browser limits Argon2 memory — vault tuned to what the device " +
       "allows. The desktop app can go higher.");
     return { params: res };
@@ -296,13 +329,16 @@
       ? new Uint8Array(await keyBtn._file.arrayBuffer()) : null;
 
     $("#enc-go").disabled = true;
+    armCancel("#enc-cancel");
     for (const { file, prog } of rows) {
+      if (batchCancel) { log("batch stayed — remaining documents untouched."); break; }
       log(`encrypt ${file.name}${cascade ? " [cascade]" : ""}`);
       const res = await sendJob({
         op: "encrypt", file, password: kb(pw1), profile, params,
         keyData, cascade,
       }, prog);
       if (res.type === "error") {
+        if (isCancelErr(res)) { log(`✗ ${file.name}: stayed by request`, "err"); break; }
         log(`✗ ${file.name}: ${res.message}`, "err");
         continue;
       }
@@ -312,6 +348,7 @@
     }
     $("#enc-pw1").value = $("#enc-pw2").value = "";
     $("#enc-go").disabled = false;
+    disarmCancel("#enc-cancel");
     log("Batch finished.");
   };
 
@@ -326,12 +363,15 @@
       ? new Uint8Array(await keyBtn._file.arrayBuffer()) : null;
 
     $("#dec-go").disabled = true;
+    armCancel("#dec-cancel");
     for (const { file, prog } of rows) {
+      if (batchCancel) { log("batch stayed — remaining documents untouched."); break; }
       log(`decrypt ${file.name}`);
       const res = await sendJob({
         op: "decrypt", file, password: kb(pw), keyData,
       }, prog);
       if (res.type === "error") {
+        if (isCancelErr(res)) { log(`✗ ${file.name}: stayed by request`, "err"); break; }
         const hint = res.kind === "VaultAuthError"
           ? "wrong password/keyfile or corrupted vault" : res.message;
         log(`✗ ${file.name}: ${hint}`, "err");
@@ -343,6 +383,7 @@
     }
     $("#dec-pw").value = "";
     $("#dec-go").disabled = false;
+    disarmCancel("#dec-cancel");
     log("Batch finished.");
   };
 
@@ -419,4 +460,21 @@
     await navigator.clipboard.writeText($("#genpass-out").value);
     log("Password copied to clipboard.");
   };
+
+  // ---------------- offline service worker ----------------
+  /* The bureau's claim is that every instrument keeps working with the
+     network cable severed — the service worker makes that literally true:
+     it deposits this exact build in a versioned cache after first load. */
+  if ("serviceWorker" in navigator) {
+    navigator.serviceWorker
+      .register("sw.js?v=" + VERSION.replace(/\./g, ""))
+      .then((reg) => {
+        if (reg.installing || reg.waiting) {
+          log("caching the bureau for offline duty…");
+        } else {
+          log("offline cache ready — the cable may be severed at will");
+        }
+      })
+      .catch(() => { /* private windows may refuse; the counter still works */ });
+  }
 })();

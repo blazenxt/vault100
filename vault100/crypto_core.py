@@ -109,8 +109,8 @@ _MAX_TIME = 64
 _MAX_PARALLELISM = 16
 
 KDF_PROFILES = {
-    "standard": dict(memory_kib=64 * 1024, time_cost=3, parallelism=4),
-    "paranoid": dict(memory_kib=256 * 1024, time_cost=4, parallelism=4),
+    "standard": dict(memory_kib=128 * 1024, time_cost=3, parallelism=4),
+    "paranoid": dict(memory_kib=512 * 1024, time_cost=4, parallelism=4),
 }
 DEFAULT_PROFILE = "standard"
 

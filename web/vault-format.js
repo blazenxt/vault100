@@ -24,8 +24,8 @@
   const MAX_MEM_KIB = 4 * 1024 * 1024, MAX_TIME = 64, MAX_PAR = 16;
 
   const KDF_PROFILES = {
-    standard: { memoryKib: 64 * 1024, timeCost: 3, parallelism: 4 },
-    paranoid: { memoryKib: 256 * 1024, timeCost: 4, parallelism: 4 },
+    standard: { memoryKib: 128 * 1024, timeCost: 3, parallelism: 4 },
+    paranoid: { memoryKib: 512 * 1024, timeCost: 4, parallelism: 4 },
   };
 
   /* Environment is injected by the loader (worker / node):
@@ -195,6 +195,7 @@
     const wnonce = randbytes(24);
     const wrapped = sodium.crypto_aead_xchacha20poly1305_ietf_encrypt(
       fek, null, null, wnonce, kek);
+    kek.fill(0);
 
     const flags = (cascade ? FLAG_CASCADE : 0) | (opts.keyData ? FLAG_KEYFILE : 0);
     const fixed = new Uint8Array(52);
@@ -280,6 +281,8 @@
         null, wrapped, null, wnonce, kek);
     } catch (e) {
       throw new VaultAuthError("wrong password/keyfile or corrupted vault");
+    } finally {
+      kek.fill(0);
     }
     const state = sodium.crypto_secretstream_xchacha20poly1305_init_pull(
       streamHdr, fek.subarray(0, 32));

@@ -36,7 +36,7 @@ available, with both a **command-line interface** and a **desktop GUI**.
 | **Second factor** | `--keyfile` — 256-bit random file (any file works, VeraCrypt-style) | Attackers need *both* factors; password-guessing alone is dead |
 | **Outer cipher** | XChaCha20-Poly1305 (libsodium secretstream) | AEAD, 192-bit nonces, auto re-key, truncation-proof |
 | **Cascade layer** | `--cascade`: AES-256-GCM sealed *inside* XChaCha20 | If either algorithm is ever broken, the other still holds |
-| **KDF** | Argon2id · 64 MiB×3 (`standard`) · 256 MiB×4 (`paranoid`) · **auto-tuned to your machine** (`max`) | GPUs/ASICs get thousands of guesses/sec, not billions |
+| **KDF** | Argon2id · 128 MiB×3 (`standard`) · 512 MiB×4 (`paranoid`) · **auto-tuned to your machine** (`max`) | GPUs/ASICs get thousands of guesses/sec, not billions |
 | **Salt** | Random 32 bytes per vault | Identical files + same password ⇒ totally different vaults |
 | **Integrity** | AEAD tag per 1 MiB chunk; immutable stream context as AAD; Poly1305-checked key wrap | Bit-flips, reordering, truncation, header edits — all rejected loudly |
 | **Privacy** | Original filename + metadata encrypted inside the vault | Attackers can't even see what the file was called |

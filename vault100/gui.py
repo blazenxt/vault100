@@ -585,7 +585,7 @@ Vault100 v2 — security design
               if either algorithm is ever broken, the other still holds
 
   Key deriv.  Argon2id, random 32-byte salt per vault
-              standard 64 MiB×3 · paranoid 256 MiB×4 · max: auto-tuned
+              standard 128 MiB×3 · paranoid 512 MiB×4 · max: auto-tuned
               to your machine (~2 s per unlock, forever for attackers)
 
   Integrity   AEAD per chunk + header bound as AAD at both layers —
