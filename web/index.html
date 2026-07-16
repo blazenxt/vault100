@@ -32,7 +32,9 @@
   *{box-sizing:border-box}
   html{background:var(--desk)}
   body{
-    margin:0;color:var(--ink);background:var(--desk);
+    margin:0;color:var(--ink);
+    background:radial-gradient(120% 90% at 50% 0%, #0b0c10 0%, var(--desk) 62%, #050608 100%);
+    min-height:100vh;
     font:13.5px/1.65 var(--mono);
   }
   /* desk fiber */
@@ -52,8 +54,16 @@
     background:var(--paper);position:relative;
     box-shadow:0 30px 70px rgba(0,0,0,.65),0 2px 0 rgba(0,0,0,.5);
     background-image:
-      radial-gradient(circle at 27px 30px, #040507 6.5px, #1e222a 7.5px, rgba(0,0,0,0) 8.5px);
-    background-size:100% 86px;background-repeat:repeat-y;
+      radial-gradient(circle at 27px 30px, #040507 6.5px, #1e222a 7.5px, rgba(0,0,0,0) 8.5px),
+      repeating-linear-gradient(180deg, rgba(0,0,0,0) 0 26px, rgba(221,214,196,.028) 26px 27px);
+    background-size:100% 86px,100% 27px;
+    background-repeat:repeat-y,repeat;
+  }
+  /* the carbon copy peeking from underneath */
+  .sheet::after{
+    content:"";position:absolute;inset:0;z-index:-1;
+    background:#0d0f14;transform:rotate(.9deg) translate(11px,7px);
+    box-shadow:0 26px 54px rgba(0,0,0,.55);
   }
   /* red legal margin rule */
   .sheet::before{
@@ -71,7 +81,8 @@
   .lh .center{flex:1;text-align:center}
   .bureau{font:10.5px var(--mono);letter-spacing:.3em;text-transform:uppercase;color:var(--ink2)}
   .bureau::before,.bureau::after{content:"—";margin:0 10px;color:var(--faint)}
-  .wordmark{font:700 40px/1.05 var(--mono);letter-spacing:.04em;margin-top:6px}
+  .wordmark{font:700 40px/1.05 var(--mono);letter-spacing:.04em;margin-top:6px;
+    text-shadow:0 -1px 0 rgba(221,214,196,.09),0 2px 3px rgba(0,0,0,.85)}
   .wordmark b{color:var(--red);font-weight:700}
   .counterline{font:10px var(--mono);letter-spacing:.24em;text-transform:uppercase;color:var(--ink2);margin-top:8px}
   .lh .rightcol{flex:none;width:158px;display:flex;flex-direction:column;gap:10px;align-items:stretch}
@@ -111,7 +122,7 @@
     padding:11px 20px 12px;transform:translateY(1.5px);
   }
   .tabbtn:hover{background:#171a20;color:var(--ink)}
-  .tabbtn.active{background:var(--ink);color:var(--paper)}
+  .tabbtn.active{background:var(--ink);color:var(--paper);box-shadow:inset 0 3px 0 var(--red)}
   @media(max-width:640px){.tabbtn{padding:10px 12px;letter-spacing:.08em}}
 
   .tab{display:none;padding-top:8px}
@@ -259,6 +270,21 @@
         transparent 27px 30px);
   }
   .barcodenum{font:9.5px var(--mono);letter-spacing:.34em;color:var(--ink2);margin-top:5px}
+
+  /* tear-off receipt stub, perforated to the sheet's right */
+  .stub{
+    position:absolute;left:calc(100% + 8px);top:72px;width:120px;
+    background:var(--paper2);border-left:2px dotted var(--ink2);
+    padding:16px 13px;transform:rotate(.6deg);
+    box-shadow:0 18px 36px rgba(0,0,0,.5);
+    font:9px var(--mono);color:var(--ink2);letter-spacing:.14em;
+    text-transform:uppercase;
+  }
+  .stub .st{font-weight:700;color:var(--ink);margin-bottom:9px}
+  .stub .sn{color:var(--red);margin-bottom:9px}
+  .stub .sf{font:italic 8px var(--mono);color:var(--faint);line-height:1.75;
+    text-transform:none;letter-spacing:.04em}
+  @media(max-width:1180px){.stub{display:none}}
 
   footer{
     margin-top:24px;padding-top:12px;border-top:3px double var(--ink);
@@ -531,12 +557,18 @@
   </div>
 
   <footer>
-    <span><span class="b">Vault100 v2.1.0</span> · the seal bureau · night window 100</span>
+    <span><span class="b">Vault100 v2.0.6</span> · the seal bureau · night ledger</span>
     <span>no accounts · no telemetry · no escrow</span>
     <span>filed in triplicate — <span class="b">zero copies retained</span></span>
   </footer>
+
+  <div class="stub" aria-hidden="true">
+    <div class="st">form 100-b<br>receipt stub</div>
+    <div class="sn">№ 0047 / 2026</div>
+    <div class="sf">keep this stub —<br>it is your only receipt</div>
+  </div>
 </div>
 
-<script src="app.js?v=210"></script>
+<script src="app.js?v=206"></script>
 </body>
 </html>

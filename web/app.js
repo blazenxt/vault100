@@ -16,7 +16,7 @@
   }
 
   // ---------------- worker plumbing ----------------
-  const VERSION = "2.1.0";
+  const VERSION = "2.0.6";
   const worker = new Worker("worker.js?v=" + VERSION.replace(/\./g, ""));
   let nextId = 1;
   const pending = new Map();       // id -> {progressEl, resolve, reject, kind}
