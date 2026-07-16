@@ -16,7 +16,7 @@
   }
 
   // ---------------- worker plumbing ----------------
-  const VERSION = "2.0.5";
+  const VERSION = "2.1.0";
   const worker = new Worker("worker.js?v=" + VERSION.replace(/\./g, ""));
   let nextId = 1;
   const pending = new Map();       // id -> {progressEl, resolve, reject, kind}
@@ -233,7 +233,35 @@
     }
   };
 
+  // ---------------- the fine ladder: 108 key-turning notches ----------------
+  /* memory tiers (MiB) × turning counts, graded weakest → heaviest.
+     Values ride as raw params: p:<memKiB>:<turns>:<lanes>. They are stamped
+     into the vault header, so every notch opens in the CLI & desktop app. */
+  (function buildLadder() {
+    const selx = $("#enc-security");
+    if (!selx) return;
+    const MEM = [16, 24, 32, 48, 64, 96, 128, 160, 192, 256, 320, 384,
+                 448, 512, 640, 768, 896, 1024];
+    const TURNS = [1, 2, 3, 4, 5, 6];
+    const combos = [];
+    for (const m of MEM) for (const t of TURNS) combos.push([m, t]);
+    combos.sort((a, b) => (a[0] * a[1]) - (b[0] * b[1]) || a[0] - b[0]);
+    const grp = document.createElement("optgroup");
+    grp.label = `the fine ladder — ${combos.length} notches, weak → heavy`;
+    combos.forEach(([m, t], i) => {
+      const o = document.createElement("option");
+      o.value = `p:${m * 1024}:${t}:4`;
+      o.textContent = `№ ${String(i + 1).padStart(3, "0")} · ${m} MiB × ${t} turn${t > 1 ? "s" : ""}`;
+      grp.appendChild(o);
+    });
+    selx.appendChild(grp);
+  })();
+
   async function resolveProfile(sel) {
+    if (sel.startsWith("p:")) {
+      const [mem, t, par] = sel.slice(2).split(":").map(Number);
+      return { params: { memoryKib: mem, timeCost: t, parallelism: par } };
+    }
     if (sel !== "max") return { profile: sel };
     if (calibratedParams) return { params: calibratedParams };
     log("Calibrating Argon2id to this device (~2 s target)…");
