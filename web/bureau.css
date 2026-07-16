@@ -531,3 +531,61 @@
   .faq summary::before{content:"▸ ";color:var(--red)}
   .faq details[open] summary::before{content:"▾ "}
   .faq details p{margin:6px 0 6px 16px;color:var(--ink2);font-size:12.5px}
+
+  /* ---------- the public registry strip (the bureau's row) ---------- */
+  .pubnav{display:flex;align-items:center;gap:2px;flex-wrap:wrap;
+    margin-top:4px;padding:5px 10px;
+    border:1.5px dashed rgba(var(--linetri),.35);border-radius:8px;
+    background:rgba(var(--shadetri),.10);
+    font-size:11px;letter-spacing:.06em}
+  .pubnav .pblabel{color:var(--faint);text-transform:uppercase;
+    font-size:9px;letter-spacing:.22em;margin-right:4px}
+  .pubnav a{color:var(--ink2);text-decoration:none;padding:3px 9px;border-radius:6px}
+  .pubnav a:hover{color:var(--ink);background:rgba(var(--linetri),.09)}
+  .pubnav a.on{color:var(--ink);background:rgba(var(--redtri),.16);
+    box-shadow:inset 0 0 0 1px rgba(var(--redtri),.4)}
+  .pubnav a.pbget{color:var(--red);font-weight:700;
+    border:1px dashed rgba(var(--redtri),.55)}
+  .pubnav a.pbget:hover{background:rgba(var(--redtri),.16)}
+
+  /* ---------- the registry footer ---------- */
+  .sitefoot{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;
+    margin:22px 0 6px;border-top:2px solid rgba(var(--linetri),.25);padding-top:14px}
+  .sitefoot .sfh{font-size:9px;letter-spacing:.24em;text-transform:uppercase;
+    color:var(--faint);margin-bottom:6px}
+  .sitefoot a{display:block;color:var(--ink2);text-decoration:none;
+    font-size:11.5px;padding:2.5px 0}
+  .sitefoot a:hover{color:var(--red)}
+  footer a{color:var(--red);text-decoration:none;border-bottom:1px dotted var(--red)}
+  @media (max-width:620px){.sitefoot{grid-template-columns:1fr 1fr;gap:10px}}
+
+  /* ---------- the ledger writ (about / privacy / terms) ---------- */
+  .writ .wh{font:700 12px var(--mono);letter-spacing:.16em;text-transform:uppercase;
+    color:var(--ink2);margin:22px 0 6px}
+  .writ p{margin:7px 0;font-size:13px}
+  .writ a{color:var(--red);text-decoration:none;border-bottom:1px dotted var(--red)}
+  .writ ul.dots{margin:8px 0 8px 20px;padding:0}
+  .writ ul.dots li{margin:5px 0;font-size:13px}
+  .writ .fine{color:var(--ink2);font-size:11.5px;margin-top:16px}
+  .clause{display:flex;gap:12px;margin:11px 0}
+  .clause .cno{color:var(--red);font-weight:700;min-width:30px}
+  .clause p{margin:0;flex:1}
+  .creedcards{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin:12px 0}
+  .creed{border:1.5px dashed rgba(var(--linetri),.35);border-radius:8px;
+    padding:10px 12px;font-size:12.5px;background:rgba(var(--shadetri),.10)}
+  .creed b{color:var(--red)}
+  @media (max-width:700px){.creedcards{grid-template-columns:1fr}}
+
+  /* ---------- schedule of provisions (features / get) ---------- */
+  .sched .rec h3{margin-bottom:6px}
+  .sched p{font-size:12.5px}
+  code.tag{background:rgba(var(--linetri),.12);padding:1px 6px;border-radius:4px;
+    font-size:.95em}
+  pre.cmd{background:var(--paper2);border:1px dashed rgba(var(--linetri),.35);
+    border-radius:8px;padding:10px 12px;margin:10px 0 2px;overflow-x:auto;
+    font:12px/1.7 var(--mono);color:var(--ink);white-space:pre}
+  pre.cmd .c1{color:var(--faint)}
+  .faq.faqpage{margin-top:8px}
+  .part > .fine, .sched + .fine{color:var(--ink2);font-size:11.5px;margin-top:16px}
+  .part > .fine a, .sched + .fine a{color:var(--red);text-decoration:none;
+    border-bottom:1px dotted var(--red)}

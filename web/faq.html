@@ -1,0 +1,312 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Content-Security-Policy"
+      content="default-src 'none'; script-src 'self' 'wasm-unsafe-eval';
+               worker-src 'self'; style-src 'self' 'unsafe-inline';
+               img-src 'self' data:; connect-src 'self'; font-src 'none';
+               form-action 'none'; base-uri 'none'; manifest-src 'self'">
+<meta name="referrer" content="no-referrer">
+<meta name="theme-color" content="#08090b">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="description" content="Answers on the house: is Vault100 free, do files leave my device, which algorithms protect vaults, forgotten passphrases, keyfiles, logging, offline use, passphrase changes and business use.">
+<meta name="robots" content="index,follow,max-image-preview:large">
+<link rel="canonical" href="https://vault100.blazenxt.in/faq.html">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Vault100 — The Seal Bureau">
+<meta property="og:title" content="Questions heard at the counter — answered on the house">
+<meta property="og:description" content="Answers on the house: is Vault100 free, do files leave my device, which algorithms protect vaults, forgotten passphrases, keyfiles, logging, offline use, passphrase changes and business use.">
+<meta property="og:url" content="https://vault100.blazenxt.in/faq.html">
+<meta property="og:image" content="https://vault100.blazenxt.in/og-cover.jpg">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Questions heard at the counter — answered on the house">
+<meta name="twitter:description" content="Answers on the house: is Vault100 free, do files leave my device, which algorithms protect vaults, forgotten passphrases, keyfiles, logging, offline use, passphrase changes and business use.">
+<meta name="twitter:image" content="https://vault100.blazenxt.in/og-cover.jpg">
+<link rel="manifest" href="manifest.json">
+<title>FAQ — Questions Heard at the Counter · Vault100</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 48'%3E%3Crect width='48' height='48' fill='%23111318'/%3E%3Ccircle cx='24' cy='24' r='15' fill='none' stroke='%23ddd6c4' stroke-width='3'/%3E%3Ccircle cx='24' cy='24' r='5' fill='%23e15555'/%3E%3C/svg%3E">
+<link rel="stylesheet" href="bureau.css?v=217">
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    {
+      "@type": "Question",
+      "name": "Is Vault100 really free?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Yes \u2014 free and MIT-licensed open source, with no accounts, no subscriptions and no ads. Run it, study it, modify it, self-host it, forever."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Do my files ever leave my device?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Never. All cryptography runs locally in a dedicated Worker thread of your browser \u2014 or fully offline in the CLI and desktop app. Disconnect the network and the bureau keeps working exactly the same."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Is the web counter as strong as the desktop engine?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Yes. The web counter uses the same primitives through WASM libsodium and WebCrypto, stamps identical parameters, and opens CLI vaults byte-exactly (and vice versa). Each page proves it on arrival by decrypting a reference vault made by the desktop build \u2014 watch the inspection stamp, upper right."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "What if I forget a vault's combination?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "No one on earth can recover it \u2014 not even the bureau, which keeps no ledger of combinations, keys or escrow copies. Write passphrases down; store keyfiles like house keys, with a copy laid safely away."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Which algorithms protect my vaults?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "XChaCha20-Poly1305 authenticated streaming encryption, an optional AES-256-GCM cascade (double-lock), Argon2id memory-hard key derivation with 108 graded notches, and optional 256-bit keyfiles as a physical second factor. Parameters are stamped in each vault's public header."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "What exactly is a .v100key keyfile?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "A small file holding 256 random bits, minted by the keyfile press (Annex D) or the CLI. When demanded at sealing, every later opening needs BOTH the combination and the file \u2014 a physical second factor, VeraCrypt-style."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Does the bureau see or log anything about me?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "No accounts, no cookies, no analytics, no telemetry, no uploads. The only things kept are three desk preferences inside your own browser's storage (ink, shift, sweep seconds). The privacy writ enumerates everything."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Can I use Vault100 offline or self-host it?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Yes. After the first visit the web counter works with the network cable severed (offline PWA). Self-hosting is a zero-dependency Node server or the provided Dockerfile; the CLI and desktop app never need a network at all."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Can I change a vault's passphrase later?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Yes \u2014 Form 100-R (or python -m vault100 passwd) re-seals only the vault's key wrap; the body is never re-encrypted, so a 10 GB vault's combination changes as fast as a 10 KB one."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "May my business use Vault100?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Yes. MIT means commercial use, modification and redistribution are all permitted \u2014 just keep the license notice. No permission letter needed; the counter serves institutions and citizens alike."
+      }
+    }
+  ]
+}
+</script>
+</head>
+<body>
+
+<div class="sheet">
+  <svg width="0" height="0" style="position:absolute" aria-hidden="true">
+    <filter id="inkbleed">
+      <feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="2" seed="7" result="n"/>
+      <feDisplacementMap in="SourceGraphic" in2="n" scale="1.6"/>
+    </filter>
+  </svg>
+  <svg class="tear" viewBox="0 0 920 10" preserveAspectRatio="none" aria-hidden="true">
+    <path fill="#111318" d="M0 10 V4 l23 -2 l23 3 l23 -3 l23 2 l23 -1 l23 3 l23 -3 l23 1 l23 -2 l23 3 l23 -3 l23 2 l23 -1 l23 3 l23 -3 l23 1 l23 -2 l23 3 l23 -3 l23 2 l23 -1 l23 3 l23 -3 l23 1 l23 -2 l23 3 l23 -3 l23 2 l23 -1 l23 3 l23 -3 l23 1 l23 -2 l23 3 l23 -3 l23 2 l23 -1 l23 3 l23 -3 l23 1 L920 4 L920 10 Z"/>
+  </svg>
+  <span class="ring r1" aria-hidden="true"></span>
+  <span class="ring r2" aria-hidden="true"></span>
+  <span class="ring r3" aria-hidden="true"></span>
+
+  <!-- ================= LETTERHEAD ================= -->
+  <header class="lh">
+    <svg class="postmark" viewBox="0 0 96 96" aria-hidden="true">
+      <circle cx="48" cy="48" r="44" fill="none" stroke="#6d685a" stroke-width="2"/>
+      <circle cx="48" cy="48" r="32" fill="none" stroke="#6d685a" stroke-width="1" stroke-dasharray="3 3"/>
+      <text x="48" y="30" text-anchor="middle" font-family="monospace" font-size="9" letter-spacing="2" fill="#6d685a">SEAL BUREAU</text>
+      <text x="48" y="46" text-anchor="middle" font-family="monospace" font-size="8" letter-spacing="1.5" fill="#6d685a">★ ★ ★</text>
+      <text x="48" y="60" text-anchor="middle" font-family="monospace" font-size="9" letter-spacing="2" fill="#6d685a">WINDOW 100</text>
+      <text x="48" y="74" text-anchor="middle" font-family="monospace" font-size="7.5" letter-spacing="1.5" fill="#6d685a">EST. 2026</text>
+    </svg>
+
+    <div class="center">
+      <div class="bureau">The Seal Bureau · Night Counter</div>
+      <div class="wordmark">VAULT-<b>100</b></div>
+      <div class="counterline">enquiries · answers on the house · no fee</div>
+    </div>
+
+    <div class="rightcol">
+      <div class="serial">
+        <b>ENQUIRY LEDGER</b><br>
+        ser. № 1012 / 2026<br>
+        received: <span id="today" class="blank">&nbsp;</span>
+      </div>
+      <div id="selftest-badge" class="badge warn">under<br>inspection</div>
+    </div>
+  </header>
+
+  <hr class="double">
+  <div class="ribbon">
+    <span>container <i>V100ENC2</i></span>
+    <span>cipher <i>xchacha20-poly1305</i> ⊕ <i>aes-256-gcm</i></span>
+    <span>key turning <i>argon2id</i></span>
+    <span>copies retained by bureau <i>none</i></span>
+  </div>
+
+  <!-- ================= COUNTERS ================= -->
+  <div class="tabwrap">
+    <nav class="switch" role="navigation" aria-label="bureau counters">
+      <a class="tabbtn desk" href="index.html">❦ front desk</a>
+      <a class="tabbtn" href="seal.html">Form 100-B · Seal</a>
+      <a class="tabbtn" href="open.html">Form 100-C · Open</a>
+      <a class="tabbtn" href="rewrap.html">Form 100-R · Recombinate</a>
+      <a class="tabbtn" href="annex.html">Annex D · Instruments</a>
+      <div class="inkkit" role="group" aria-label="counter ink and shift">
+        <label class="inkwell" title="the counter's ink"><span class="iwlabel">ink</span><select id="ink" aria-label="counter ink">
+          <option value="carbon">carbon black</option>
+          <option value="oxford">oxford blue</option>
+          <option value="sepia">sepia brown</option>
+          <option value="ledger">ledger green</option>
+          <option value="crimson">stamp crimson</option>
+        </select></label>
+        <button id="shift" class="shiftbtn" type="button"
+                title="office hours — flip the desk lamp">&#9789; night desk</button>
+      </div>
+    </nav>
+    <nav class="pubnav" aria-label="the bureau — public registry">
+      <span class="pblabel">the bureau&nbsp;·</span>
+      <a class="" href="about.html">about</a>
+      <a class="" href="features.html">features</a>
+      <a class="on" href="faq.html">faq</a>
+      <a class=" pbget" href="get.html">⭳ get vault100</a>
+      <a class="" href="privacy.html">privacy</a>
+      <a class="" href="terms.html">terms</a>
+    </nav>
+  </div>
+
+  <!-- ================= FAQ ================= -->
+  <div class="part">
+    <h2><span class="rn">Enquiries.</span> Questions heard at the counter</h2>
+    <div class="faq faqpage">
+      <details>
+        <summary>Is Vault100 really free?</summary>
+        <p>Yes — free and MIT-licensed open source, with no accounts, no subscriptions and no ads. Run it, study it, modify it, self-host it, forever.</p>
+      </details>
+      <details>
+        <summary>Do my files ever leave my device?</summary>
+        <p>Never. All cryptography runs locally in a dedicated Worker thread of your browser — or fully offline in the CLI and desktop app. Disconnect the network and the bureau keeps working exactly the same.</p>
+      </details>
+      <details>
+        <summary>Is the web counter as strong as the desktop engine?</summary>
+        <p>Yes. The web counter uses the same primitives through WASM libsodium and WebCrypto, stamps identical parameters, and opens CLI vaults byte-exactly (and vice versa). Each page proves it on arrival by decrypting a reference vault made by the desktop build — watch the inspection stamp, upper right.</p>
+      </details>
+      <details>
+        <summary>What if I forget a vault's combination?</summary>
+        <p>No one on earth can recover it — not even the bureau, which keeps no ledger of combinations, keys or escrow copies. Write passphrases down; store keyfiles like house keys, with a copy laid safely away.</p>
+      </details>
+      <details>
+        <summary>Which algorithms protect my vaults?</summary>
+        <p>XChaCha20-Poly1305 authenticated streaming encryption, an optional AES-256-GCM cascade (double-lock), Argon2id memory-hard key derivation with 108 graded notches, and optional 256-bit keyfiles as a physical second factor. Parameters are stamped in each vault's public header.</p>
+      </details>
+      <details>
+        <summary>What exactly is a .v100key keyfile?</summary>
+        <p>A small file holding 256 random bits, minted by the keyfile press (Annex D) or the CLI. When demanded at sealing, every later opening needs BOTH the combination and the file — a physical second factor, VeraCrypt-style.</p>
+      </details>
+      <details>
+        <summary>Does the bureau see or log anything about me?</summary>
+        <p>No accounts, no cookies, no analytics, no telemetry, no uploads. The only things kept are three desk preferences inside your own browser's storage (ink, shift, sweep seconds). The privacy writ enumerates everything.</p>
+      </details>
+      <details>
+        <summary>Can I use Vault100 offline or self-host it?</summary>
+        <p>Yes. After the first visit the web counter works with the network cable severed (offline PWA). Self-hosting is a zero-dependency Node server or the provided Dockerfile; the CLI and desktop app never need a network at all.</p>
+      </details>
+      <details>
+        <summary>Can I change a vault's passphrase later?</summary>
+        <p>Yes — Form 100-R (or python -m vault100 passwd) re-seals only the vault's key wrap; the body is never re-encrypted, so a 10 GB vault's combination changes as fast as a 10 KB one.</p>
+      </details>
+      <details>
+        <summary>May my business use Vault100?</summary>
+        <p>Yes. MIT means commercial use, modification and redistribution are all permitted — just keep the license notice. No permission letter needed; the counter serves institutions and citizens alike.</p>
+      </details>
+    </div>
+    <p class="fine">enquiry not listed? state it plainly at
+      <a href="https://github.com/blazenxt/vault100/issues" rel="noopener">the issues window</a>
+      — the clerk answers in public so the next traveller need not ask.</p>
+  </div>
+
+  <!-- ================= CLERK'S RECORD ================= -->
+  <div class="records solo">
+    <div>
+      <div class="rechead">Clerk's record · enquiries heard & answered</div>
+      <div id="log"></div>
+    </div>
+  </div>
+
+  <div class="foldnote">Do not fold below this line</div>
+
+  <div class="barcodebox">
+    <div class="barcode" aria-hidden="true"></div>
+    <div class="barcodenum">№ V100·2026·A·1012</div>
+  </div>
+
+  <nav class="sitefoot" aria-label="bureau registry footer">
+    <div class="sfcol">
+      <div class="sfh">the counters</div>
+      <a href="seal.html">Form 100-B · Seal</a>
+      <a href="open.html">Form 100-C · Open</a>
+      <a href="rewrap.html">Form 100-R · Recombinate</a>
+      <a href="annex.html">Annex D · Instruments</a>
+    </div>
+    <div class="sfcol">
+      <div class="sfh">the bureau</div>
+      <a href="about.html">about &amp; charter</a>
+      <a href="features.html">schedule of provisions</a>
+      <a href="faq.html">questions ledger</a>
+      <a href="get.html">get vault100</a>
+    </div>
+    <div class="sfcol">
+      <div class="sfh">the instruments</div>
+      <a href="privacy.html">privacy writ</a>
+      <a href="terms.html">terms of service</a>
+      <a href="https://github.com/blazenxt/vault100" rel="noopener">GitHub · the source</a>
+      <a href="https://github.com/blazenxt/vault100/releases" rel="noopener">tagged releases</a>
+    </div>
+  </nav>
+
+  <footer>
+    <span><span class="b">Vault100 v2.0.17</span> · the seal bureau · night ledger</span>
+    <span>© 2026 BlazeNXT ·
+      <a href="https://github.com/blazenxt/vault100/blob/main/LICENSE" rel="noopener">MIT license</a>
+      · no accounts · no telemetry · no escrow</span>
+    <span>filed in triplicate — <span class="b">zero copies retained</span></span>
+  </footer>
+
+
+  <div class="stub" aria-hidden="true">
+    <div class="st">enquiry<br>ledger copy</div>
+    <div class="sn">№ 1012 / 2026</div>
+    <div class="sf">registry copy —<br>keep for your records</div>
+  </div>
+  <span class="curl" aria-hidden="true"></span>
+</div>
+
+<script src="common.js?v=217"></script>
+</body>
+</html>

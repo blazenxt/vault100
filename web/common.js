@@ -7,7 +7,7 @@
   const VB = (window.VB = {});
   const $ = (VB.$ = (s) => document.querySelector(s));
   VB.$$ = (s) => Array.from(document.querySelectorAll(s));
-  VB.VERSION = "2.0.16";
+  VB.VERSION = "2.0.17";
 
   // ---------------- the desk lamp & ink well (themes) ----------------
   // Applied synchronously before first paint, so no theme flash. The

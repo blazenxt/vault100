@@ -8,7 +8,7 @@
  */
 "use strict";
 
-const VERSION = "216";
+const VERSION = "217";
 const CACHE = "vault100-" + VERSION;
 const Q = "?v=" + VERSION;
 const ASSETS = [
@@ -18,6 +18,12 @@ const ASSETS = [
   "/open.html",
   "/annex.html",
   "/rewrap.html",
+  "/about.html",
+  "/features.html",
+  "/faq.html",
+  "/get.html",
+  "/privacy.html",
+  "/terms.html",
   "/bureau.css" + Q,
   "/common.js" + Q,
   "/seal.js" + Q,

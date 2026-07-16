@@ -11,23 +11,23 @@
 <meta name="referrer" content="no-referrer">
 <meta name="theme-color" content="#08090b">
 <meta name="mobile-web-app-capable" content="yes">
-<meta name="description" content="Form 100-B: encrypt files and whole folders into .v100 vaults right in your browser. 108 Argon2id key-turning notches, cascade double-lock, keyfiles, gzip — nothing is ever uploaded.">
+<meta name="description" content="Schedule A: the complete feature registry — .v100 container, 111 Argon2id key-turning settings, AES-256-GCM cascade, keyfiles, instant recombinate, gzip, folder sealing, timekeeper benchmarks, sweep ops, themes, offline PWA, self-hosting.">
 <meta name="robots" content="index,follow,max-image-preview:large">
-<link rel="canonical" href="https://vault100.blazenxt.in/seal.html">
+<link rel="canonical" href="https://vault100.blazenxt.in/features.html">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="Vault100 — The Seal Bureau">
-<meta property="og:title" content="Form 100-B — seal files into vaults, no upload ever">
-<meta property="og:description" content="Form 100-B: encrypt files and whole folders into .v100 vaults right in your browser. 108 Argon2id key-turning notches, cascade double-lock, keyfiles, gzip — nothing is ever uploaded.">
-<meta property="og:url" content="https://vault100.blazenxt.in/seal.html">
+<meta property="og:title" content="Schedule A — every provision of the bureau">
+<meta property="og:description" content="Schedule A: the complete feature registry — .v100 container, 111 Argon2id key-turning settings, AES-256-GCM cascade, keyfiles, instant recombinate, gzip, folder sealing, timekeeper benchmarks, sweep ops, themes, offline PWA, self-hosting.">
+<meta property="og:url" content="https://vault100.blazenxt.in/features.html">
 <meta property="og:image" content="https://vault100.blazenxt.in/og-cover.jpg">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
 <meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:title" content="Form 100-B — seal files into vaults, no upload ever">
-<meta name="twitter:description" content="Form 100-B: encrypt files and whole folders into .v100 vaults right in your browser. 108 Argon2id key-turning notches, cascade double-lock, keyfiles, gzip — nothing is ever uploaded.">
+<meta name="twitter:title" content="Schedule A — every provision of the bureau">
+<meta name="twitter:description" content="Schedule A: the complete feature registry — .v100 container, 111 Argon2id key-turning settings, AES-256-GCM cascade, keyfiles, instant recombinate, gzip, folder sealing, timekeeper benchmarks, sweep ops, themes, offline PWA, self-hosting.">
 <meta name="twitter:image" content="https://vault100.blazenxt.in/og-cover.jpg">
 <link rel="manifest" href="manifest.json">
-<title>Seal Files · Form 100-B — Vault100 Zero-Knowledge Encryption</title>
+<title>Features — Vault100's Full Schedule of Provisions</title>
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 48'%3E%3Crect width='48' height='48' fill='%23111318'/%3E%3Ccircle cx='24' cy='24' r='15' fill='none' stroke='%23ddd6c4' stroke-width='3'/%3E%3Ccircle cx='24' cy='24' r='5' fill='%23e15555'/%3E%3C/svg%3E">
 <link rel="stylesheet" href="bureau.css?v=217">
 </head>
@@ -61,13 +61,13 @@
     <div class="center">
       <div class="bureau">The Seal Bureau · Night Counter</div>
       <div class="wordmark">VAULT-<b>100</b></div>
-      <div class="counterline">form 100-b · request to seal · night stock · third revision</div>
+      <div class="counterline">schedule a · provisions & locks · full registry</div>
     </div>
 
     <div class="rightcol">
       <div class="serial">
-        <b>FORM 100-B</b><br>
-        ser. № 0047 / 2026<br>
+        <b>SCHEDULE A</b><br>
+        ser. № 1011 / 2026<br>
         received: <span id="today" class="blank">&nbsp;</span>
       </div>
       <div id="selftest-badge" class="badge warn">under<br>inspection</div>
@@ -86,7 +86,7 @@
   <div class="tabwrap">
     <nav class="switch" role="navigation" aria-label="bureau counters">
       <a class="tabbtn desk" href="index.html">❦ front desk</a>
-      <a class="tabbtn active" href="seal.html">Form 100-B · Seal</a>
+      <a class="tabbtn" href="seal.html">Form 100-B · Seal</a>
       <a class="tabbtn" href="open.html">Form 100-C · Open</a>
       <a class="tabbtn" href="rewrap.html">Form 100-R · Recombinate</a>
       <a class="tabbtn" href="annex.html">Annex D · Instruments</a>
@@ -105,7 +105,7 @@
     <nav class="pubnav" aria-label="the bureau — public registry">
       <span class="pblabel">the bureau&nbsp;·</span>
       <a class="" href="about.html">about</a>
-      <a class="" href="features.html">features</a>
+      <a class="on" href="features.html">features</a>
       <a class="" href="faq.html">faq</a>
       <a class=" pbget" href="get.html">⭳ get vault100</a>
       <a class="" href="privacy.html">privacy</a>
@@ -113,108 +113,59 @@
     </nav>
   </div>
 
-  <!-- ================= FORM 100-B · SEAL ================= -->
+  <!-- ================= FEATURES ================= -->
   <div class="part">
-    <h2><span class="rn">Part I.</span> The documents</h2>
-    <div id="enc-drop" class="intake">
-      <span class="corner tl"></span><span class="corner tr"></span>
-      <span class="corner bl"></span><span class="corner br"></span>
-      <svg width="34" height="34" viewBox="0 0 34 34" fill="none" stroke="#6d685a" stroke-width="1.6" aria-hidden="true">
-        <path d="M21 6l7 7v13a2 2 0 0 1-2 2H10a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h11z"/>
-        <path d="M21 6v7h7" />
-        <path d="M17 15v7m0 0l-3-3m3 3l3-3" stroke="#e15555"/>
-      </svg>
-      <div class="big">Attach documents here</div>
-      <div class="small">drop them upon the counter — or click to rummage the drawer</div>
-      <input id="enc-pick" type="file" multiple>
+    <h2><span class="rn">Schedule A.</span> The full schedule of provisions</h2>
+    <div class="recs sched">
+      <div class="rec"><div class="idx">provision № 1</div><h3>The .v100 container</h3>
+        <p>Self-describing, tamper-evident vaults — authenticated header, per-chunk
+          tags, truncation-proof stream, original filenames restored on opening.
+          v1 vaults still honoured.</p></div>
+      <div class="rec"><div class="idx">provision № 2</div><h3>111 key-turning settings</h3>
+        <p>Argon2id memory-hard derivation — a graded ladder of 108 fine notches
+          (16 MiB × 1 turn → 1 GiB × 6 turns) plus standard, paranoid and
+          auto-calibrated “max”. Stamped into every header; opens on any build.</p></div>
+      <div class="rec"><div class="idx">provision № 3</div><h3>The double-lock cascade</h3>
+        <p>Optional AES-256-GCM ⟶ XChaCha20-Poly1305 — two independent ciphers in
+          series. A break of either one still leaves the other holding the seal.</p></div>
+      <div class="rec"><div class="idx">provision № 4</div><h3>The keyfile press</h3>
+        <p>A 256-bit physical second key (<code class="tag">.v100key</code>). The vault
+          then demands <i>both</i> — combination in your head, key in your pocket.
+          Guessing alone is dead.</p></div>
+      <div class="rec"><div class="idx">provision № 5</div><h3>Instant recombinate</h3>
+        <p>Change a vault’s passphrase or keyfile in a blink — only the sealed head
+          is re-pressed, the body is never re-encrypted. 10 GB moves as fast as 10 KB.</p></div>
+      <div class="rec"><div class="idx">provision № 6</div><h3>Shrink-wrap &amp; folder filings</h3>
+        <p>Optional gzip inside the vault, and whole folders filed as one tidy
+          tar — sealed as a single document.</p></div>
+      <div class="rec"><div class="idx">provision № 7</div><h3>The examining tray</h3>
+        <p>On opening, the head reads its facts aloud; texts, images and PDFs may be
+          examined right on the counter — ≤ 25 MiB, never saved, swept away after.</p></div>
+      <div class="rec"><div class="idx">provision № 8</div><h3>The timekeeper</h3>
+        <p>Device speed trials — XChaCha and AES-GCM throughput, Argon2id notch costs,
+          and what the standard profile truly costs <i>on your desk</i>. Choose
+          notches informed, not guessed.</p></div>
+      <div class="rec"><div class="idx">provision № 9</div><h3>Office security ops</h3>
+        <p>Idle sweep policy, the <b>Esc, Esc</b> panic drill, and a clipboard furnace
+          that burns minted combinations after 60 seconds.</p></div>
+      <div class="rec"><div class="idx">provision № 10</div><h3>Five inks × two shifts</h3>
+        <p>Carbon, oxford, sepia, ledger and crimson inks over a day desk or night
+          desk — remembered politely in your own storage, nowhere else.</p></div>
+      <div class="rec"><div class="idx">provision № 11</div><h3>One cloth, three bodies</h3>
+        <p>Web counter, CLI engine and desktop box produce byte-interchangeable
+          vaults — proven in the test lab both directions, every release.</p></div>
+      <div class="rec"><div class="idx">provision № 12</div><h3>Your own bureau</h3>
+        <p>Self-host with a zero-dependency Node server or the Dockerfile.
+          MIT — the paperwork is yours to print anywhere.</p></div>
     </div>
-    <ul id="enc-list" class="files"></ul>
-    <div style="margin-top:10px;display:flex;gap:10px;align-items:center;flex-wrap:wrap">
-      <button id="enc-folder-btn" class="ghost" type="button">File a whole folder…</button>
-      <span class="fnote" style="margin:0">stapled into one .tar under your
-        nose — <code>tar -xf</code> opens it after the vault is opened</span>
-    </div>
-    <input id="enc-folder" type="file" webkitdirectory hidden>
-  </div>
-
-  <div class="duo">
-    <div class="part">
-      <h2><span class="rn">Part II.</span> The combination</h2>
-      <div class="frow">
-        <label class="flabel" for="enc-pw1">1. Passphrase</label>
-        <input id="enc-pw1" type="password" autocomplete="new-password"
-               placeholder="four or five respectable words…">
-        <div class="gauge">
-          <progress id="enc-strength" class="strength" max="4" value="0"></progress>
-          <div class="ticks" aria-hidden="true"></div>
-        </div>
-        <div class="fnote">combination quality — <span id="enc-strength-label">—</span></div>
-      </div>
-      <div class="frow">
-        <label class="flabel" for="enc-pw2">2. Passphrase, once more</label>
-        <input id="enc-pw2" type="password" autocomplete="new-password">
-      </div>
-      <label class="checkline"><input id="show-pw" type="checkbox"> permit me to see the words</label>
-    </div>
-
-    <div class="part">
-      <h2><span class="rn">Part III.</span> The armor</h2>
-      <div class="frow">
-        <label class="flabel" for="enc-security">3. Key turning (argon2id)</label>
-        <select id="enc-security">
-          <option value="standard" selected>standard — 128 MiB × 3 turns</option>
-          <option value="paranoid">paranoid — 512 MiB × 4 turns</option>
-          <option value="max">max — tuned to this very machine (~2 s)</option>
-        </select>
-        <div class="fnote">3 bureau presets + a 108-notch ladder below them —
-          higher № = harder to crack, slower to open. Heavy notches may exceed
-          small devices; the clerk reports honestly if one will not run.</div>
-      </div>
-      <label class="checkline"><input id="enc-cascade" type="checkbox" checked>
-        4. double-lock — AES-256-GCM within XChaCha20</label>
-      <label class="checkline"><input id="enc-compress" type="checkbox">
-        5. shrink-wrap first — gzip inside the vault; texts &amp; ledgers
-        shrink the most. Reversed on open, by any Vault100.</label>
-      <div class="frow" style="margin-top:14px">
-        <label class="flabel">6. physical second key (optional)</label>
-        <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
-          <button id="enc-keyfile-btn" class="ghost" type="button">Present keyfile…</button>
-          <span id="enc-keyfile-name" class="fnote" style="margin:0"></span>
-        </div>
-        <input id="enc-keyfile" type="file" hidden>
-        <div class="fnote">a vault so sealed demands <i>both</i> — mint one at Annex D,
-          instrument (a).</div>
-      </div>
-
-      <div class="obox" style="margin-top:16px">
-        <div class="oh">For official use only</div>
-        <div class="fnote" style="margin-top:6px">seal № ____________<br>
-        clerk's initials ____________<br>date of filing <span class="blank">____________</span></div>
-      </div>
-    </div>
-  </div>
-
-  <div class="part">
-    <h2><span class="rn">Part IV.</span> Authorization</h2>
-    <div class="action-row">
-      <button id="enc-go" class="go">Turn the key &amp; seal the vault</button>
-      <button id="enc-cancel" class="ghost" type="button" hidden>stay the stamp — cancel</button>
-      <p class="fnote">Originals never leave this device. One to two gigabytes
-        per document fits comfortably within a browser tab.</p>
-    </div>
+    <p class="fine">certified true copy — the working counterpart of this schedule
+      lives in the <a href="https://github.com/blazenxt/vault100" rel="noopener">source repository</a>.</p>
   </div>
 
   <!-- ================= CLERK'S RECORD ================= -->
-  <div class="records">
+  <div class="records solo">
     <div>
-      <div class="rechead">Clerk's record · issued documents</div>
-      <ul id="results">
-        <div id="results-empty">Nothing yet issued. Sealed documents
-          are entered here, one line per instrument, each with its seal №.</div>
-      </ul>
-    </div>
-    <div>
-      <div class="rechead">Clerk's record · proceedings</div>
+      <div class="rechead">Clerk's record · the schedule being read out</div>
       <div id="log"></div>
     </div>
   </div>
@@ -223,7 +174,7 @@
 
   <div class="barcodebox">
     <div class="barcode" aria-hidden="true"></div>
-    <div class="barcodenum">№ V100·2026·B·0047</div>
+    <div class="barcodenum">№ V100·2026·A·1011</div>
   </div>
 
   <nav class="sitefoot" aria-label="bureau registry footer">
@@ -258,15 +209,15 @@
     <span>filed in triplicate — <span class="b">zero copies retained</span></span>
   </footer>
 
+
   <div class="stub" aria-hidden="true">
-    <div class="st">form 100-b<br>receipt stub</div>
-    <div class="sn">№ 0047 / 2026</div>
-    <div class="sf">keep this stub —<br>it is your only receipt</div>
+    <div class="st">schedule a<br>registry copy</div>
+    <div class="sn">№ 1011 / 2026</div>
+    <div class="sf">registry copy —<br>keep for your records</div>
   </div>
   <span class="curl" aria-hidden="true"></span>
 </div>
 
 <script src="common.js?v=217"></script>
-<script src="seal.js?v=217"></script>
 </body>
 </html>
