@@ -1,0 +1,54 @@
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  pytest:
+    name: crypto suite (py${{ matrix.python }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python: ["3.10", "3.12", "3.13"]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python }}
+      - run: pip install -r requirements.txt
+      - name: 55-test crypto suite (fast KDF)
+        env:
+          VAULT100_FAST_KDF: "1"
+        run: python -m pytest tests/test_crypto.py -q
+      - name: CLI smoke — bench + version
+        env:
+          VAULT100_FAST_KDF: "1"
+        run: |
+          python -m vault100 --version
+          python -m vault100 bench --quick
+
+  webcheck:
+    name: web js syntax + server boot
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: node --check all page scripts
+        run: |
+          cd web
+          for f in common.js seal.js open.js annex.js rewrap.js worker.js vault-format.js sw.js server.mjs; do
+            node --check "$f"
+          done
+      - name: server boots and serves
+        run: |
+          cd web
+          node server.mjs & sleep 2
+          curl -fsS http://127.0.0.1:8080/health
+          curl -fsS -o /dev/null http://127.0.0.1:8080/
+          curl -fsS -o /dev/null http://127.0.0.1:8080/vendor/argon2.wasm
+          curl -fsS http://127.0.0.1:8080/robots.txt | grep -q "Sitemap:"
