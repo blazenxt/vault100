@@ -3,7 +3,7 @@
  */
 "use strict";
 
-const V = "?v=219";
+const V = "?v=220";
 importScripts("vendor/libsodium-sumo.js" + V);
 importScripts("vendor/libsodium-wrappers.js" + V);
 importScripts("vendor/argon2.js" + V);
@@ -14,7 +14,7 @@ let cancelJob = null;
 
 // argon2-browser: serve the WASM binary ourselves (relative to worker scope)
 self.loadArgon2WasmBinary = () =>
-  fetch("vendor/argon2.wasm?v=219").then((r) => {
+  fetch("vendor/argon2.wasm?v=220").then((r) => {
     if (!r.ok) throw new Error("argon2.wasm failed to load (HTTP " + r.status + ")");
     return r.arrayBuffer();
   });
@@ -151,6 +151,28 @@ async function runJob(msg) {
       }
       return;
     }
+    if (op === "share-split") {
+      // the quorum press: secret bytes in → n text slips out
+      const secret = new Uint8Array(msg.secret);
+      const slips = VaultFormat.shareSplit(secret, msg.n, msg.m)
+        .map((s) => VaultFormat.shareEncode(s));
+      const press = VaultFormat.sharePressId(
+        VaultFormat.shareDecode(slips[0])[0]);
+      secret.fill(0);
+      postMessage({ type: "done", id, op, press, slips });
+      return;
+    }
+    if (op === "share-join") {
+      const sec = VaultFormat.shareJoin(VaultFormat.shareDecode(msg.text));
+      let text = null;
+      try {
+        text = new TextDecoder("utf-8", { fatal: true }).decode(sec);
+      } catch (e) { /* binary secret — bytes only */ }
+      const buf = sec.buffer.slice(sec.byteOffset,
+                                   sec.byteOffset + sec.byteLength);
+      postMessage({ type: "done", id, op, secret: buf, text }, [buf]);
+      return;
+    }
     if (op === "decrypt") {
       const res = await VaultFormat.decryptVault(msg.file, {
         password: msg.password, keyData: keyDigest,
@@ -171,7 +193,7 @@ async function runJob(msg) {
                   message: (e && e.message) || String(e) });
   } finally {
     for (const k of ["password", "oldPassword", "newPassword",
-                     "keyData", "oldKeyData", "newKeyData"]) {
+                     "keyData", "oldKeyData", "newKeyData", "secret"]) {
       if (msg[k] && msg[k].fill) msg[k].fill(0);   // best effort
     }
     if (cancelJob === id) cancelJob = null;

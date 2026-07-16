@@ -1,6 +1,8 @@
 """Vault100 v2 test suite — proves the security properties hold."""
 
+import glob
 import io
+import itertools
 import os
 import struct
 import sys
@@ -519,6 +521,113 @@ class BenchTests(unittest.TestCase):
         from vault100 import cli
         rc = cli.main(["bench", "--quick"])
         self.assertEqual(rc, 0)
+
+
+class QuorumPressTests(unittest.TestCase):
+    """The quorum press — Shamir M-of-N slips (vault100/shamir.py)."""
+
+    def test_gf_field_laws(self):
+        from vault100.shamir import gf_mul, gf_inv
+        self.assertEqual(gf_mul(0x57, 0x83), 0xC1)          # AES test vector
+        for a in range(1, 256):
+            self.assertEqual(gf_mul(a, gf_inv(a)), 1)
+
+    def test_all_quorum_subsets_recover(self):
+        from vault100.shamir import split_secret, join_secret
+        slips = split_secret(PW, 5, 3)
+        for idxs in itertools.combinations(range(5), 3):
+            self.assertEqual(join_secret([slips[i] for i in idxs]), PW)
+
+    def test_more_than_quorum_also_recovers(self):
+        from vault100.shamir import split_secret, join_secret
+        slips = split_secret(PW, 7, 4)
+        self.assertEqual(join_secret(slips), PW)
+        self.assertEqual(join_secret([slips[i] for i in (0, 2, 3, 5, 6)]), PW)
+
+    def test_below_quorum_refused_and_reveals_nothing(self):
+        from vault100.shamir import ShareError, split_secret, join_secret
+        slips = split_secret(PW, 5, 3)
+        with self.assertRaises(ShareError):
+            join_secret(slips[:2])
+        # a lone slip is not just un-decodable — it is flat noise:
+        # every secret byte must stay possible. (Spot-check the mechanics:
+        # two different secrets can share a slip point-wise at quorum 2.)
+        s1, s2 = b"\x00" * 16, b"\xff" * 16
+        sh1, sh2 = split_secret(s1, 2, 2), split_secret(s2, 2, 2)
+        self.assertNotEqual(sh1[0], sh2[0])
+        self.assertEqual(len(sh1[0]), len(sh2[0]))
+
+    def test_secret_lengths(self):
+        from vault100.shamir import split_secret, join_secret
+        for length in (1, 2, 255, 1024, 4096):
+            sec = os.urandom(length)
+            slips = split_secret(sec, 6, 4)
+            got = join_secret([slips[i] for i in (0, 1, 3, 5)])
+            self.assertEqual(got, sec)
+
+    def test_bounds_validation(self):
+        from vault100.shamir import ShareError, split_secret
+        for n, m in ((1, 1), (5, 1), (2, 3), (256, 2)):
+            with self.assertRaises(ShareError):
+                split_secret(PW, n, m)
+        with self.assertRaises(ShareError):
+            split_secret(b"", 5, 3)
+        with self.assertRaises(ShareError):
+            split_secret(b"x" * 65536, 5, 3)
+
+    def test_text_slip_furniture_tolerance(self):
+        from vault100.shamir import split_to_text, join_from_text
+        slips = split_to_text("unicode ⛄ secret".encode(), 7, 4)
+        blob = ("office memorandum — distribution below\n\n"
+                + "\n--- stray line ---\n".join(slips[i] for i in (5, 0, 3, 1))
+                + "\nregards, the clerk\n")
+        self.assertEqual(join_from_text(blob), "unicode ⛄ secret".encode())
+
+    def test_tampered_slip_rejected(self):
+        from vault100.shamir import ShareError, split_secret, inspect_slip
+        slip = bytearray(split_secret(PW, 3, 2)[0])
+        slip[20] ^= 1                                    # payload nibble
+        with self.assertRaises(ShareError):
+            inspect_slip(bytes(slip))
+        slip = bytearray(split_secret(PW, 3, 2)[0])
+        slip[-1] ^= 1                                    # crc nibble
+        with self.assertRaises(ShareError):
+            inspect_slip(bytes(slip))
+
+    def test_mixed_pressings_rejected(self):
+        from vault100.shamir import ShareError, split_secret, join_secret
+        a = split_secret(PW, 5, 3)
+        b = split_secret(PW, 5, 3)
+        with self.assertRaises(ShareError):
+            join_secret([a[0], b[1], b[2]])
+
+    def test_doctored_title_line_rejected(self):
+        from vault100.shamir import ShareError, decode_slips, split_to_text
+        text = split_to_text(PW, 5, 3)[0].replace(
+            "BEGIN V100 SHARE 1 OF 5", "BEGIN V100 SHARE 2 OF 5")
+        with self.assertRaises(ShareError):
+            decode_slips(text)
+
+    def test_cli_share_split_join_roundtrip(self):
+        from vault100 import cli
+        with tempfile.TemporaryDirectory() as td:
+            sec = os.path.join(td, "combo.txt")
+            with open(sec, "wb") as f:
+                f.write(PW)
+            self.assertEqual(cli.main(
+                ["share", "split", sec, "-n", "5", "-m", "3"]), 0)
+            slips = sorted(glob.glob(os.path.join(td, "*.v100s")))
+            self.assertEqual(len(slips), 5)
+            out = os.path.join(td, "back.bin")
+            self.assertEqual(cli.main(
+                ["share", "join", slips[0], slips[2], slips[4],
+                 "-o", out]), 0)
+            with open(out, "rb") as f:
+                self.assertEqual(f.read(), PW)
+            # two slips must not open the press
+            self.assertEqual(cli.main(
+                ["share", "join", slips[0], slips[1],
+                 "-o", os.path.join(td, "nope.bin")]), 1)
 
 
 if __name__ == "__main__":

@@ -138,4 +138,129 @@
     log("timekeeper's report filed at instrument (f) —");
     for (const ln of lines) log("  " + ln);
   };
+
+  // (g) the quorum press — Shamir M-of-N, in the worker, zero-knowledge
+  const qpN = $("#qp-n"), qpM = $("#qp-m");
+  if (qpN && qpM) {
+    for (let i = 2; i <= 12; i++)
+      qpN.innerHTML += `<option value="${i}"${i === 5 ? " selected" : ""}>${i}</option>`;
+    const refillM = () => {
+      const n = parseInt(qpN.value, 10);
+      const was = parseInt(qpM.value || "3", 10);
+      qpM.innerHTML = "";
+      for (let i = 2; i <= n; i++)
+        qpM.innerHTML += `<option value="${i}">${i}</option>`;
+      qpM.value = String(Math.min(Math.max(was, 2), n));
+    };
+    refillM();
+    qpN.onchange = refillM;
+  }
+
+  const qpSecret = $("#qp-secret"), qpSlips = $("#qp-slips");
+  $("#qp-genkey").onclick = () => {
+    const b = new Uint8Array(32);
+    crypto.getRandomValues(b);
+    let s = "";
+    for (const x of b) s += String.fromCharCode(x);
+    qpSecret.value = btoa(s);
+    log("a fresh 256-bit secret pressed into the well — strike it into slips, " +
+        "then lodge the slips apart.");
+  };
+
+  $("#qp-mint").onclick = async () => {
+    const text = qpSecret.value;
+    const secret = new TextEncoder().encode(text);
+    qpSlips.innerHTML = "";
+    if (!text) return log("the press needs a secret in the well first.", "err");
+    if (secret.length > 4096)
+      return log("the press takes at most 4 KiB here — " +
+                 "seal documents as .v100 vaults; split a passphrase.", "err");
+    const n = parseInt(qpN.value, 10), m = parseInt(qpM.value, 10);
+    log(`the quorum press engages — ${n} slips, any ${m} reprint…`);
+    const r = await sendJob({ op: "share-split", secret, n, m });
+    if (!r || !r.slips)
+      return log("✗ the press jammed — " + ((r && r.message) || "fault"), "err");
+    const serial = window.VB.makeSerial("Q");
+    r.slips.forEach((slip, i) => {
+      const box = document.createElement("div");
+      box.className = "qpslip";
+      const head = document.createElement("div");
+      head.className = "sliphead";
+      const t = document.createElement("span");
+      t.textContent = `slip ${i + 1} of ${n}`;
+      const pid = document.createElement("span");
+      pid.className = "pid";
+      pid.textContent = `press №${r.press} · quorum ${m} · ${serial}`;
+      head.appendChild(t); head.appendChild(pid);
+      const ta = document.createElement("textarea");
+      ta.className = "ro"; ta.readOnly = true; ta.value = slip;
+      const row = document.createElement("div");
+      row.className = "rowline";
+      const cp = document.createElement("button");
+      cp.className = "ghost"; cp.type = "button"; cp.textContent = "Copy";
+      cp.onclick = () => copySecret(slip, `slip ${i + 1}`);
+      const dl = document.createElement("button");
+      dl.className = "ghost"; dl.type = "button"; dl.textContent = "Download";
+      dl.onclick = () => download(
+        `vault100.slip-${i + 1}-of-${n}.v100s`, [slip], slip.length);
+      row.appendChild(cp); row.appendChild(dl);
+      box.appendChild(head); box.appendChild(ta); box.appendChild(row);
+      qpSlips.appendChild(box);
+    });
+    const all = document.createElement("div");
+    all.className = "rowline";
+    all.style.marginTop = "12px";
+    const alldl = document.createElement("button");
+    alldl.className = "ghost"; alldl.type = "button";
+    alldl.textContent = "⭳ Download all slips (one folder of paper)";
+    const heap = r.slips.join("\n");
+    alldl.onclick = () =>
+      download(`vault100.slips-${r.press}-any-${m}-of-${n}.txt`,
+               [heap], heap.length);
+    all.appendChild(alldl);
+    qpSlips.appendChild(all);
+    log(`press №${r.press}: ${n} slips struck — lodge them apart; ` +
+        `any ${m} reprint the secret. ${serial}`);
+  };
+
+  $("#qp-join").onclick = async () => {
+    const text = $("#qp-join-in").value;
+    $("#qp-joined").value = "";
+    $("#qp-joined-note").textContent = " ";
+    if (!text.trim())
+      return log("paste the quorum's slips into the well first.", "err");
+    const r = await sendJob({ op: "share-join", text });
+    if (!r || (r.secret === undefined))
+      return log("✗ the quorum was not satisfied — " +
+                 ((r && r.message) || "fault"), "err");
+    if (r.text !== null && r.text !== undefined) {
+      $("#qp-joined").value = r.text;
+      $("#qp-joined-note").textContent =
+        "reprinted as readable text — copy it where it belongs, then sweep.";
+    } else {
+      const b = new Uint8Array(r.secret);
+      $("#qp-joined").value =
+        Array.from(b.slice(0, 32), (x) => x.toString(16).padStart(2, "0"))
+          .join("") + (b.length > 32 ? "…" : "");
+      $("#qp-joined-note").textContent =
+        `a binary secret (${b.length} bytes) — “Download bytes” saves it raw.`;
+    }
+    $("#qp-joined").dataset.raw = "";
+    log("quorum satisfied — the secret stands reprinted on the counter.");
+  };
+
+  $("#qp-joined-copy").onclick = () => {
+    const v = $("#qp-joined").value;
+    if (v) copySecret(v, "reprinted secret");
+  };
+  $("#qp-joined-save").onclick = async () => {
+    const text = $("#qp-join-in").value;
+    if (!text.trim()) return;
+    const r = await sendJob({ op: "share-join", text });
+    if (r && r.secret) {
+      const b = new Uint8Array(r.secret);
+      download("vault100-reprinted-secret.bin", [b], b.length);
+      log("raw reprinted bytes downloaded — guard the file like the secret.");
+    }
+  };
 })();

@@ -26,6 +26,8 @@ from .crypto_core import (DEFAULT_PROFILE, KDF_PROFILES, VaultAuthError,
                           sanitize_filename, unique_path, vault_info)
 from .genpass import gen_passphrase, gen_password
 from .keyfile import KeyfileError, generate_keyfile, identify, load_keyfile
+from .shamir import (SHARE_EXT, ShareError, join_from_text, press_id_of,
+                     split_secret, encode_slip)
 from .shredder import ShredError, shred_file
 from .strength import estimate
 
@@ -351,6 +353,42 @@ def cmd_shred(args) -> int:
     return 0 if ok else 1
 
 
+def cmd_share(args) -> int:
+    if args.share_op == "split":
+        with open(args.file, "rb") as f:
+            secret = f.read()
+        slips = split_secret(secret, args.shares, args.threshold)
+        pid = press_id_of(slips[0])
+        texts = [encode_slip(s) for s in slips]
+        if args.stdout:
+            for t in texts:
+                print(t)
+        else:
+            outdir = args.out_dir or os.path.dirname(
+                os.path.abspath(args.file))
+            stem = os.path.splitext(os.path.basename(args.file))[0]
+            for k, t in enumerate(texts, 1):
+                path = unique_path(os.path.join(
+                    outdir, f"{stem}.slip-{k}-of-{args.shares}{SHARE_EXT}"))
+                with open(path, "w", encoding="ascii") as f:
+                    f.write(t)
+                print(f"  slip {k}/{args.shares} → {path}")
+        print(f"press №{pid}: {args.shares} slips struck, "
+              f"any {args.threshold} reprint the secret", file=sys.stderr)
+        return 0
+    # join
+    texts = []
+    for path in args.slips:
+        with open(path, "r", encoding="utf-8", errors="replace") as f:
+            texts.append(f.read())
+    secret = join_from_text(texts)
+    out = unique_path(args.out or "recovered-secret.bin")
+    with open(out, "wb") as f:
+        f.write(secret)
+    print(f"quorum satisfied — {len(secret)} byte(s) reprinted → {out}")
+    return 0
+
+
 # ---------------------------------------------------------------------------
 # Parser
 # ---------------------------------------------------------------------------
@@ -443,6 +481,28 @@ def build_parser() -> argparse.ArgumentParser:
     b.add_argument("--quick", action="store_true",
                    help="short trials (8 MiB), for slow machines or CI")
     b.set_defaults(func=cmd_bench)
+
+    q = sub.add_parser("share", help="the quorum press — Shamir M-of-N "
+                                     "secret sharing (split/join)")
+    qsub = q.add_subparsers(dest="share_op", required=True)
+    qs = qsub.add_parser("split", help="break a secret file into N slips, "
+                                       "any M reopen")
+    qs.add_argument("file", help="secret to press (passphrase/keyfile, "
+                                 "≤ 65535 bytes)")
+    qs.add_argument("-n", "--shares", type=int, default=5,
+                    help="slips to strike (2–255, default 5)")
+    qs.add_argument("-m", "--threshold", type=int, default=3,
+                    help="slips needed to reprint (2–N, default 3)")
+    qs.add_argument("--out-dir", help="where slips land "
+                                      "(default: beside the secret)")
+    qs.add_argument("--stdout", action="store_true",
+                    help="print slips instead of writing files")
+    qj = qsub.add_parser("join", help="reprint a secret from ≥ M slips")
+    qj.add_argument("slips", nargs="+", help="slip files (.v100s); "
+                                             "several slips may ride in one file")
+    qj.add_argument("-o", "--out", help="output file "
+                                        "(default: recovered-secret.bin)")
+    q.set_defaults(func=cmd_share)
     return p
 
 

@@ -598,3 +598,22 @@
   .rec textarea:focus{border-color:var(--red);outline:none}
   .rec textarea.ro{background:rgba(var(--shadetri),.18);white-space:pre;overflow-x:auto}
   .rec textarea.tall{min-height:180px}
+
+  /* ---------- the quorum press (v2.0.20) ---------- */
+  .rec.wide{grid-column:1/-1}
+  .qpgrid{display:grid;grid-template-columns:1fr 1fr;gap:22px;margin-top:6px}
+  @media(max-width:720px){.qpgrid{grid-template-columns:1fr}}
+  .qph{font:700 10px var(--mono);letter-spacing:.22em;text-transform:uppercase;
+    color:var(--red);margin:0 0 8px}
+  .qdesk .rowline{margin-top:10px}
+  .qdesk label.qlab{font:11px var(--mono);color:var(--ink2);display:flex;
+    align-items:center;gap:6px}
+  .qpslip{margin-top:12px;border:1px solid rgba(var(--linetri),.35);
+    border-radius:8px;padding:10px 12px;background:rgba(var(--shadetri),.08)}
+  .qpslip .sliphead{font:700 10.5px var(--mono);letter-spacing:.14em;
+    text-transform:uppercase;display:flex;justify-content:space-between;
+    gap:10px;flex-wrap:wrap;margin-bottom:6px}
+  .qpslip .sliphead .pid{color:var(--ink2);font-weight:400;letter-spacing:.05em}
+  .qpslip textarea{min-height:74px;font-size:11px;white-space:pre;overflow-x:auto}
+  .qpslip .rowline{margin-top:8px}
+  .rec .fnote.qpnote{margin-top:10px}

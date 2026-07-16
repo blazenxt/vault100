@@ -99,6 +99,191 @@
   class VaultAuthError extends VaultError {}
   class VaultFormatError extends VaultError {}
   class VaultCancelled extends VaultError {}
+  class VaultShareError extends VaultError {}
+
+  // -- the quorum press: Shamir M-of-N over GF(2^8) -------------------------
+  /* Keep byte-parity with vault100/shamir.py:
+     slip = "V100S1" | press(5) | m u8 | n u8 | x u8 | len le16 | y[len] | crc32 le.
+     Text slips: BEGIN/END "V100 SHARE k OF n" + base64 @ 64 cols. */
+  const SHARE_MAGIC = u8("V100S1");
+  const SHARE_BEGIN_RE = /-----BEGIN V100 SHARE\s+(\d+)\s+OF\s+(\d+)-----/g;
+  const SHARE_END = "-----END V100 SHARE-----";
+  const SHARE_MIN_M = 2, SHARE_MAX_N = 255, SHARE_MAX_LEN = 0xffff;
+  const SHARE_OVERHEAD = 6 + 5 + 1 + 1 + 1 + 2 + 4;
+
+  const GF_EXP = new Uint8Array(512), GF_LOG = new Uint8Array(256);
+  (function () {
+    let x = 1;
+    for (let i = 0; i < 255; i++) {
+      GF_EXP[i] = x; GF_LOG[x] = i;
+      let x2 = x << 1;
+      if (x2 & 0x100) x2 ^= 0x11b;
+      x = x2 ^ x;                       // multiply by 3 = (x*2) ^ x
+    }
+    for (let i = 255; i < 512; i++) GF_EXP[i] = GF_EXP[i - 255];
+    if (GF_LOG[1] !== 0 || x !== 1)
+      throw new Error("quorum press: GF tables failed to build");
+  })();
+  function gfMul(a, b) {
+    return (a === 0 || b === 0) ? 0 : GF_EXP[GF_LOG[a] + GF_LOG[b]];
+  }
+  function gfInv(a) { return GF_EXP[255 - GF_LOG[a]]; }
+  function gfTable(x) {
+    const t = new Uint8Array(256);
+    if (x) { const lx = GF_LOG[x];
+      for (let b = 1; b < 256; b++) t[b] = GF_EXP[GF_LOG[b] + lx]; }
+    return t;
+  }
+
+  const CRC_TABLE = (function () {
+    const t = new Uint32Array(256);
+    for (let n = 0; n < 256; n++) {
+      let c = n;
+      for (let k = 0; k < 8; k++) c = (c & 1) ? (0xedb88320 ^ (c >>> 1)) : (c >>> 1);
+      t[n] = c >>> 0;
+    }
+    return t;
+  })();
+  function crc32(bytes) {                 // same value as zlib.crc32
+    let c = 0xffffffff;
+    for (let i = 0; i < bytes.length; i++)
+      c = CRC_TABLE[(c ^ bytes[i]) & 0xff] ^ (c >>> 8);
+    return (c ^ 0xffffffff) >>> 0;
+  }
+
+  function shareInspect(slip) {
+    if (!(slip instanceof Uint8Array)) slip = new Uint8Array(slip);
+    if (slip.length < SHARE_OVERHEAD + 1)
+      throw new VaultShareError("slip is too short — the press never struck this");
+    for (let i = 0; i < 6; i++)
+      if (slip[i] !== SHARE_MAGIC[i])
+        throw new VaultShareError("not a Vault100 slip (missing V100S1 stamp)");
+    const length = slip[14] | (slip[15] << 8);
+    if (slip.length !== SHARE_OVERHEAD + length)
+      throw new VaultShareError("slip is torn — length stamp and body disagree");
+    const crc = crc32(slip.subarray(0, slip.length - 4));
+    const want = rd32(slip, slip.length - 4);
+    if (crc !== want)
+      throw new VaultShareError(
+        "slip checksum mismatch — a character was retyped wrong " +
+        "(or the paper was doctored)");
+    const m = slip[11], n = slip[12], x = slip[13];
+    if (x === 0 || m < SHARE_MIN_M || n > SHARE_MAX_N || m > n)
+      throw new VaultShareError("slip bears an impossible quorum stamp");
+    return { press: slip.slice(6, 11), m, n, x, length,
+             y: slip.slice(16, 16 + length) };
+  }
+
+  function shareSplit(secret, n, m) {
+    secret = secret instanceof Uint8Array ? secret : new Uint8Array(secret);
+    if (!(SHARE_MIN_M <= m && m <= n && n <= SHARE_MAX_N))
+      throw new VaultShareError(
+        `need ${SHARE_MIN_M} ≤ quorum ≤ slips ≤ ${SHARE_MAX_N}`);
+    if (!(1 <= secret.length && secret.length <= SHARE_MAX_LEN))
+      throw new VaultShareError(
+        `the press takes 1–${SHARE_MAX_LEN} bytes — seal larger payloads ` +
+        "as .v100 vaults and split a passphrase");
+    const rnd = needEnv().randbytes;
+    const press = rnd(5), L = secret.length;
+    const coeffs = [secret.slice()];
+    for (let k = 1; k < m; k++) coeffs.push(rnd(L));
+    const slips = [];
+    for (let x = 1; x <= n; x++) {
+      const tab = gfTable(x);
+      const acc = coeffs[m - 1].slice();
+      for (let k = m - 2; k >= 0; k--) {
+        const ck = coeffs[k];
+        for (let b = 0; b < L; b++) acc[b] = tab[acc[b]] ^ ck[b];
+      }
+      const head = concat(SHARE_MAGIC, press,
+                          new Uint8Array([m, n, x, L & 0xff, L >> 8]), acc);
+      const crcb = new Uint8Array(4);
+      new DataView(crcb.buffer).setUint32(0, crc32(head), true);
+      slips.push(concat(head, crcb));
+    }
+    for (const c of coeffs) c.fill(0);
+    return slips;
+  }
+
+  function shareJoin(slips) {
+    if (!slips || !slips.length)
+      throw new VaultShareError("no slips presented");
+    const parts = slips.map(shareInspect);
+    const p0 = parts[0];
+    const pid = b64e(p0.press);
+    for (const p of parts.slice(1)) {
+      if (b64e(p.press) !== pid)
+        throw new VaultShareError(
+          "these slips come from different pressings — " +
+          "they were never one secret");
+      if (p.m !== p0.m || p.n !== p0.n || p.length !== p0.length)
+        throw new VaultShareError("the slips disagree about their own quorum");
+    }
+    const seen = new Set(), uniq = [];
+    for (const p of parts) {
+      if (seen.has(p.x)) continue;
+      seen.add(p.x); uniq.push(p);
+    }
+    if (uniq.length < p0.m)
+      throw new VaultShareError(
+        `the quorum press needs ${p0.m} different slips — ` +
+        `only ${uniq.length} presented`);
+    const use = uniq.slice(0, p0.m);
+    const tabs = [];
+    for (let j = 0; j < use.length; j++) {
+      let lam = 1;
+      for (let k = 0; k < use.length; k++)
+        if (k !== j) lam = gfMul(lam, gfMul(use[k].x, gfInv(use[k].x ^ use[j].x)));
+      tabs.push(gfTable(lam));
+    }
+    const out = new Uint8Array(p0.length);
+    for (let j = 0; j < use.length; j++) {
+      const tab = tabs[j], y = use[j].y;
+      for (let b = 0; b < out.length; b++) out[b] ^= tab[y[b]];
+    }
+    return out;
+  }
+
+  function shareEncode(slip) {
+    const info = shareInspect(slip);
+    const b64 = b64e(slip), lines = [];
+    for (let i = 0; i < b64.length; i += ARMOR_COLS)
+      lines.push(b64.slice(i, i + ARMOR_COLS));
+    return `-----BEGIN V100 SHARE ${info.x} OF ${info.n}-----\n` +
+           lines.join("\n") + "\n" + SHARE_END + "\n";
+  }
+
+  function shareDecode(text) {           // all slips in a blob of text
+    const found = [];
+    SHARE_BEGIN_RE.lastIndex = 0;
+    let m;
+    while ((m = SHARE_BEGIN_RE.exec(text)) !== null) {
+      const end = text.indexOf(SHARE_END, m.index);
+      if (end < 0)
+        throw new VaultShareError("a slip's closing stamp is missing");
+      const body = text.slice(m.index + m[0].length, end).replace(/\s+/g, "");
+      let slip;
+      try { slip = b64d(body); }
+      catch (e) {
+        throw new VaultShareError(
+          `slip ${m[1]} of ${m[2]}: base64 is damaged`);
+      }
+      const info = shareInspect(slip);
+      if (info.x !== +m[1] || info.n !== +m[2])
+        throw new VaultShareError(
+          "slip's title line and stamped number disagree — doctored?");
+      found.push(slip);
+      SHARE_BEGIN_RE.lastIndex = end + SHARE_END.length;
+    }
+    if (!found.length)
+      throw new VaultShareError("no Vault100 slips found in that text");
+    return found;
+  }
+
+  function sharePressId(slip) {
+    return Array.from(shareInspect(slip).press,
+                      (b) => b.toString(16).padStart(2, "0")).join("");
+  }
 
   // -- shrink-wrap (gzip) --------------------------------------------------
   /* "gz": true in the metadata means the payload is one gzip stream —
@@ -681,10 +866,12 @@
 
   root.VaultFormat = {
     MAGIC_V2, CHUNK_SIZE, KDF_PROFILES, MEM_FLOOR_KIB,
-    VaultError, VaultAuthError, VaultFormatError, VaultCancelled,
+    VaultError, VaultAuthError, VaultFormatError, VaultCancelled, VaultShareError,
     setEnv, keyfileDigest, generateKeyfileBytes, encryptVault, decryptVault,
     recombineVault, info, calibrateKdf, runSelfTest, runBench, SELFTEST, isMemError,
     armorEncode, armorDecode, ARMOR_BEGIN, ARMOR_END,
+    shareSplit, shareJoin, shareEncode, shareDecode, shareInspect, sharePressId,
+    SHARE_MAX_LEN,
     _internals: { hkdfSha256, deriveKek, argon2id, argon2idProven,
                   kekFromRaw, parsePrefix, concat, u8 },
   };

@@ -7,7 +7,7 @@
   const VB = (window.VB = {});
   const $ = (VB.$ = (s) => document.querySelector(s));
   VB.$$ = (s) => Array.from(document.querySelectorAll(s));
-  VB.VERSION = "2.0.19";
+  VB.VERSION = "2.0.20";
 
   // ---------------- the desk lamp & ink well (themes) ----------------
   // Applied synchronously before first paint, so no theme flash. The
@@ -142,7 +142,7 @@
     lastJobId = id;
     // transfer (not copy) every secret byte array offered with the job
     const SECRETS = ["password", "oldPassword", "newPassword",
-                     "keyData", "oldKeyData", "newKeyData"];
+                     "keyData", "oldKeyData", "newKeyData", "secret"];
     const transfers = [];
     for (const k of SECRETS) {
       if (job[k] instanceof Uint8Array) {
@@ -192,6 +192,9 @@
       if (i.type === "password" || i.type === "text") i.value = "";
     }
     for (const t of VB.$$("textarea")) t.value = "";   // notes & armor wells
+    const qps = $("#qp-slips");                          // quorum slips — burned
+    if (qps) qps.innerHTML = "";
+    const qpn = $("#qp-joined-note"); if (qpn) qpn.textContent = " ";
     for (const [inp, chk] of [["#enc-pw1", "#show-pw"], ["#enc-pw2", "#show-pw"],
                               ["#dec-pw", null], ["#rw-old", "#rw-show"],
                               ["#rw-new1", "#rw-show"], ["#rw-new2", "#rw-show"]]) {
