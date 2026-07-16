@@ -182,6 +182,9 @@
   async function encryptVault(file, opts) {
     const { sodium, randbytes } = needEnv();
     const p = opts.params || KDF_PROFILES[opts.profile || "standard"];
+    if (!p || !Number.isFinite(p.memoryKib) ||
+        !Number.isFinite(p.timeCost) || !Number.isFinite(p.parallelism))
+      throw new VaultFormatError("invalid KDF parameters");
     validateKdf(p.memoryKib, p.timeCost, p.parallelism);
     const cascade = !!opts.cascade;
     const total = file.size;
@@ -336,14 +339,41 @@
   }
 
   // -- KDF calibration ("max") -----------------------------------------------
-  async function calibrateKdf(targetSeconds = 2.0, maxKib = 1024 * 1024) {
-    const sample = 64 * 1024;
-    const t0 = root.performance.now();
-    await argon2id(u8("vault100-calibration"), rand16(), {
-      memoryKib: sample, timeCost: 1, parallelism: 4 });
-    const dt = Math.max((root.performance.now() - t0) / 1000, 0.01);
-    const mem = Math.min(maxKib, Math.max(64 * 1024,
+  /* Browsers vary wildly in how much WASM memory Argon2 may grab. Sample at
+     64 MiB first; if the device refuses, step down until one works. Then
+     extrapolate — and PROVE the final size really runs on this device,
+     halving until it does. Params travel in the vault header, so any
+     Vault100 app can still open the result. */
+  async function calibrateKdf(targetSeconds = 2.0, maxKib = 512 * 1024) {
+    const cache = new Map();   // memKiB -> {dt} | null (refused)
+    let lastErr = null;
+    async function probe(memKiB) {
+      if (cache.has(memKiB)) return cache.get(memKiB);
+      let r = null;
+      try {
+        const t0 = root.performance.now();
+        await argon2id(u8("vault100-calibration"), rand16(), {
+          memoryKib: memKiB, timeCost: 1, parallelism: 4 });
+        r = { dt: Math.max((root.performance.now() - t0) / 1000, 0.01) };
+      } catch (e) { lastErr = e; }
+      cache.set(memKiB, r);
+      return r;
+    }
+
+    let sample = 0, dt = 0;
+    for (const s of [64 * 1024, 16 * 1024, 8 * 1024]) {
+      const r = await probe(s);
+      if (r) { sample = s; dt = r.dt; break; }
+    }
+    if (!sample) throw new VaultError(
+      "Argon2id could not run on this device/browser (" +
+      ((lastErr && lastErr.message) || lastErr || "unknown") + ")");
+
+    let mem = Math.min(maxKib, Math.max(sample,
       Math.floor(sample * targetSeconds / dt)));
+    while (mem > sample && !(await probe(mem)))
+      mem = Math.max(sample, Math.floor(mem / 2));
+
     const est = dt * (mem / sample);
     const timeCost = Math.min(MAX_TIME, Math.max(1, Math.floor(targetSeconds / est)));
     return { memoryKib: mem, timeCost, parallelism: 4 };

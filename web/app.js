@@ -49,7 +49,8 @@
       return;
     }
     if (m.type === "calibrated") {
-      calibratedParams = m.params;
+      if (m.params && Number.isFinite(m.params.memoryKib))
+        calibratedParams = m.params;
       const p = pending.get(m.id);
       if (p) { p.resolve(m.params); pending.delete(m.id); }
       log(`KDF auto-tuned: ${Math.round(m.params.memoryKib / 1024)} MiB × ${m.params.timeCost} pass(es)`);
@@ -232,12 +233,18 @@
 
   async function resolveProfile(sel) {
     if (sel !== "max") return { profile: sel };
-    if (!calibratedParams) {
-      log("Calibrating Argon2id to this device (~2 s target)…");
-      const params = await sendJob({ op: "calibrate" });
-      return { params };
+    if (calibratedParams) return { params: calibratedParams };
+    log("Calibrating Argon2id to this device (~2 s target)…");
+    const res = await sendJob({ op: "calibrate" });
+    if (!res || res.type === "error" || !Number.isFinite(res.memoryKib)) {
+      log("✗ calibration failed: " + ((res && res.message) || "no result") +
+          " — falling back to standard (64 MiB × 3).", "err");
+      return { profile: "standard" };
     }
-    return { params: calibratedParams };
+    if (res.memoryKib < 64 * 1024) log(
+      "⚠ this browser limits Argon2 memory — vault tuned to what the device " +
+      "allows. The desktop app can go higher.");
+    return { params: res };
   }
 
   // ---------------- encrypt batch ----------------
