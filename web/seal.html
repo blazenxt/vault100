@@ -1,0 +1,201 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Content-Security-Policy"
+      content="default-src 'none'; script-src 'self' 'wasm-unsafe-eval';
+               worker-src 'self'; style-src 'self' 'unsafe-inline';
+               img-src 'self' data:; connect-src 'self'; font-src 'none';
+               form-action 'none'; base-uri 'none'; manifest-src 'self'">
+<meta name="referrer" content="no-referrer">
+<meta name="theme-color" content="#08090b">
+<meta name="mobile-web-app-capable" content="yes">
+<link rel="manifest" href="manifest.json">
+<title>FORM 100-B · seal counter — The Seal Bureau</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 48'%3E%3Crect width='48' height='48' fill='%23111318'/%3E%3Ccircle cx='24' cy='24' r='15' fill='none' stroke='%23ddd6c4' stroke-width='3'/%3E%3Ccircle cx='24' cy='24' r='5' fill='%23e15555'/%3E%3C/svg%3E">
+<link rel="stylesheet" href="bureau.css?v=209">
+</head>
+<body>
+
+<div class="sheet">
+  <svg width="0" height="0" style="position:absolute" aria-hidden="true">
+    <filter id="inkbleed">
+      <feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="2" seed="7" result="n"/>
+      <feDisplacementMap in="SourceGraphic" in2="n" scale="1.6"/>
+    </filter>
+  </svg>
+  <svg class="tear" viewBox="0 0 920 10" preserveAspectRatio="none" aria-hidden="true">
+    <path fill="#111318" d="M0 10 V4 l23 -2 l23 3 l23 -3 l23 2 l23 -1 l23 3 l23 -3 l23 1 l23 -2 l23 3 l23 -3 l23 2 l23 -1 l23 3 l23 -3 l23 1 l23 -2 l23 3 l23 -3 l23 2 l23 -1 l23 3 l23 -3 l23 1 l23 -2 l23 3 l23 -3 l23 2 l23 -1 l23 3 l23 -3 l23 1 l23 -2 l23 3 l23 -3 l23 2 l23 -1 l23 3 l23 -3 l23 1 L920 4 L920 10 Z"/>
+  </svg>
+  <span class="ring r1" aria-hidden="true"></span>
+  <span class="ring r2" aria-hidden="true"></span>
+  <span class="ring r3" aria-hidden="true"></span>
+
+  <!-- ================= LETTERHEAD ================= -->
+  <header class="lh">
+    <svg class="postmark" viewBox="0 0 96 96" aria-hidden="true">
+      <circle cx="48" cy="48" r="44" fill="none" stroke="#6d685a" stroke-width="2"/>
+      <circle cx="48" cy="48" r="32" fill="none" stroke="#6d685a" stroke-width="1" stroke-dasharray="3 3"/>
+      <text x="48" y="30" text-anchor="middle" font-family="monospace" font-size="9" letter-spacing="2" fill="#6d685a">SEAL BUREAU</text>
+      <text x="48" y="46" text-anchor="middle" font-family="monospace" font-size="8" letter-spacing="1.5" fill="#6d685a">★ ★ ★</text>
+      <text x="48" y="60" text-anchor="middle" font-family="monospace" font-size="9" letter-spacing="2" fill="#6d685a">WINDOW 100</text>
+      <text x="48" y="74" text-anchor="middle" font-family="monospace" font-size="7.5" letter-spacing="1.5" fill="#6d685a">EST. 2026</text>
+    </svg>
+
+    <div class="center">
+      <div class="bureau">The Seal Bureau · Night Counter</div>
+      <div class="wordmark">VAULT-<b>100</b></div>
+      <div class="counterline">form 100-b · request to seal · night stock · third revision</div>
+    </div>
+
+    <div class="rightcol">
+      <div class="serial">
+        <b>FORM 100-B</b><br>
+        ser. № 0047 / 2026<br>
+        received: <span id="today" class="blank">&nbsp;</span>
+      </div>
+      <div id="selftest-badge" class="badge warn">under<br>inspection</div>
+    </div>
+  </header>
+
+  <hr class="double">
+  <div class="ribbon">
+    <span>container <i>V100ENC2</i></span>
+    <span>cipher <i>xchacha20-poly1305</i> ⊕ <i>aes-256-gcm</i></span>
+    <span>key turning <i>argon2id</i></span>
+    <span>copies retained by bureau <i>none</i></span>
+  </div>
+
+  <!-- ================= COUNTERS ================= -->
+  <div class="tabwrap">
+    <nav class="switch" role="navigation" aria-label="bureau counters">
+      <a class="tabbtn desk" href="index.html">❦ front desk</a>
+      <a class="tabbtn active" href="seal.html">Form 100-B · Seal</a>
+      <a class="tabbtn" href="open.html">Form 100-C · Open</a>
+      <a class="tabbtn" href="annex.html">Annex D · Instruments</a>
+    </nav>
+  </div>
+
+  <!-- ================= FORM 100-B · SEAL ================= -->
+  <div class="part">
+    <h2><span class="rn">Part I.</span> The documents</h2>
+    <div id="enc-drop" class="intake">
+      <span class="corner tl"></span><span class="corner tr"></span>
+      <span class="corner bl"></span><span class="corner br"></span>
+      <svg width="34" height="34" viewBox="0 0 34 34" fill="none" stroke="#6d685a" stroke-width="1.6" aria-hidden="true">
+        <path d="M21 6l7 7v13a2 2 0 0 1-2 2H10a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h11z"/>
+        <path d="M21 6v7h7" />
+        <path d="M17 15v7m0 0l-3-3m3 3l3-3" stroke="#e15555"/>
+      </svg>
+      <div class="big">Attach documents here</div>
+      <div class="small">drop them upon the counter — or click to rummage the drawer</div>
+      <input id="enc-pick" type="file" multiple>
+    </div>
+    <ul id="enc-list" class="files"></ul>
+  </div>
+
+  <div class="duo">
+    <div class="part">
+      <h2><span class="rn">Part II.</span> The combination</h2>
+      <div class="frow">
+        <label class="flabel" for="enc-pw1">1. Passphrase</label>
+        <input id="enc-pw1" type="password" autocomplete="new-password"
+               placeholder="four or five respectable words…">
+        <div class="gauge">
+          <progress id="enc-strength" class="strength" max="4" value="0"></progress>
+          <div class="ticks" aria-hidden="true"></div>
+        </div>
+        <div class="fnote">combination quality — <span id="enc-strength-label">—</span></div>
+      </div>
+      <div class="frow">
+        <label class="flabel" for="enc-pw2">2. Passphrase, once more</label>
+        <input id="enc-pw2" type="password" autocomplete="new-password">
+      </div>
+      <label class="checkline"><input id="show-pw" type="checkbox"> permit me to see the words</label>
+    </div>
+
+    <div class="part">
+      <h2><span class="rn">Part III.</span> The armor</h2>
+      <div class="frow">
+        <label class="flabel" for="enc-security">3. Key turning (argon2id)</label>
+        <select id="enc-security">
+          <option value="standard" selected>standard — 128 MiB × 3 turns</option>
+          <option value="paranoid">paranoid — 512 MiB × 4 turns</option>
+          <option value="max">max — tuned to this very machine (~2 s)</option>
+        </select>
+        <div class="fnote">3 bureau presets + a 108-notch ladder below them —
+          higher № = harder to crack, slower to open. Heavy notches may exceed
+          small devices; the clerk reports honestly if one will not run.</div>
+      </div>
+      <label class="checkline"><input id="enc-cascade" type="checkbox" checked>
+        4. double-lock — AES-256-GCM within XChaCha20</label>
+      <div class="frow" style="margin-top:14px">
+        <label class="flabel">5. physical second key (optional)</label>
+        <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+          <button id="enc-keyfile-btn" class="ghost" type="button">Present keyfile…</button>
+          <span id="enc-keyfile-name" class="fnote" style="margin:0"></span>
+        </div>
+        <input id="enc-keyfile" type="file" hidden>
+        <div class="fnote">a vault so sealed demands <i>both</i> — mint one at Annex D,
+          instrument (a).</div>
+      </div>
+
+      <div class="obox" style="margin-top:16px">
+        <div class="oh">For official use only</div>
+        <div class="fnote" style="margin-top:6px">seal № ____________<br>
+        clerk's initials ____________<br>date of filing <span class="blank">____________</span></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="part">
+    <h2><span class="rn">Part IV.</span> Authorization</h2>
+    <div class="action-row">
+      <button id="enc-go" class="go">Turn the key &amp; seal the vault</button>
+      <button id="enc-cancel" class="ghost" type="button" hidden>stay the stamp — cancel</button>
+      <p class="fnote">Originals never leave this device. One to two gigabytes
+        per document fits comfortably within a browser tab.</p>
+    </div>
+  </div>
+
+  <!-- ================= CLERK'S RECORD ================= -->
+  <div class="records">
+    <div>
+      <div class="rechead">Clerk's record · issued documents</div>
+      <ul id="results">
+        <div id="results-empty">Nothing yet issued. Sealed documents
+          are entered here, one line per instrument, each with its seal №.</div>
+      </ul>
+    </div>
+    <div>
+      <div class="rechead">Clerk's record · proceedings</div>
+      <div id="log"></div>
+    </div>
+  </div>
+
+  <div class="foldnote">Do not fold below this line</div>
+
+  <div class="barcodebox">
+    <div class="barcode" aria-hidden="true"></div>
+    <div class="barcodenum">№ V100·2026·B·0047</div>
+  </div>
+
+  <footer>
+    <span><span class="b">Vault100 v2.0.9</span> · the seal bureau · night ledger</span>
+    <span>no accounts · no telemetry · no escrow</span>
+    <span>filed in triplicate — <span class="b">zero copies retained</span></span>
+  </footer>
+
+  <div class="stub" aria-hidden="true">
+    <div class="st">form 100-b<br>receipt stub</div>
+    <div class="sn">№ 0047 / 2026</div>
+    <div class="sf">keep this stub —<br>it is your only receipt</div>
+  </div>
+  <span class="curl" aria-hidden="true"></span>
+</div>
+
+<script src="common.js?v=209"></script>
+<script src="seal.js?v=209"></script>
+</body>
+</html>

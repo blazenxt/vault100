@@ -39,7 +39,7 @@ const COMPRESSIBLE = new Set([".html", ".js", ".mjs", ".css", ".json",
 const SEC_HEADERS = {
   "Content-Security-Policy":
     "default-src 'none'; script-src 'self' 'wasm-unsafe-eval'; " +
-    "worker-src 'self'; style-src 'unsafe-inline'; img-src 'self' data:; " +
+    "worker-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; " +
     "connect-src 'self'; font-src 'none'; form-action 'none'; " +
     "base-uri 'none'; manifest-src 'self'",
   "X-Content-Type-Options": "nosniff",

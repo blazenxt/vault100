@@ -12,7 +12,7 @@
 <meta name="theme-color" content="#08090b">
 <meta name="mobile-web-app-capable" content="yes">
 <link rel="manifest" href="manifest.json">
-<title>FRONT DESK — The Seal Bureau · night counter</title>
+<title>ANNEX D · instruments — The Seal Bureau</title>
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 48'%3E%3Crect width='48' height='48' fill='%23111318'/%3E%3Ccircle cx='24' cy='24' r='15' fill='none' stroke='%23ddd6c4' stroke-width='3'/%3E%3Ccircle cx='24' cy='24' r='5' fill='%23e15555'/%3E%3C/svg%3E">
 <link rel="stylesheet" href="bureau.css?v=209">
 </head>
@@ -46,12 +46,12 @@
     <div class="center">
       <div class="bureau">The Seal Bureau · Night Counter</div>
       <div class="wordmark">VAULT-<b>100</b></div>
-      <div class="counterline">front desk · directory of windows · night stock</div>
+      <div class="counterline">annex d · small machines · night stock</div>
     </div>
 
     <div class="rightcol">
       <div class="serial">
-        <b>FORM 100-S</b><br>
+        <b>ANNEX D</b><br>
         ser. № 0047 / 2026<br>
         received: <span id="today" class="blank">&nbsp;</span>
       </div>
@@ -67,72 +67,65 @@
     <span>copies retained by bureau <i>none</i></span>
   </div>
 
-  <p class="pitch">
-    <span class="zk">Dearest visitor: this counter performs every turn of the key
-    inside your own machine.</span> The bureau merely delivered the paperwork —
-    it never sees your documents, your passphrase, or your keys, and keeps no
-    copies. You may verify the claim personally: <b>finish loading this form,
-    then sever the network cable</b> — every window below continues to function.
-    Vaults (<b>.v100</b>) issued here open in the Vault100 desk &amp;
-    command-line applications, and vice versa.
-  </p>
-
   <!-- ================= COUNTERS ================= -->
   <div class="tabwrap">
     <nav class="switch" role="navigation" aria-label="bureau counters">
-      <a class="tabbtn desk active" href="index.html">❦ front desk</a>
+      <a class="tabbtn desk" href="index.html">❦ front desk</a>
       <a class="tabbtn" href="seal.html">Form 100-B · Seal</a>
       <a class="tabbtn" href="open.html">Form 100-C · Open</a>
-      <a class="tabbtn" href="annex.html">Annex D · Instruments</a>
+      <a class="tabbtn active" href="annex.html">Annex D · Instruments</a>
     </nav>
   </div>
 
+  <!-- ================= ANNEX D · INSTRUMENTS ================= -->
   <div class="part">
-    <h2><span class="rn">Directory.</span> Choose your window</h2>
-    <div class="dir">
-      <a class="win" href="seal.html">
-        <span class="wno">window 1</span>
-        <span class="wmid">
-          <span class="wname">Form 100-B · Seal documents</span>
-          <span class="wdesc">bring documents; leave with a <b>.v100</b> vault — 111 key-turning
-            settings, double-lock, optional physical second key.</span>
-        </span>
-        <span class="warrow">→</span>
-      </a>
-      <a class="win" href="open.html">
-        <span class="wno">window 2</span>
-        <span class="wmid">
-          <span class="wname">Form 100-C · Open a vault</span>
-          <span class="wdesc">present a <b>.v100</b> with its combination (and its keyfile,
-            if one was demanded) — the original document is returned.</span>
-        </span>
-        <span class="warrow">→</span>
-      </a>
-      <a class="win" href="annex.html">
-        <span class="wno">annex</span>
-        <span class="wmid">
-          <span class="wname">Annex D · Small machines</span>
-          <span class="wdesc">the keyfile press · the examining glass · the passphrase press ·
-            the certificate of trust.</span>
-        </span>
-        <span class="warrow">→</span>
-      </a>
-    </div>
-  </div>
-
-  <div class="obox" style="margin-top:20px">
-    <div class="oh">Office hours</div>
-    <div class="fnote" style="margin-top:6px">
-      the night counter never closes. after your first visit the bureau continues
-      to receive you with the network cable severed — the paperwork is cached on
-      your own premises. no accounts · no telemetry · no escrow.
+    <h2><span class="rn">Annex D.</span> Small machines of the bureau</h2>
+    <div class="recs">
+      <div class="rec">
+        <div class="idx">instrument (a)</div>
+        <h3>The keyfile press</h3>
+        <p>Stamps a 256-bit physical second key. Keep it as a house key —
+          somewhere apart, with a copy laid safely away.</p>
+        <div class="rowline"><button id="keygen-go" class="ghost">Press &amp; download .v100key</button></div>
+      </div>
+      <div class="rec">
+        <div class="idx">instrument (b)</div>
+        <h3>The examining glass</h3>
+        <p>Reads only a vault's public header — form, cipher, turns of the key.
+          No passphrase requested, no contents disturbed.</p>
+        <div class="rowline">
+          <button id="info-pick-btn" class="ghost">Examine a .v100…</button>
+          <input id="info-pick" type="file" accept=".v100" hidden>
+        </div>
+      </div>
+      <div class="rec">
+        <div class="idx">instrument (c)</div>
+        <h3>The passphrase press</h3>
+        <p>Cryptographically secure combinations, minted a moment ago,
+          in this room and nowhere else.</p>
+        <label class="checkline"><input id="genpass-words" type="checkbox" checked>
+          word passphrase (the recommended sort)</label>
+        <div class="rowline" style="margin-top:10px">
+          <input id="genpass-out" class="ro" type="text" readonly placeholder="—" style="flex:1">
+          <button id="genpass-go" class="ghost">Mint</button>
+          <button id="genpass-copy" class="ghost">Copy</button>
+        </div>
+        <div class="fnote">combination quality — <span id="genpass-strength">—</span></div>
+      </div>
+      <div class="rec">
+        <div class="idx">instrument (d)</div>
+        <h3>The certificate of trust</h3>
+        <p>Upon arrival this form opens a reference vault sealed by the desk
+          application — proving the delivered machinery is genuine and
+          compatible. The stamp, upper right, records the verdict.</p>
+      </div>
     </div>
   </div>
 
   <!-- ================= CLERK'S RECORD ================= -->
   <div class="records solo">
     <div>
-      <div class="rechead">Clerk's record · proceedings at the front desk</div>
+      <div class="rechead">Clerk's record · proceedings at the annex</div>
       <div id="log"></div>
     </div>
   </div>
@@ -141,7 +134,7 @@
 
   <div class="barcodebox">
     <div class="barcode" aria-hidden="true"></div>
-    <div class="barcodenum">№ V100·2026·S·0047</div>
+    <div class="barcodenum">№ V100·2026·D·0047</div>
   </div>
 
   <footer>
@@ -151,7 +144,7 @@
   </footer>
 
   <div class="stub" aria-hidden="true">
-    <div class="st">form 100-s<br>receipt stub</div>
+    <div class="st">annex d<br>receipt stub</div>
     <div class="sn">№ 0047 / 2026</div>
     <div class="sf">keep this stub —<br>it is your only receipt</div>
   </div>
@@ -159,5 +152,6 @@
 </div>
 
 <script src="common.js?v=209"></script>
+<script src="annex.js?v=209"></script>
 </body>
 </html>

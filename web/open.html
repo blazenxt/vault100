@@ -12,7 +12,7 @@
 <meta name="theme-color" content="#08090b">
 <meta name="mobile-web-app-capable" content="yes">
 <link rel="manifest" href="manifest.json">
-<title>FRONT DESK — The Seal Bureau · night counter</title>
+<title>FORM 100-C · open counter — The Seal Bureau</title>
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 48'%3E%3Crect width='48' height='48' fill='%23111318'/%3E%3Ccircle cx='24' cy='24' r='15' fill='none' stroke='%23ddd6c4' stroke-width='3'/%3E%3Ccircle cx='24' cy='24' r='5' fill='%23e15555'/%3E%3C/svg%3E">
 <link rel="stylesheet" href="bureau.css?v=209">
 </head>
@@ -26,7 +26,7 @@
     </filter>
   </svg>
   <svg class="tear" viewBox="0 0 920 10" preserveAspectRatio="none" aria-hidden="true">
-    <path fill="#111318" d="M0 10 V4 l23 -2 l23 3 l23 -3 l23 2 l23 -1 l23 3 l23 -3 l23 1 l23 -2 l23 3 l23 -3 l23 2 l23 -1 l23 3 l23 -3 l23 1 l23 -2 l23 3 l23 -3 l23 2 l23 -1 l23 3 l23 -3 l23 1 l23 -2 l23 3 l23 -3 l23 2 l23 -1 l23 3 l23 -3 l23 1 l23 -2 l23 3 l23 -3 l23 2 l23 -1 l23 3 l23 -3 l23 1 L920 4 L920 10 Z"/>
+    <path fill="#111318" d="M0 10 V4 l23 -2 l23 3 l23 -3 l23 2 l23 -1 l23 3 l23 -3 l23 1 l23 -2 l23 3 l23 -3 l23 2 l23 -1 l23 3 l23 -3 l23 1 l23 -2 l23 3 l23 -3 l23 2 l23 -1 l23 3 l23 -3 l23 1 l23 -2 l23 3 l23 -3 l23 2 l23 -1 l23 3 l23 -3 l23 2 l23 -1 l23 3 l23 -3 l23 1 L920 4 L920 10 Z"/>
   </svg>
   <span class="ring r1" aria-hidden="true"></span>
   <span class="ring r2" aria-hidden="true"></span>
@@ -46,12 +46,12 @@
     <div class="center">
       <div class="bureau">The Seal Bureau · Night Counter</div>
       <div class="wordmark">VAULT-<b>100</b></div>
-      <div class="counterline">front desk · directory of windows · night stock</div>
+      <div class="counterline">form 100-c · request to open · night stock · third revision</div>
     </div>
 
     <div class="rightcol">
       <div class="serial">
-        <b>FORM 100-S</b><br>
+        <b>FORM 100-C</b><br>
         ser. № 0047 / 2026<br>
         received: <span id="today" class="blank">&nbsp;</span>
       </div>
@@ -67,72 +67,73 @@
     <span>copies retained by bureau <i>none</i></span>
   </div>
 
-  <p class="pitch">
-    <span class="zk">Dearest visitor: this counter performs every turn of the key
-    inside your own machine.</span> The bureau merely delivered the paperwork —
-    it never sees your documents, your passphrase, or your keys, and keeps no
-    copies. You may verify the claim personally: <b>finish loading this form,
-    then sever the network cable</b> — every window below continues to function.
-    Vaults (<b>.v100</b>) issued here open in the Vault100 desk &amp;
-    command-line applications, and vice versa.
-  </p>
-
   <!-- ================= COUNTERS ================= -->
   <div class="tabwrap">
     <nav class="switch" role="navigation" aria-label="bureau counters">
-      <a class="tabbtn desk active" href="index.html">❦ front desk</a>
+      <a class="tabbtn desk" href="index.html">❦ front desk</a>
       <a class="tabbtn" href="seal.html">Form 100-B · Seal</a>
-      <a class="tabbtn" href="open.html">Form 100-C · Open</a>
+      <a class="tabbtn active" href="open.html">Form 100-C · Open</a>
       <a class="tabbtn" href="annex.html">Annex D · Instruments</a>
     </nav>
   </div>
 
+  <!-- ================= FORM 100-C · OPEN ================= -->
   <div class="part">
-    <h2><span class="rn">Directory.</span> Choose your window</h2>
-    <div class="dir">
-      <a class="win" href="seal.html">
-        <span class="wno">window 1</span>
-        <span class="wmid">
-          <span class="wname">Form 100-B · Seal documents</span>
-          <span class="wdesc">bring documents; leave with a <b>.v100</b> vault — 111 key-turning
-            settings, double-lock, optional physical second key.</span>
-        </span>
-        <span class="warrow">→</span>
-      </a>
-      <a class="win" href="open.html">
-        <span class="wno">window 2</span>
-        <span class="wmid">
-          <span class="wname">Form 100-C · Open a vault</span>
-          <span class="wdesc">present a <b>.v100</b> with its combination (and its keyfile,
-            if one was demanded) — the original document is returned.</span>
-        </span>
-        <span class="warrow">→</span>
-      </a>
-      <a class="win" href="annex.html">
-        <span class="wno">annex</span>
-        <span class="wmid">
-          <span class="wname">Annex D · Small machines</span>
-          <span class="wdesc">the keyfile press · the examining glass · the passphrase press ·
-            the certificate of trust.</span>
-        </span>
-        <span class="warrow">→</span>
-      </a>
+    <h2><span class="rn">Part I.</span> The sealed document</h2>
+    <div id="dec-drop" class="intake">
+      <span class="corner tl"></span><span class="corner tr"></span>
+      <span class="corner bl"></span><span class="corner br"></span>
+      <svg width="34" height="34" viewBox="0 0 34 34" fill="none" stroke="#6d685a" stroke-width="1.6" aria-hidden="true">
+        <rect x="8" y="14" width="18" height="13" rx="1.5"/>
+        <path d="M12 14v-3.5a5 5 0 0 1 10 0V14" stroke="#e15555"/>
+        <circle cx="17" cy="20.5" r="1.6"/>
+      </svg>
+      <div class="big">Present the vault to the clerk</div>
+      <div class="small">drop .v100 — or click to retrieve it from the drawer</div>
+      <input id="dec-pick" type="file" multiple accept=".v100">
+    </div>
+    <ul id="dec-list" class="files"></ul>
+  </div>
+
+  <div class="duo">
+    <div class="part">
+      <h2><span class="rn">Part II.</span> The combination</h2>
+      <div class="frow">
+        <label class="flabel" for="dec-pw">1. Passphrase</label>
+        <input id="dec-pw" type="password" autocomplete="current-password">
+      </div>
+    </div>
+    <div class="part">
+      <h2><span class="rn">Part III.</span> Second key</h2>
+      <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+        <button id="dec-keyfile-btn" class="ghost" type="button">Present keyfile…</button>
+        <span id="dec-keyfile-name" class="fnote" style="margin:0"></span>
+      </div>
+      <input id="dec-keyfile" type="file" hidden>
+      <div class="fnote">required only if the vault was sealed with one. The
+        document's true name is returned with it, inside the envelope.</div>
     </div>
   </div>
 
-  <div class="obox" style="margin-top:20px">
-    <div class="oh">Office hours</div>
-    <div class="fnote" style="margin-top:6px">
-      the night counter never closes. after your first visit the bureau continues
-      to receive you with the network cable severed — the paperwork is cached on
-      your own premises. no accounts · no telemetry · no escrow.
+  <div class="part">
+    <h2><span class="rn">Part IV.</span> Authorization</h2>
+    <div class="action-row">
+      <button id="dec-go" class="go">Turn the key &amp; open</button>
+      <button id="dec-cancel" class="ghost" type="button" hidden>stay the stamp — cancel</button>
     </div>
   </div>
 
   <!-- ================= CLERK'S RECORD ================= -->
-  <div class="records solo">
+  <div class="records">
     <div>
-      <div class="rechead">Clerk's record · proceedings at the front desk</div>
+      <div class="rechead">Clerk's record · issued documents</div>
+      <ul id="results">
+        <div id="results-empty">Nothing yet issued. Opened documents
+          are entered here, one line per instrument.</div>
+      </ul>
+    </div>
+    <div>
+      <div class="rechead">Clerk's record · proceedings</div>
       <div id="log"></div>
     </div>
   </div>
@@ -141,7 +142,7 @@
 
   <div class="barcodebox">
     <div class="barcode" aria-hidden="true"></div>
-    <div class="barcodenum">№ V100·2026·S·0047</div>
+    <div class="barcodenum">№ V100·2026·C·0047</div>
   </div>
 
   <footer>
@@ -151,7 +152,7 @@
   </footer>
 
   <div class="stub" aria-hidden="true">
-    <div class="st">form 100-s<br>receipt stub</div>
+    <div class="st">form 100-c<br>receipt stub</div>
     <div class="sn">№ 0047 / 2026</div>
     <div class="sf">keep this stub —<br>it is your only receipt</div>
   </div>
@@ -159,5 +160,6 @@
 </div>
 
 <script src="common.js?v=209"></script>
+<script src="open.js?v=209"></script>
 </body>
 </html>

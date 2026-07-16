@@ -8,13 +8,20 @@
  */
 "use strict";
 
-const VERSION = "208";
+const VERSION = "209";
 const CACHE = "vault100-" + VERSION;
 const Q = "?v=" + VERSION;
 const ASSETS = [
   "/",
   "/index.html",
-  "/app.js" + Q,
+  "/seal.html",
+  "/open.html",
+  "/annex.html",
+  "/bureau.css" + Q,
+  "/common.js" + Q,
+  "/seal.js" + Q,
+  "/open.js" + Q,
+  "/annex.js" + Q,
   "/worker.js" + Q,
   "/vault-format.js" + Q,
   "/vendor/libsodium-sumo.js" + Q,
@@ -23,6 +30,7 @@ const ASSETS = [
   "/vendor/argon2.wasm" + Q,
   "/manifest.json",
   "/icon.svg",
+  "/icon-maskable.svg",
 ];
 
 self.addEventListener("install", (e) => {
@@ -50,10 +58,12 @@ self.addEventListener("fetch", (e) => {
     e.respondWith(
       fetch(e.request).then((r) => {
         const copy = r.clone();
-        caches.open(CACHE).then((c) => c.put("/index.html", copy));
+        const key = url.pathname === "/" ? "/index.html" : url.pathname;
+        caches.open(CACHE).then((c) => c.put(key, copy));
         return r;
       }).catch(() =>
-        caches.match("/index.html").then((m) => m || caches.match("/")))
+        caches.match(e.request).then((m) => m ||
+          caches.match(url.pathname).then((m2) => m2 || caches.match("/index.html"))))
     );
     return;
   }
