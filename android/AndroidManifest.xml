@@ -4,27 +4,56 @@
      the APK's own bundled assets under a private https origin, so the whole
      bureau (seal / open / rewrap / armor / annex) works with the cable
      severed. All cryptography runs client-side in the page's web worker —
-     this shell only delivers static filings and ferries finished work. -->
+     this shell only delivers static filings and ferries finished work.
+
+     v2.0.25 adds two doors on the handset side — the share sheet
+     (ACTION_SEND*) and the file manager (ACTION_VIEW for .v100/.v100asc) —
+     both still permissionless: bytes arrive via content:// grants that the
+     handing app issues, nothing is asked for. -->
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="in.blazenxt.vault100"
-    android:versionCode="20024"
-    android:versionName="2.0.24">
+    android:versionCode="20025"
+    android:versionName="2.0.25">
 
     <uses-sdk android:minSdkVersion="24" android:targetSdkVersion="34" />
 
     <application
         android:label="Vault100"
-        android:icon="@drawable/vaulticon"
-        android:theme="@android:style/Theme.Material.NoActionBar"
+        android:icon="@mipmap/vaulticon"
+        android:theme="@style/V100Theme"
         android:hardwareAccelerated="true">
 
         <activity
             android:name=".MainActivity"
             android:exported="true"
+            android:launchMode="singleTask"
             android:configChanges="keyboardHidden|orientation|screenSize|screenLayout|uiMode">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+
+            <!-- the share sheet: send any paper straight onto the seal desk -->
+            <intent-filter>
+                <action android:name="android.intent.action.SEND" />
+                <action android:name="android.intent.action.SEND_MULTIPLE" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <data android:mimeType="*/*" />
+            </intent-filter>
+
+            <!-- the file manager: tapping a vault opens the open counter -->
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="content" android:host="*" android:mimeType="*/*"
+                      android:pathPattern=".*.v100" />
+                <data android:scheme="content" android:host="*" android:mimeType="*/*"
+                      android:pathPattern=".*.v100asc" />
+                <data android:scheme="file" android:host="*" android:mimeType="*/*"
+                      android:pathPattern=".*.v100" />
+                <data android:scheme="file" android:host="*" android:mimeType="*/*"
+                      android:pathPattern=".*.v100asc" />
             </intent-filter>
         </activity>
     </application>

@@ -7,7 +7,7 @@
   const VB = (window.VB = {});
   const $ = (VB.$ = (s) => document.querySelector(s));
   VB.$$ = (s) => Array.from(document.querySelectorAll(s));
-  VB.VERSION = "2.0.24";
+  VB.VERSION = "2.0.25";
 
   // ---------------- the desk lamp & ink well (themes) ----------------
   // Applied synchronously before first paint, so no theme flash. The
@@ -313,6 +313,50 @@
     else if (n % 3 === 2) { const v = (u8[m] << 16) | (u8[m + 1] << 8); s += A[v >> 18] + A[(v >> 12) & 63] + A[(v >> 6) & 63] + "="; }
     return s;
   };
+
+  VB._b64dec = function (s) {                     // atob → bytes, chunked-safe
+    const bin = atob(s || "");
+    const u8 = new Uint8Array(bin.length);
+    for (let i = 0; i < bin.length; i++) u8[i] = bin.charCodeAt(i);
+    return u8;
+  };
+
+  /* The pocket annex (the Android app) also stages papers arriving from the
+     rest of the handset — the share sheet and the file manager. Bytes wait
+     in the shell's private spool until a counter collects them; on ordinary
+     desktops the bridge is absent and this is a no-op. */
+  VB.pullStaged = async function () {
+    if (typeof AndroidVault === "undefined" || typeof VB.onFilesDropped !== "function") return;
+    let n = 0;
+    try { n = AndroidVault.stagedCount(); } catch (e) { return; }
+    if (!n) return;
+    const files = [];
+    for (let i = 0; i < n; i++) {
+      try {
+        const info = String(AndroidVault.stagedInfo(i)).split("\u0001");
+        const name = info[0] || ("filing-" + (i + 1) + ".bin");
+        const size = Math.max(0, +info[1] || 0);
+        const parts = [];
+        let got = 0;
+        while (got < size) {
+          const want = Math.min(49152, size - got);
+          const u8 = VB._b64dec(AndroidVault.stagedRead(i, got, want));
+          if (!u8.length) break;                     // torn staging — abandon
+          parts.push(u8);
+          got += u8.length;
+        }
+        AndroidVault.stagedDiscard(i);
+        if (got >= size) {
+          files.push(new File(parts, name));
+          log(`${name} — ${size.toLocaleString()} B stamped in by the annex, laid on the counter.`);
+        }
+      } catch (e) { /* one torn staging never blocks the queue */ }
+    }
+    if (files.length) VB.onFilesDropped(files);
+  };
+
+  // filings staged before this counter finished dressing arrive on their own
+  window.addEventListener("load", () => setTimeout(() => { VB.pullStaged(); }, 60));
 
   /* The pocket annex (the Android app) exposes a ticketed relay named
      AndroidVault: filings spool across it, one ticket at a time, and land

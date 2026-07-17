@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- no white flash: the window itself is inked before the counter draws itself -->
+    <style name="V100Theme" parent="android:Theme.Material.NoActionBar">
+        <item name="android:windowBackground">@color/v100_ink</item>
+        <item name="android:statusBarColor">@color/v100_ink</item>
+        <item name="android:navigationBarColor">@color/v100_ink</item>
+    </style>
+</resources>

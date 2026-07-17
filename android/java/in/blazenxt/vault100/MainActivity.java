@@ -3,9 +3,12 @@ package in.blazenxt.vault100;
 import android.app.Activity;
 import android.content.ClipData;
 import android.content.Intent;
+import android.database.Cursor;
 import android.net.Uri;
 import android.os.Bundle;
+import android.provider.OpenableColumns;
 import android.util.Base64;
+import android.view.WindowManager;
 import android.webkit.JavascriptInterface;
 import android.webkit.ValueCallback;
 import android.webkit.WebChromeClient;
@@ -21,7 +24,9 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.io.RandomAccessFile;
 import java.util.ArrayDeque;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -32,12 +37,21 @@ import java.util.Map;
  * and is served to the WebView from a private https origin
  * (https://appassets.androidplatform.net/). The app requests ZERO Android
  * permissions — not even INTERNET — so the vault is offline by physics, not
- * by policy. Encryption/decryption still happens in the page's web worker
+ * by policy. Encryption/decryption runs in the page's web worker
  * (Argon2id + XChaCha20-Poly1305); this shell only:
  *   1. delivers static filings to the window,
  *   2. opens the system tray when a page needs a file (onShowFileChooser),
  *   3. relays finished filings (VB.download) into the system save dialog,
- *      ticketed so several filings can queue without tripping each other.
+ *      ticketed so several filings can queue without tripping each other,
+ *   4. receives papers from the rest of the handset: the share sheet
+ *      (ACTION_SEND*) stages files onto the seal desk, and tapping a
+ *      .v100 / .v100asc vault in any file manager (ACTION_VIEW) opens it
+ *      on the open counter — bytes are copied into the private spool and
+ *      pulled across the bridge by VB.pullStaged().
+ *
+ * FLAG_SECURE is raised: system screenshots and screen recordings of the
+ * ledger come back blank. (A second phone's camera can still photograph a
+ * courier QR — that door stays open by design.)
  */
 public class MainActivity extends Activity {
     private static final String ORIGIN = "appassets.androidplatform.net";
@@ -53,11 +67,18 @@ public class MainActivity extends Activity {
     private int nextTicket = 1;
     private int currentSafTicket = -1;
 
+    // ---- the intake stage: papers handed over by other apps ----------------
+    private final ArrayList<Staged> staged = new ArrayList<Staged>();
+    private int nextStaged = 1;
+
     private static class Spool { File file; FileOutputStream out; String name; }
+    private static class Staged { String name; File file; long size; }
 
     @Override
     public void onCreate(Bundle state) {
         super.onCreate(state);
+        getWindow().setFlags(WindowManager.LayoutParams.FLAG_SECURE,
+                             WindowManager.LayoutParams.FLAG_SECURE);
         getWindow().setStatusBarColor(0xFF121317);
         getWindow().setNavigationBarColor(0xFF121317);
         web = new WebView(this);
@@ -73,11 +94,29 @@ public class MainActivity extends Activity {
         web.addJavascriptInterface(new VaultBridge(), "AndroidVault");
         web.setWebViewClient(new BureauClient());
         web.setWebChromeClient(new BureauChrome());
-        web.loadUrl("https://" + ORIGIN + "/");
+
+        Intent in = getIntent();
+        if (in != null && (Intent.ACTION_VIEW.equals(in.getAction())
+                || Intent.ACTION_SEND.equals(in.getAction())
+                || Intent.ACTION_SEND_MULTIPLE.equals(in.getAction()))) {
+            handleIncoming(in);
+        } else {
+            web.loadUrl("https://" + ORIGIN + "/");
+        }
+    }
+
+    @Override
+    protected void onNewIntent(Intent in) {
+        super.onNewIntent(in);
+        if (in != null) handleIncoming(in);
     }
 
     @Override
     public void onDestroy() {
+        synchronized (this) {
+            for (Staged st : staged) if (st.file != null && st.file.exists()) st.file.delete();
+            staged.clear();
+        }
         if (web != null) web.destroy();
         super.onDestroy();
     }
@@ -143,7 +182,7 @@ public class MainActivity extends Activity {
                 ? "UTF-8" : null;
     }
 
-    // ---------------- intake: the system tray for choosing papers ------------
+    // ---------------- intake A: the system tray for choosing papers ----------
     private class BureauChrome extends WebChromeClient {
         @Override
         public boolean onShowFileChooser(WebView v, ValueCallback<Uri[]> cb,
@@ -197,8 +236,88 @@ public class MainActivity extends Activity {
         super.onActivityResult(req, res, data);
     }
 
-    // ---------------- the relay bridge: VB.download → system save tray -------
+    // ---------------- intake B: papers arriving from other apps --------------
+    private void handleIncoming(final Intent in) {
+        new Thread(new Runnable() {
+            public void run() {
+                final String target = stageIntent(in);
+                if (target == null) return;
+                runOnUiThread(new Runnable() {
+                    public void run() {
+                        String cur = web.getUrl() == null ? "" : web.getUrl();
+                        if (cur.endsWith("/" + target)) {
+                            // already standing at the right counter — hand over now
+                            web.evaluateJavascript(
+                                "window.VB&&VB.pullStaged&&VB.pullStaged();", null);
+                        } else {
+                            // the auto-pull hook in common.js collects the stage
+                            web.loadUrl("https://" + ORIGIN + "/" + target);
+                        }
+                    }
+                });
+            }
+        }).start();
+    }
+
+    /** Copies intent papers into the private spool. Returns the counter to open. */
+    private String stageIntent(Intent in) {
+        String a = in.getAction();
+        ArrayList<Uri> uris = new ArrayList<Uri>();
+        if (Intent.ACTION_VIEW.equals(a) && in.getData() != null) uris.add(in.getData());
+        else if (Intent.ACTION_SEND.equals(a)) {
+            Uri u = in.getParcelableExtra(Intent.EXTRA_STREAM);
+            if (u != null) uris.add(u);
+        } else if (Intent.ACTION_SEND_MULTIPLE.equals(a)) {
+            ArrayList<Uri> l = in.getParcelableArrayListExtra(Intent.EXTRA_STREAM);
+            if (l != null) uris.addAll(l);
+        }
+        if (uris.isEmpty()) return null;
+        String target = Intent.ACTION_VIEW.equals(a) ? "open.html" : "seal.html";
+        int accepted = 0;
+        for (Uri u : uris) if (stageOne(u)) accepted++;
+        if (accepted == 0) return null;
+        final String msg = accepted + " paper(s) stamped in — sent to the "
+                + (target.equals("open.html") ? "open" : "seal") + " counter.";
+        toast(msg);
+        return target;
+    }
+
+    private boolean stageOne(Uri u) {
+        String name = null; long size = -1;
+        try (Cursor c = getContentResolver().query(u, null, null, null, null)) {
+            if (c != null && c.moveToFirst()) {
+                int ni = c.getColumnIndex(OpenableColumns.DISPLAY_NAME);
+                int si = c.getColumnIndex(OpenableColumns.SIZE);
+                if (ni != -1) name = c.getString(ni);
+                if (si != -1 && !c.isNull(si)) size = c.getLong(si);
+            }
+        } catch (Exception ignored) {}
+        if (name == null || name.trim().isEmpty()) {
+            String last = u.getLastPathSegment();
+            name = (last == null || last.trim().isEmpty()) ? "filing.bin" : last;
+        }
+        name = sanitize(name);
+        try (InputStream src = getContentResolver().openInputStream(u)) {
+            if (src == null) return false;
+            Staged st = new Staged();
+            st.name = name;
+            synchronized (this) { st.file = new File(getCacheDir(), "vault100-stage-" + (nextStaged++) + ".bin"); }
+            try (FileOutputStream dst = new FileOutputStream(st.file)) {
+                byte[] buf = new byte[65536];
+                int n; long total = 0;
+                while ((n = src.read(buf)) != -1) { dst.write(buf, 0, n); total += n; }
+                st.size = (size >= 0 && size == total) ? size : total;
+            }
+            synchronized (this) { staged.add(st); }
+            return true;
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
+    // ---------------- the relay bridge: page ⇄ shell --------------------------
     private class VaultBridge {
+        // save-relay side (VB.download → system save tray)
         @JavascriptInterface
         public synchronized int begin(String name, long size) {
             int t = nextTicket++;
@@ -235,6 +354,41 @@ public class MainActivity extends Activity {
                     launchSaf(ticket);
                 }
             });
+        }
+
+        // intake-stage side (other apps → VB.pullStaged)
+        @JavascriptInterface
+        public synchronized int stagedCount() { return staged.size(); }
+
+        @JavascriptInterface
+        public synchronized String stagedInfo(int i) {
+            Staged st = staged.get(i);
+            return st.name + "\u0001" + st.size;
+        }
+
+        @JavascriptInterface
+        public String stagedRead(int i, int off, int len) {
+            Staged st;
+            synchronized (this) { st = (i >= 0 && i < staged.size()) ? staged.get(i) : null; }
+            if (st == null) return "";
+            try (RandomAccessFile r = new RandomAccessFile(st.file, "r")) {
+                if (off < 0) off = 0;
+                if (len > 1 << 20) len = 1 << 20;
+                byte[] b = new byte[len];
+                r.seek(off);
+                int n = r.read(b);
+                if (n <= 0) return "";
+                return Base64.encodeToString(b, 0, n, Base64.NO_WRAP);
+            } catch (Exception e) {
+                return "";
+            }
+        }
+
+        @JavascriptInterface
+        public synchronized void stagedDiscard(int i) {
+            if (i < 0 || i >= staged.size()) return;
+            Staged st = staged.remove(i);
+            if (st.file != null && st.file.exists()) st.file.delete();
         }
     }
 

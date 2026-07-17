@@ -197,6 +197,14 @@ A real, signed **`.apk`** — the entire bureau folded into a handset:
   web counter; vaults stay interchange-compatible with CLI/web/desktop.
 * **Ticketed save relay** — finished filings (sealed vaults, armor, slips,
   stamps, record books) land in the system save dialog, one ticket at a time.
+* **Opens vaults from anywhere** — tap a `.v100`/`.v100asc` in any file
+  manager and it arrives on the open counter; *share* any file to Vault100
+  from any app and it lands on the seal desk (both still permissionless).
+* **Screenshots barred** — `FLAG_SECURE` keeps the ledger out of system
+  screenshots and screen recordings (a second phone can still photograph a
+  courier QR — that door is deliberate).
+* **Adaptive icon + inked splash** — the bureau seal floats on night-ink,
+  Android 8+ masks included.
 * **Inspectable seal** — the signer certificate digest is published on the
   [get page](https://vault100.blazenxt.in/get.html); check any bundle with
   `apksigner verify --print-certs Vault100-<ver>.apk` before sideloading.
@@ -265,6 +273,7 @@ node web/server.mjs    # serves on :8080 (honors $PORT), /health for checks
 **v2.0.x series** (all releases on the
 [releases page](https://github.com/blazenxt/vault100/releases)):
 
+* **2.0.25** — **the open window (app upgrade)**: share-sheet intake & file-manager `.v100`/`.v100asc` opening (`ACTION_SEND*`/`ACTION_VIEW` → staged spool → `VB.pullStaged`) · **screenshots/screen-recordings barred** (`FLAG_SECURE`) · adaptive icon + inked splash · zero permissions unchanged · build env bootstrap (`android/bootstrap_env.sh`) for sandbox-proof rebuilds
 * **2.0.24** — **the pocket annex (Android)**: real signed `.apk` — the entire bureau bundled inside (same worker, same vaults, byte-for-byte) · **zero Android permissions — not even INTERNET** — offline by physics · ticketed save-relay into the system save tray · published signer digest on the get page (`apksigner verify --print-certs`) · `android/` no-Gradle build (`./build.sh`)
 * **2.0.23** — **the notary**: ed25519 endorsements — `vault100 notary mint/endorse/attest` (.v100seal secret + .v100stamp public + detached .v100sig) · Annex instrument (i) mint/endorse/attest desks · byte-exact web↔desk · seal files 0600
 * **2.0.22** — **desk box hardening**: Tkinter night-ledger bureau theme · live strength bar · stopwatch bench button · recently-handled forms (XDG config) · **CLI + GUI `verify`** — prove vaults open clean with ZERO plaintext written · module import smoke-test

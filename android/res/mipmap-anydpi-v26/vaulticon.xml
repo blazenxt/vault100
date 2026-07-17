@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- proper adaptive icon (API 26+): the bureau's mask-safe seal floats on ink -->
+<adaptive-icon xmlns:android="http://schemas.android.com/apk/res/android">
+    <background android:drawable="@color/v100_ink" />
+    <foreground android:drawable="@mipmap/vaulticon_fg" />
+</adaptive-icon>
