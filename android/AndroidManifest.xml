@@ -12,8 +12,8 @@
      handing app issues, nothing is asked for. -->
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="in.blazenxt.vault100"
-    android:versionCode="20025"
-    android:versionName="2.0.25">
+    android:versionCode="20026"
+    android:versionName="2.0.26">
 
     <uses-sdk android:minSdkVersion="24" android:targetSdkVersion="34" />
 

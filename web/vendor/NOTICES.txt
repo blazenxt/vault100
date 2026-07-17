@@ -1,0 +1,86 @@
+THE PROVENANCE SHELF — third-party notices for the Vault100 parcels
+(web counter · CLI engine · desktop box · pocket annex APK)
+=====================================================================
+
+Vault100 itself is MIT-licensed (Copyright (c) 2026 BlazeNXT); see LICENSE at
+the repository root. This file carries the notices of the components the
+bureau's parcels ship or are built with. The counter embeds NO fonts (system
+type stacks only), loads NO third-party scripts at runtime beyond the
+vendored files below, and phones home to NOBODY.
+
+---------------------------------------------------------------------
+1) libsodium — vendored as web/vendor/libsodium-sumo.js + libsodium-wrappers.js
+   (WASM/asm.js build; all encryption, signatures and randomness)
+   ISC License — Copyright (c) 2013-2026 Frank Denis <j at pureftpd dot org>
+
+   Permission to use, copy, modify, and/or distribute this software for any
+   purpose with or without fee is hereby granted, provided that the above
+   copyright notice and this permission notice appear in all copies.
+
+   THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
+   WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
+   MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
+   ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
+   WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
+   ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
+   OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
+
+   Upstream: https://github.com/jedisct1/libsodium
+           and https://github.com/jedisct1/libsodium.js
+
+---------------------------------------------------------------------
+2) Argon2 — vendored as web/vendor/argon2.js + web/vendor/argon2.wasm
+   (the KDF that prices every key-turning notch)
+
+   The Argon2 reference implementation (P-H-C) is dual-licensed under your
+   choice of Creative Commons CC0 1.0 Universal or the Apache License 2.0:
+     https://github.com/P-H-C/phc-winner-argon2/blob/master/LICENSE
+
+   The WebAssembly bindings/dist build conventions derive from argon2-browser
+   (antelle/argon2-browser), MIT License:
+     https://github.com/antelle/argon2-browser/blob/master/LICENSE.md
+
+   MIT License
+
+   Permission is hereby granted, free of charge, to any person obtaining a
+   copy of this software and associated documentation files (the "Software"),
+   to deal in the Software without restriction, including without limitation
+   the rights to use, copy, modify, merge, publish, distribute, sublicense,
+   and/or sell copies of the Software, and to permit persons to whom the
+   Software is furnished to do so, subject to inclusion of the above notice.
+
+---------------------------------------------------------------------
+3) qrcode-generator 1.4.4 — vendored as web/vendor/qrcode.js
+   (the courier's QR stamps; the notice also rides at the file's head)
+
+   MIT License — Copyright (c) 2009 Kazuhiko Arase
+
+   Permission is hereby granted, free of charge, to any person obtaining a
+   copy of this software and associated documentation files (the "Software"),
+   to deal in the Software without restriction, including without limitation
+   the rights to use, copy, modify, merge, publish, distribute, sublicense,
+   and/or sell copies of the Software, and to permit persons to whom the
+   Software is furnished to do so, subject to the following conditions:
+
+   The above copyright notice and this permission notice shall be included in
+   all copies or substantial portions of the Software.
+
+   THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND.
+
+   Upstream: https://github.com/kazuhikoarase/qrcode-generator
+
+---------------------------------------------------------------------
+4) Android SDK Platform & Build-Tools (aapt2 · d8 · apksigner · android.jar)
+   (used strictly at BUILD time to assemble and seal the pocket annex APK;
+    no part of them phones anywhere at runtime — the app requests zero
+    permissions)
+   Apache License, Version 2.0 — https://www.apache.org/licenses/LICENSE-2.0
+   Copyright © the Android Open Source Project.
+
+---------------------------------------------------------------------
+
+Seals, icons, cover art and all bureau ledger artwork are the bureau's own
+work under the MIT license. Bureau type is your own system's — no foundry was
+commissioned, so none is owed.
+
+entered into the ledger with release v2.0.26 — "the writ desk".

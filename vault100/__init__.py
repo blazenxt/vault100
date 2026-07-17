@@ -23,7 +23,7 @@ from .crypto_core import (
 )
 from .keyfile import generate_keyfile, load_keyfile
 
-__version__ = "2.0.25"
+__version__ = "2.0.26"
 __all__ = [
     "DEFAULT_PROFILE",
     "KDF_PROFILES",
